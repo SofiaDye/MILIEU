@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip3 list:*)",
+      "Bash(python3 server.py)",
+      "Bash(curl -s http://127.0.0.1:5000/)",
+      "Bash(python3 -c ':*)",
+      "Bash(echo \"PID: $!\")",
+      "Read(//tmp/**)",
+      "Bash(kill 14669 14686)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/)",
+      "Bash(curl -s -X POST http://127.0.0.1:5000/analyse -F \"file=@/dev/null\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('response keys:', list\\(d.keys\\(\\)\\)\\)\")",
+      "Bash(curl -s -X POST http://127.0.0.1:5000/analyse)",
+      "Bash(curl -s -X POST http://127.0.0.1:5000/analyse -H \"Origin: http://127.0.0.1:5500\" -v)",
+      "Bash(curl -s -X OPTIONS http://127.0.0.1:5000/analyse -H \"Origin: http://127.0.0.1:5500\" -H \"Access-Control-Request-Method: POST\" -v)",
+      "Bash(curl -s http://localhost:5000)",
+      "Bash(python3)",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -sL \"https://docs.google.com/spreadsheets/d/e/2PACX-1vQOL-cy_b3u_us5w3C3023dDH5KDd3UpBSnDqtRijijz_rrFdczQlXZyuIZCfs4Ogq1RjVpMe5edrdU/pub?output=csv\")",
+      "Bash(sed -n '259,272p' \"/Users/sofiadye/Desktop/UNI YR 3/UNIT 10/FMP/p5js-project/itteration 6/index.html\")",
+      "Bash(sed -n '1163,1172p' \"/Users/sofiadye/Desktop/UNI YR 3/UNIT 10/FMP/p5js-project/itteration 6/index.html\")",
+      "Bash(rm -rf /var/folders/gf/lvtnqgtj2nj1kdbvvk_1r1gr0000gn/T/tfhub_modules/)",
+      "Bash(brew list *)"
+    ]
+  }
+}

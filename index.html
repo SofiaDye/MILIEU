@@ -1,0 +1,3334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MILIEU</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#f5f4f2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Milieu" />
+    <link rel="apple-touch-icon" href="/icon-512.png" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Adobe Fonts: Smoosh1, Komet, Miller Text -->
+    <link rel="stylesheet" href="https://use.typekit.net/xsq6oqv.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { overflow: hidden; background: rgb(255, 255, 255); font-family: 'komet', sans-serif; font-weight: 300; }
+
+        /* Consistent modal button style for all modals */
+        .modal-btn {
+            background: none;
+            border: 1px solid rgba(80,100,130,0.32);
+            border-radius: 20px;
+            padding: 8px 26px;
+            font-family: "miller-text", serif;
+            font-weight: 400;
+            font-style: italic;
+            font-size: 14px;
+            color: rgba(35,50,75,0.62);
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s, background 0.18s;
+            outline: none;
+            margin: 0;
+        }
+        .modal-btn:hover, .modal-btn:focus {
+            border-color: rgba(80,100,130,0.58);
+            color: rgba(20,30,50,0.88);
+            background: rgba(200,210,225,0.22);
+        }
+        canvas { display: block; }
+
+        /* Map modal */
+        #map-modal {
+            display: none; position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(30,40,60,0.32);
+            z-index: 2000; align-items: center; justify-content: center;
+        }
+        #map-container {
+            width: 70vw; height: 70vh; min-width: 320px; min-height: 320px;
+            background: #fff; border-radius: 12px; box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        #map { flex: 1; min-height: 200px; border-radius: 12px; }
+        #map-close {
+            position: absolute; top: 12px; right: 12px;
+            width: 32px; height: 32px;
+            background: #5b9bd5; border: none; border-radius: 50%;
+            color: #fff; font-size: 18px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10; transition: background 0.18s;
+        }
+        #map-close:hover { background: #3a78b5; }
+
+        /* Splash screen */
+        #splash-screen {
+            position: fixed; inset: 0;
+            z-index: 500;
+            background: radial-gradient(ellipse at 50% 50%,
+                rgba(235,242,255,1.0) 0%,
+                rgba(210,225,248,1.0) 35%,
+                rgba(185,208,240,1.0) 65%,
+                rgba(160,190,228,1.0) 100%);
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 1.0s ease;
+            pointer-events: all;
+        }
+        #splash-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* 3D model behind text */
+        #splash-model {
+            opacity: 0.55;
+            transition: opacity 1.2s ease;
+        }
+        #splash-model.hide { opacity: 0; }
+
+        /* soft white circle in centre */
+        #splash-circle {
+            width: 520px; height: 520px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at 50% 50%,
+                rgba(255,255,255,0.68) 0%,
+                rgba(245,248,255,0.44) 40%,
+                rgba(220,232,248,0.14) 70%,
+                rgba(200,218,240,0.0) 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            padding: 60px;
+            position: relative;
+        }
+        /* phrase text */
+        #splash-phrase {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 22px; line-height: 1.55;
+            color: rgba(25,35,55,0.78);
+            max-width: 300px;
+            opacity: 0;
+            transition: opacity 0.9s ease;
+            position: absolute;
+        }
+        #splash-phrase.visible { opacity: 1; }
+        /* logo — pinned to exact same spot as #orb-title */
+        #splash-logo {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px; opacity: 0;
+            transition: opacity 1.1s ease;
+            z-index: 501;
+            pointer-events: none;
+        }
+        #splash-logo.visible { opacity: 0.8; }
+        #splash-logo img { width: 320px; display: block; }
+        #splash-subtitle {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 14px; color: rgba(35,50,75,0.55);
+            text-align: center; margin-top: 8px;
+            letter-spacing: 0.02em;
+        }
+        /* enter button sits below logo, independently positioned */
+        #splash-enter {
+            position: fixed;
+            bottom: 40px; left: 50%;
+            top: auto;
+            transform: translateX(-50%);
+            z-index: 501;
+            background: url('silverbutton.png') center / contain no-repeat;
+            border: none; border-radius: 0; padding: 0 26px;
+            height: 96px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 14px; color: rgba(35,50,75,0.62);
+            cursor: pointer; pointer-events: all;
+            transition: filter 0.2s, color 0.2s;
+            display: block;
+        }
+        #splash-enter:hover {
+            filter: brightness(0.93);
+            color: rgba(20,30,50,0.88);
+        }
+
+        /* Home button */
+        #home-btn {
+            position: fixed; top: 22px; left: 24px;
+            height: 34px; padding: 0 14px;
+            background: none; border: 1px solid rgba(80,100,130,0.20);
+            border-radius: 20px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; color: rgba(50,60,80,0.55);
+            cursor: pointer; z-index: 1001;
+            display: none; align-items: center; gap: 6px;
+            transition: background 0.18s, border-color 0.18s, color 0.18s;
+        }
+        #home-btn:hover {
+            background: rgba(200,210,225,0.22);
+            border-color: rgba(80,100,130,0.40);
+            color: rgba(30,40,60,0.80);
+        }
+
+        /* Globe button */
+        #globe-btn {
+            position: fixed; top: 22px; right: 24px;
+            width: 38px; height: 38px;
+            background: none; border: none; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1001;
+            transition: background 0.18s, opacity 0.4s;
+        }
+        #globe-btn.hidden-ui { opacity: 0; pointer-events: none; }
+        #globe-btn:hover {
+            background: rgba(200,220,240,0.18);
+        }
+        #globe-btn svg {
+            width: 22px; height: 22px;
+            opacity: 0.85;
+        }
+        #ae-btn {
+            position: fixed; top: 22px; right: 116px;
+            height: 28px; padding: 0 12px;
+            background: rgba(220,225,235,0.92);
+            border: none; border-radius: 6px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 12px; color: rgba(40,42,50,0.70);
+            cursor: pointer; z-index: 1001;
+            display: none; align-items: center; gap: 6px;
+            letter-spacing: 0.06em;
+            transition: background 0.15s;
+        }
+        #ae-btn:hover { background: rgba(200,207,220,1); }
+        #ae-btn.active {
+            background: rgba(20,20,20,0.88);
+            color: rgba(255,255,255,0.85);
+        }
+        #ae-btn.active:hover { background: rgba(0,0,0,1); }
+
+        #sound-btn {
+            position: fixed; top: 22px; right: 24px;
+            width: 38px; height: 38px;
+            background: none; border: none; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1001;
+            transition: background 0.18s;
+        }
+        #sound-btn:hover { background: rgba(200,220,240,0.18); }
+        #sound-btn svg { width: 22px; height: 22px; opacity: 0.85; }
+
+        /* Gallery tab — lives inside the panel, peeks out on the right edge */
+        #gallery-handle {
+            position: absolute; top: 50%; right: -28px;
+            transform: translateY(-50%);
+            width: 28px; height: 140px;
+            background: rgba(220,225,235,0.92);
+            border-radius: 0 10px 10px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.10);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, width 0.2s;
+        }
+        #gallery-handle:hover {
+            width: 34px;
+            background: rgba(200,207,220,1);
+        }
+        #gallery-handle span {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-family: "miller-text", serif;
+            font-style: italic;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: rgba(40,42,50,0.65);
+            user-select: none;
+        }
+
+        /* Quick-capture button */
+        #quick-capture-btn {
+            position: fixed; top: 70px; left: 24px;
+            height: 28px; padding: 0 12px;
+            background: rgba(220,225,235,0.92);
+            border: none; border-radius: 6px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 12px; color: rgba(40,42,50,0.80);
+            cursor: pointer; z-index: 20;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+            transition: background 0.15s, opacity 0.2s;
+            white-space: nowrap;
+        }
+        #quick-capture-btn:hover { background: rgba(200,207,220,1); }
+
+        /* Gallery panel */
+        #gallery-panel {
+            position: fixed; top: 0; left: 0;
+            width: 300px; height: 100vh;
+            background: rgba(245,247,250,0.98);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+            z-index: 200;
+            display: flex; flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.35s ease;
+            overflow: visible;
+        }
+        #gallery-panel.open { transform: translateX(0); }
+        #gallery-header {
+            flex-shrink: 0;
+            padding: 22px 20px 14px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        #gallery-header h4 {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0;
+        }
+        #gallery-close {
+            background: none; border: none; cursor: pointer;
+            font-size: 20px; color: rgba(60,65,75,0.45); line-height: 1; padding: 0 0 0 10px;
+        }
+        #gallery-close:hover { color: rgba(20,22,25,0.80); }
+        #gallery-grid {
+            flex: 1; min-height: 0;
+            overflow-y: auto; overflow-x: hidden;
+            padding: 8px 14px 28px;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; align-content: start;
+        }
+        #gallery-empty {
+            text-align: center;
+            font-family: "miller-text", serif; font-style: italic; font-size: 13px;
+            color: rgba(40,42,50,0.35); padding: 40px 0;
+        }
+        .gallery-month-header {
+            grid-column: 1 / -1;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 11px; color: rgba(40,42,50,0.55);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            padding: 14px 0 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .gallery-month-header:first-child { padding-top: 6px; }
+        .gallery-thumb {
+            width: 100%; border-radius: 8px; overflow: hidden;
+            cursor: pointer; position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: box-shadow 0.15s;
+            background: #dde3ec;
+        }
+        .gallery-thumb:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .gallery-thumb video,
+        .gallery-thumb > img { width: 100%; aspect-ratio: 3/2; object-fit: contain; display: block; background: #dde3ec; }
+        .gallery-thumb-info {
+            padding: 8px 10px 9px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        .gallery-thumb-name {
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.80);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .gallery-thumb-sub {
+            font-size: 11px; color: rgba(40,42,50,0.42); margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .gallery-thumb-complexity {
+            font-family: "miller-text", serif; font-style: italic;
+            color: rgba(40,42,50,0.60) !important; margin-top: 2px;
+        }
+        .thumb-sm-dots {
+            display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+        }
+        .thumb-sm-dot {
+            width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+        }
+        .gallery-thumb .thumb-del {
+            position: absolute; top: 6px; right: 6px;
+            background: rgba(0,0,0,0.40); color: white; border: none;
+            border-radius: 50%; width: 20px; height: 20px; font-size: 12px;
+            cursor: pointer; display: none; align-items: center; justify-content: center;
+            line-height: 1; z-index: 2;
+        }
+        .gallery-thumb:hover .thumb-del { display: flex; }
+
+        /* Lightbox */
+        #gallery-lightbox {
+            display: none; position: fixed; inset: 0;
+            background: rgba(20,25,40,0.82); z-index: 300;
+            align-items: flex-start; justify-content: center;
+            padding: 28px 16px 40px; overflow-y: auto;
+        }
+        #gallery-lightbox.open { display: flex; }
+        #lightbox-inner {
+            background: rgba(245,247,250,0.98);
+            border-radius: 14px; width: 100%; max-width: 520px;
+            margin: auto; overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+            position: relative;
+        }
+        #lightbox-video, #lightbox-img-full {
+            width: 100%; display: block; max-height: 52vh;
+            object-fit: contain; background: #111;
+            border-radius: 14px 14px 0 0;
+        }
+        #lightbox-meta {
+            padding: 20px 22px 28px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .lb-section-title {
+            font-family: 'miller-text', serif; font-style: italic; font-weight: 400;
+            font-size: 10px; color: rgba(40,42,50,0.42); letter-spacing: 0.09em;
+            text-transform: uppercase; margin-bottom: 4px;
+        }
+        .lb-divider { height: 1px; background: rgba(0,0,0,0.07); }
+        .lb-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .lb-field { display: flex; flex-direction: column; gap: 3px; }
+        .lb-label {
+            font-size: 10px; color: rgba(40,42,50,0.42);
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .lb-value {
+            font-family: 'miller-text', serif; font-style: italic;
+            font-size: 14px; color: rgba(40,42,50,0.78);
+        }
+        .lb-complexity-box {
+            background: rgba(180,195,215,0.18); border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'miller-text', serif; font-style: italic;
+            font-size: 15px; color: rgba(40,42,50,0.80);
+        }
+        .lb-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+        .lb-tag {
+            display: flex; align-items: center; gap: 5px;
+            font-family: 'miller-text', serif; font-style: italic; font-size: 13px;
+            color: rgba(40,42,50,0.70); background: rgba(180,195,215,0.15);
+            border-radius: 12px; padding: 3px 10px;
+        }
+        .lb-tag-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .lb-description {
+            font-family: 'miller-text', serif; font-style: italic;
+            font-size: 14px; color: rgba(40,42,50,0.68); line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .lb-uploaded-img { width: 100%; border-radius: 8px; display: block; }
+        #lightbox-close {
+            position: absolute; top: 10px; right: 12px;
+            background: rgba(0,0,0,0.35); border: none; color: white;
+            font-size: 18px; cursor: pointer;
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; z-index: 2;
+        }
+        #lightbox-close:hover { background: rgba(0,0,0,0.60); }
+
+        /* Central orb container */
+        #orb-container {
+            
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15; pointer-events: all;
+            transition: opacity 0.8s ease;
+        }
+        #orb-container.hidden { opacity: 0; pointer-events: none; }
+
+        #orb {
+            width: 520px; height: 520px;
+            border-radius: 50%; position: relative;
+            cursor: pointer;
+            animation: orbFloat 4s ease-in-out infinite;
+            pointer-events: auto;
+        }
+
+        /* Make all children ignore pointer events so #orb gets the click */
+        #orb * {
+            pointer-events: none !important;
+        }
+
+        #orb-sphere {
+            width: 100%; height: 100%; border-radius: 50%;
+            background:
+                radial-gradient(circle at 38% 35%, rgba(255,255,255,1.0) 0%, rgba(255,255,255,0.95) 8%, rgba(240,248,255,0.80) 20%, rgba(200,225,255,0.40) 40%, rgba(140,175,220,0.10) 65%, rgba(80,110,160,0.0) 100%),
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,1.0) 0%, rgba(230,240,255,0.95) 20%, rgba(180,205,240,0.85) 45%, rgba(100,135,195,0.70) 70%, rgba(40,60,120,0.60) 100%);
+            box-shadow: 0 0 30px rgba(255,255,255,0.95), 0 0 70px rgba(220,235,255,0.75), 0 0 130px rgba(200,220,255,0.45), 0 0 220px rgba(180,205,255,0.25), 0 0 350px rgba(160,190,255,0.12), inset 0 0 20px rgba(255,255,255,0.9);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none !important;
+        }
+        #orb-sphere::before {
+            content: ''; position: absolute; top: 12%; left: 20%; width: 35%; height: 25%;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.0) 100%);
+            transform: rotate(-30deg);
+        }
+        #orb-sphere::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotateX(75deg);
+            width: 88%; height: 88%; border-radius: 50%;
+            border: 1px solid rgba(55,185,138,0.30);
+            box-shadow: 0 0 8px rgba(55,185,138,0.20);
+        }
+        #orb:hover #orb-sphere {
+            box-shadow: 0 0 50px rgba(255,255,255,1.0), 0 0 100px rgba(220,235,255,0.85), 0 0 180px rgba(200,220,255,0.55), 0 0 280px rgba(180,205,255,0.30), inset 0 0 20px rgba(255,255,255,0.95);
+            transform: scale(1.06);
+        }
+        #orb:active #orb-sphere { transform: scale(0.97); }
+
+        #orb-title {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            opacity: 0.8;
+            user-select: none; z-index: 2;
+            pointer-events: none;
+        }
+        #orb-label {
+            text-align: center; margin-top: 8px;
+            font-family: 'miller-text', serif; font-weight: 400; font-style: italic;
+            font-size: 16px; letter-spacing: 0.14em;
+            color: rgba(60,70,90,0.60);
+            transition: color 0.3s;
+        }
+        #orb:hover #orb-label { color: rgba(40,50,75,0.90); }
+        #orb-sublabel {
+            text-align: center; margin-top: 6px;
+            font-family: 'miller-text', serif; font-weight: 400; font-style: italic;
+            font-size: 13px; letter-spacing: 0.10em;
+            color: rgba(60,70,90,0.38);
+            text-transform: none;
+        }
+
+        #orb-container.drag-over #orb-sphere {
+            box-shadow: 0 0 90px rgba(255,255,255,0.90), 0 0 160px rgba(210,225,245,0.50), inset 0 2px 8px rgba(255,255,255,0.9), inset 0 0 30px rgba(0,0,0,0.2);
+            transform: scale(1.08);
+        }
+        #orb-container.recording #orb { animation: orbBreathe 9s ease-in-out infinite; }
+        #orb-container.recording #orb-sphere { animation: none; }
+        #orb-container.breathing #orb { animation: orbBreathe 9s ease-in-out infinite; }
+
+        @keyframes orbFloat { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes orbBreathe {
+            0%, 100% {
+                transform: scale(0.92);
+                filter: drop-shadow(0 0 20px rgba(180,210,255,0.38));
+            }
+            50% {
+                transform: scale(1.04);
+                filter: drop-shadow(0 0 50px rgba(200,225,255,0.80));
+            }
+        }
+
+        .orbit-ring {
+            position: absolute; top: 50%; left: 50%;
+            border-radius: 50%; border: 1px solid rgba(200,215,230,0.15);
+            transform-origin: center; pointer-events: none;
+        }
+        .orbit-ring:nth-child(1) { width: 1040px; height: 1040px; margin: -520px 0 0 -520px; animation: orbitSpin 12s linear infinite; border-color: rgba(200,215,230,0.18); }
+        .orbit-ring:nth-child(2) { width: 866px; height: 866px; margin: -433px 0 0 -433px; animation: orbitSpin 20s linear infinite reverse; border-color: rgba(200,215,230,0.10); transform: rotateX(60deg); }
+        .orbit-ring:nth-child(3) { width: 1040px; height: 1040px; margin: -520px 0 0 -520px; animation: orbitSpin 30s linear infinite; border-color: rgba(200,215,230,0.06); transform: rotateY(60deg); }
+        @keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+
+        /* Show/hide details button */
+        #details-btn {
+            height: 56px;
+            padding: 0 20px;
+            background: rgba(220,225,235,1); border: none; border-radius: 8px;
+            cursor: pointer; z-index: 50;
+            transition: background 0.15s;
+            display: flex; align-items: center;
+        }
+        #details-btn:hover { background: rgba(200,207,220,1); }
+        #entropy-scale svg { display: block; }
+
+        /* Soundmarks box */
+        #soundmarks-box {
+            height: 48px;
+            background: rgba(220,225,235,1);
+            border: none;
+            border-radius: 8px;
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px;
+            color: rgba(0,0,0,1);
+            max-width: 320px;
+            cursor: pointer;
+        }
+        #soundmarks-box:hover { background: rgba(200,207,220,1); }
+        #soundmarks-label {
+            white-space: nowrap;
+            color: rgba(0,0,0,0.50);
+            font-size: 11px;
+            letter-spacing: 0.03em;
+            font-style: normal;
+            padding-right: 8px;
+            border-right: 1px solid rgba(0,0,0,0.12);
+        }
+        #soundmarks-tags {
+            display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+        }
+        .soundmark-tag {
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-style: normal;
+            letter-spacing: 0.04em;
+            background: rgba(180,195,215,0.25);
+            color: rgba(0,0,0,1);
+            white-space: nowrap;
+        }
+
+        /* Bottom-right collapsible wrapper */
+        #bottom-bar-wrapper {
+            position: fixed; bottom: 32px; right: 32px;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+            z-index: 100;
+            transition: opacity 0.4s ease;
+        }
+        #bottom-bar-wrapper.hidden-ui { opacity: 0; pointer-events: none; }
+
+        /* Toggle pill button */
+        #bottom-bar-toggle {
+            height: 38px; padding: 0 20px;
+            background: rgba(220,225,235,0.92);
+            border: none; border-radius: 20px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; letter-spacing: 0.08em;
+            color: rgba(40,42,50,0.60);
+            cursor: pointer; transition: background 0.15s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+        }
+        #bottom-bar-toggle:hover { background: rgba(200,207,220,1); color: rgba(20,25,40,0.85); }
+
+        /* Expandable bar — hidden by default, opens upward */
+        #bottom-bar {
+            display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+            opacity: 0; pointer-events: none;
+            transform: translateY(8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        #bottom-bar.open {
+            opacity: 1; pointer-events: all;
+            transform: translateY(0);
+        }
+        #gallery-panel.hidden-ui { opacity: 0; pointer-events: none; }
+        #gallery-panel { transition: transform 0.35s ease, opacity 0.4s ease; }
+        .measure-box {
+            height: 48px;
+            background: rgba(220,225,235,1);
+            border: none;
+            border-radius: 8px;
+            padding: 0 16px;
+            display: flex; align-items: center; gap: 6px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px;
+            color: rgba(0,0,0,1);
+            white-space: nowrap;
+            cursor: default;
+        }
+        button.measure-box { cursor: pointer; }
+        button.measure-box:hover { background: rgba(200,207,220,1); }
+        .measure-label {
+            font-size: 10px; font-style: normal;
+            letter-spacing: 0.03em;
+            color: rgba(0,0,0,0.45);
+            padding-right: 6px;
+            border-right: 1px solid rgba(0,0,0,0.12);
+        }
+        .measure-value { opacity: 0.4; color: rgba(0,0,0,1); }
+        .measure-value.live { opacity: 1; }
+
+        /* Other info panel */
+        #box-other .measure-label { border-right: none; padding-right: 0; }
+        #other-info-box {
+            min-width: 200px;
+        }
+        .other-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 0;
+        }
+        .other-label {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 12px; letter-spacing: 0.04em;
+            color: rgba(40,45,60,0.70);
+            flex: 1;
+        }
+        .other-val {
+            font-family: "miller-text", serif; font-size: 12px;
+            color: rgba(40,45,60,0.86);
+            min-width: 48px; text-align: right;
+        }
+        .other-expand-btn {
+            background: none; border: 1px solid rgba(80,100,130,0.28);
+            border-radius: 50%; width: 18px; height: 18px;
+            font-size: 10px; line-height: 1;
+            color: rgba(60,80,110,0.55); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: border-color 0.15s, color 0.15s;
+            font-family: "miller-text", serif; font-style: italic;
+        }
+        .other-expand-btn:hover { border-color: rgba(60,80,110,0.55); color: rgba(30,45,70,0.85); }
+        .other-def {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 11px; line-height: 1.55;
+            color: rgba(40,45,60,0.65);
+            padding: 4px 0 8px 0;
+            display: none;
+        }
+        .other-def.open { display: block; }
+        .other-divider {
+            height: 1px; background: rgba(0,0,0,0.08); margin: 2px 0;
+        }
+
+        /* Details info box */
+        #details-box {
+            display: none;
+            position: fixed; z-index: 150;
+            width: 240px;
+            background: rgba(245,247,250,0.97);
+            border-radius: 7px;
+            box-shadow: 3px 5px 18px rgba(0,0,0,0.13);
+            padding: 14px 16px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; line-height: 2;
+            color: rgba(40,42,50,0.72);
+        }
+        #details-box.visible { display: block; }
+        .definition-box {
+            display: none;
+            position: fixed; z-index: 150;
+            width: 220px;
+            background: rgba(245,247,250,0.97);
+            border-radius: 7px;
+            box-shadow: 3px 5px 18px rgba(0,0,0,0.13);
+            padding: 14px 16px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; line-height: 1.7;
+            color: rgba(40,42,50,0.72);
+        }
+        .definition-box.visible { display: block; }
+
+        #info-body p {
+            font-family: "miller-text", serif;
+            font-weight: 400;
+            font-style: italic;
+            font-size: 16.25px;
+            line-height: 1.7;
+            color: rgba(40,42,50,0.72);
+            margin: 0;
+        }
+
+        /* ── Mobile ─────────────────────────────────────────────────────────── */
+        @media (max-width: 640px) {
+
+            /* Override inline sizes on model-viewer elements */
+            model-viewer { max-width: 100% !important; max-height: 100% !important; }
+
+            /* Orb: scale the whole container down so all proportions hold */
+            #orb-container {
+                transform: translate(-50%, -50%) scale(0.58);
+                transform-origin: center center;
+            }
+            /* Preserve the translate when hidden/shown via JS opacity */
+            #orb-container.hidden {
+                transform: translate(-50%, -50%) scale(0.58);
+            }
+            /* Orbit rings: hide — they're 1040px and purely decorative */
+            .orbit-ring { display: none; }
+
+            /* Splash */
+            #splash-circle  { width: 88vw; height: 88vw; padding: 30px; }
+            #splash-phrase  { font-size: 16px; }
+            #splash-logo    { width: 72vw; }
+            #splash-logo img{ width: 72vw; }
+            #splash-model   { width: 88vw !important; height: 88vw !important; }
+            #splash-enter   { bottom: 32px; top: auto; height: 76px; }
+
+            /* Top buttons */
+            #globe-btn  { top: 14px; right: 14px; width: 34px; height: 34px; }
+            #sound-btn  { top: 14px; right: 56px; width: 34px; height: 34px; }
+
+            /* Home button — shorter text fits on small screens */
+            #home-btn { font-size: 11px; padding: 0 10px; }
+
+            /* Bottom bar wrapper: adjust position on mobile */
+            #bottom-bar-wrapper { bottom: 16px; right: 12px; }
+            #bottom-bar { align-items: flex-end; gap: 6px; }
+            #details-btn  { width: auto; }
+            #entropy-scale svg { width: 220px; }
+            #soundmarks-box { max-width: 260px; }
+
+            /* Self-directed button: smaller on mobile */
+            #self-directed-btn { height: 70px; padding: 0 16px; bottom: 24px; left: 24px; }
+
+            /* SD session prompt button: lift above self-directed button */
+            #sd-session-prompt-btn { bottom: 108px; font-size: 12px; }
+
+            /* Session prompt text: slightly smaller on mobile */
+            #session-prompt-text { font-size: 18px; max-width: 85vw; }
+
+            /* Gallery panel: take more of the screen width */
+            #gallery-panel  { width: min(85vw, 300px); }
+
+            /* Map modal */
+            #map-container  { width: 95vw; height: 75vh; }
+
+            /* Mic toast */
+            #mic-toast { font-size: 12px; padding: 10px 16px; top: 60px; }
+        }
+
+        /* Pre-record modal */
+        #prerecord-modal {
+            position: fixed; inset: 0;
+            background: rgba(30,40,60,0.22);
+            z-index: 1500;
+            display: none; align-items: center; justify-content: center;
+        }
+        #prerecord-modal.open { display: flex; }
+        #prerecord-box {
+            background: rgba(245,247,250,0.98);
+            border-radius: 14px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.14);
+            padding: 30px 32px;
+            width: 320px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        #prerecord-box h3 {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0;
+        }
+        .prerecord-field { display: flex; flex-direction: column; gap: 5px; }
+        .prerecord-field label {
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 11px; color: rgba(60,65,80,0.50); letter-spacing: 0.08em;
+        }
+        .prerecord-field input[type="date"],
+        .prerecord-field input[type="text"] {
+            border: 1px solid rgba(180,190,210,0.45);
+            border-radius: 6px; padding: 8px 11px;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.85);
+            background: rgba(255,255,255,0.9); outline: none;
+        }
+        .prerecord-field input[type="date"]:focus,
+        .prerecord-field input[type="text"]:focus { border-color: rgba(140,170,210,0.70); }
+        .prerecord-save-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 4px 0;
+        }
+        .prerecord-save-row label {
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 12px; color: rgba(60,65,80,0.60);
+        }
+        #prerecord-start {
+            height: 38px; border: none; border-radius: 8px;
+            background: rgba(180,200,225,0.9); color: rgba(20,30,50,0.85);
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 13px; cursor: pointer; transition: background 0.15s;
+        }
+        #prerecord-start:hover { background: rgba(160,185,215,1); }
+        #prerecord-cancel {
+            height: 28px; border: none; background: none;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 12px; color: rgba(80,85,100,0.45); cursor: pointer;
+            transition: color 0.15s; text-align: center;
+        }
+        #prerecord-cancel:hover { color: rgba(40,42,50,0.75); }
+
+        /* Quick save during visualisation */
+        #quick-save-btn {
+            position: fixed; bottom: 96px; left: calc(50% + 70px);
+            height: 38px; padding: 0 22px;
+            background: rgba(180,200,225,0.92);
+            border: none; border-radius: 20px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; letter-spacing: 0.08em;
+            color: rgba(20,30,50,0.75);
+            cursor: pointer; z-index: 100; display: none;
+            transition: background 0.15s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+        }
+        #quick-save-btn.visible { display: block; }
+        #quick-save-btn:hover { background: rgba(160,185,215,1); }
+
+        /* Gallery thumbnail label */
+        .thumb-label {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.45));
+            padding: 14px 7px 5px;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 10px; color: rgba(255,255,255,0.90);
+            line-height: 1.4; pointer-events: none;
+        }
+
+        /* Save prompt */
+        #save-prompt {
+            position: fixed; bottom: 96px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(245,247,250,0.97);
+            border-radius: 10px;
+            box-shadow: 3px 5px 18px rgba(0,0,0,0.13);
+            padding: 14px 22px;
+            display: none; align-items: center; gap: 14px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.72);
+            z-index: 120; white-space: nowrap;
+        }
+        #save-prompt.visible { display: flex; }
+        #save-prompt-yes, #save-prompt-no {
+            height: 30px; padding: 0 14px;
+            border: none; border-radius: 6px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 12px; cursor: pointer; transition: background 0.15s;
+        }
+        #save-prompt-yes { background: rgba(180,200,225,0.9); color: rgba(20,30,50,0.85); }
+        #save-prompt-yes:hover { background: rgba(160,185,215,1); }
+        #save-prompt-no { background: rgba(220,225,235,0.9); color: rgba(40,42,50,0.75); }
+        #save-prompt-no:hover { background: rgba(200,207,220,1); }
+
+        /* Reset button */
+        #reset-btn {
+            position: fixed; bottom: 96px; left: 50%;
+            transform: translateX(-50%);
+            height: 38px; padding: 0 24px;
+            background: rgba(220,225,235,0.92);
+            border: none; border-radius: 20px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; letter-spacing: 0.08em;
+            color: rgba(40,42,50,0.70);
+            cursor: pointer; z-index: 100;
+            display: none;
+            transition: background 0.15s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+        }
+        #reset-btn.visible { display: block; }
+        #reset-btn:hover { background: rgba(200,207,220,1); color: rgba(20,25,40,0.90); }
+
+        /* Saved confirmation */
+        #saved-confirm {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(245,247,250,0.97);
+            border-radius: 10px;
+            box-shadow: 3px 5px 18px rgba(0,0,0,0.13);
+            padding: 18px 32px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 15px; color: rgba(40,42,50,0.80);
+            z-index: 500; pointer-events: none;
+            opacity: 0; transition: opacity 0.35s ease;
+            white-space: nowrap;
+        }
+        #saved-confirm.visible { opacity: 1; }
+
+        /* Analysing label pulse */
+        @keyframes analysingFade {
+            0%, 100% { opacity: 0.45; }
+            50% { opacity: 1; }
+        }
+        #orb-label.analysing { animation: analysingFade 1.8s ease-in-out infinite; }
+
+        /* Self Directed tab — bottom left */
+        #self-directed-btn {
+            position: fixed; bottom: 32px; left: 32px;
+            height: 96px; padding: 0 24px;
+            background: url('button.png') center / contain no-repeat;
+            border: none; border-radius: 0;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; letter-spacing: 0.08em;
+            color: rgba(40,42,50,0.60);
+            cursor: pointer; z-index: 100;
+            transition: filter 0.15s, color 0.15s, opacity 0.4s;
+            box-shadow: none;
+        }
+        #self-directed-btn:hover { filter: brightness(0.93); color: rgba(20,25,40,0.85); }
+        #self-directed-btn.active {
+            filter: brightness(0.88) saturate(1.2);
+            color: rgba(20,30,50,0.85);
+        }
+        #self-directed-btn.hidden-ui { opacity: 0; pointer-events: none; }
+
+        /* Duration selection modal */
+        #duration-modal {
+            position: fixed; inset: 0;
+            background: rgba(30,40,60,0.18);
+            z-index: 1500; display: none;
+            align-items: center; justify-content: center;
+        }
+        #duration-modal.open { display: flex; }
+        #duration-box {
+            background: rgba(245,247,250,0.98);
+            border-radius: 14px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            padding: 34px 38px;
+            display: flex; flex-direction: column; align-items: center; gap: 22px;
+            min-width: 300px;
+        }
+        #duration-box h3 {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 16px; color: rgba(40,42,50,0.72); margin: 0; text-align: center;
+        }
+        #duration-options { display: flex; gap: 10px; }
+        .duration-btn {
+            flex: 1; height: 46px; padding: 0 22px;
+            background: rgba(220,225,235,0.92); border: none; border-radius: 10px;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 14px; color: rgba(40,42,50,0.72);
+            cursor: pointer; transition: background 0.15s; white-space: nowrap;
+        }
+        .duration-btn:hover { background: rgba(180,200,225,0.92); color: rgba(20,30,50,0.88); }
+
+        /* Session overlay — above orb so text renders on top of it */
+        #session-overlay {
+            position: fixed; inset: 0; z-index: 16;
+            pointer-events: none;
+            display: none;
+        }
+        /* Prompt text — centred on screen (= centre of orb) */
+        #session-prompt-text {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 22px; color: rgba(25,35,55,0.76);
+            text-align: center; max-width: 300px; line-height: 1.55;
+            letter-spacing: 0em; text-transform: none;
+            opacity: 0; transition: opacity 0.8s ease;
+            white-space: pre-line;
+        }
+        #session-breath-label {
+            position: fixed;
+            top: calc(50% + 48px); left: 50%;
+            transform: translateX(-50%);
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 15px; color: rgba(25,35,55,0.45);
+            letter-spacing: 0.12em; text-align: center;
+            opacity: 0; transition: opacity 1.2s ease;
+            pointer-events: none;
+        }
+        #session-breath-label.visible { opacity: 1; }
+        /* Data display — below the prompt text */
+        #session-data-display {
+            position: fixed;
+            top: calc(50% + 90px); left: 50%;
+            transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            opacity: 0; transition: opacity 0.8s ease;
+        }
+        #session-data-display.visible { opacity: 1; }
+        .session-tag {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 12px; letter-spacing: 0.04em; text-transform: none;
+            background: rgba(180,195,215,0.25); color: rgba(40,45,60,0.72);
+        }
+        .session-tags-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+
+        /* Session end modal */
+        #session-end-modal {
+            position: fixed; inset: 0;
+            background: rgba(30,40,60,0.22);
+            z-index: 1500; display: none;
+            align-items: center; justify-content: center;
+        }
+        #session-end-modal.open { display: flex; }
+        #session-end-box {
+            background: rgba(245,247,250,0.98);
+            border-radius: 14px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.14);
+            padding: 30px 32px; width: 340px; max-width: 95vw;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        #session-end-box h3 {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0;
+        }
+        #session-end-box p {
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 12px; color: rgba(60,65,80,0.50); margin: 0;
+        }
+        #session-description {
+            border: 1px solid rgba(180,190,210,0.45); border-radius: 6px;
+            padding: 10px 12px;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.85);
+            background: rgba(255,255,255,0.9); outline: none;
+            resize: none; height: 90px; width: 100%;
+        }
+        #session-description:focus { border-color: rgba(140,170,210,0.70); }
+        .session-image-label {
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 12px; color: rgba(80,100,130,0.55);
+            cursor: pointer; text-align: center;
+            border: 1px dashed rgba(180,190,210,0.50);
+            border-radius: 6px; padding: 10px;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .session-image-label:hover { border-color: rgba(140,165,200,0.70); color: rgba(50,70,100,0.75); }
+        #session-preview-img { width: 100%; border-radius: 6px; display: none; margin-top: 4px; }
+        #session-save-btn {
+            height: 38px; border: none; border-radius: 8px;
+            background: rgba(180,200,225,0.9); color: rgba(20,30,50,0.85);
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 13px; cursor: pointer; transition: background 0.15s;
+        }
+        #session-save-btn:hover { background: rgba(160,185,215,1); }
+        #session-discard-btn {
+            height: 28px; border: none; background: none;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 12px; color: rgba(80,85,100,0.45);
+            cursor: pointer; text-align: center; transition: color 0.15s;
+        }
+        #session-discard-btn:hover { color: rgba(40,42,50,0.75); }
+
+        /* Consistent modal navigation button row */
+        .modal-btn-row {
+            display: flex; justify-content: center; align-items: center;
+            gap: 12px; margin-top: 20px; width: 100%;
+        }
+        #session-end-next-btn { white-space: nowrap; }
+        /* Session end modal — page 1 sections */
+        .send-section { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .send-subtitle {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 11px; letter-spacing: 0.02em;
+            color: rgba(60,65,80,0.45);
+        }
+        .send-box {
+            background: rgba(220,225,235,0.55);
+            border-radius: 8px; padding: 9px 13px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.80);
+        }
+        .send-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .send-tag {
+            display: flex; align-items: center; gap: 7px;
+            background: rgba(220,225,235,0.55);
+            border-radius: 8px; padding: 7px 12px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.80);
+        }
+        .send-tag-dot {
+            width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; opacity: 0.85;
+        }
+    </style>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+    <script src="sketch.js"></script>
+</head>
+    <body>
+        <!-- Self Directed mode tab -->
+        <button id="self-directed-btn">Self Directed</button>
+
+        <!-- Home button top left -->
+        <button id="home-btn" title="Return to start">Home</button>
+
+        <!-- Globe button top right, hidden when splash overlay is present -->
+        <button id="globe-btn" title="Globe" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3a4a5a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <ellipse cx="12" cy="12" rx="10" ry="4.5" />
+                <ellipse cx="12" cy="12" rx="4.5" ry="10" />
+                <path d="M2 12h20" />
+                <path d="M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20z" />
+            </svg>
+        </button>
+    <!-- AE black bg export toggle -->
+    <button id="ae-btn" title="Black background for After Effects export">AE</button>
+    <!-- Sound toggle button -->
+    <button id="sound-btn" title="Toggle sound" style="display:none;">
+        <svg id="sound-icon-on" viewBox="0 0 24 24" fill="none" stroke="#3a4a5a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+        <svg id="sound-icon-off" viewBox="0 0 24 24" fill="none" stroke="#3a4a5a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <line x1="23" y1="9" x2="17" y2="15"/>
+            <line x1="17" y1="9" x2="23" y2="15"/>
+        </svg>
+    </button>
+    <!-- Map Modal -->
+    <div id="map-modal">
+        <div id="map-container">
+            <button id="map-close" title="Close">×</button>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Gallery Side Panel -->
+    <div id="gallery-lightbox">
+        <button id="lightbox-close">×</button>
+    </div>
+
+    <div id="gallery-panel">
+        <div id="gallery-handle"><span>My Landscapes</span></div>
+        <div id="gallery-header">
+            <h4>My Landscapes</h4>
+            <button id="gallery-close" title="Close">×</button>
+        </div>
+        <div id="gallery-grid"></div>
+    </div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    // Show/hide globe + sound buttons based on whether the splash is in the DOM
+    function updateGlobeBtnVisibility() {
+        const splash = document.getElementById('splash-screen');
+        const globeBtn = document.getElementById('globe-btn');
+        const soundBtn = document.getElementById('sound-btn');
+        const homeBtn  = document.getElementById('home-btn');
+        const aeBtn    = document.getElementById('ae-btn');
+        const splashVisible = !!(splash && splash.parentNode);
+        globeBtn.style.display = 'none';
+        soundBtn.style.display = splashVisible ? 'none' : '';
+        // homeBtn is controlled by recording/visualising state, not splash
+        aeBtn.style.display    = 'none';
+    }
+    const _visObserver = new MutationObserver(updateGlobeBtnVisibility);
+    _visObserver.observe(document.body, { childList: true });
+
+    // Map modal — wire up directly (elements are already in DOM at this point)
+    let _leafletMap = null;
+    const _mapModal  = document.getElementById('map-modal');
+    const _mapClose  = document.getElementById('map-close');
+    const _globeBtn  = document.getElementById('globe-btn');
+
+    _globeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        _mapModal.style.display = 'flex';
+        setTimeout(function() {
+            if (!_leafletMap) {
+                _leafletMap = L.map('map').setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(_leafletMap);
+            } else {
+                _leafletMap.invalidateSize();
+            }
+        }, 100);
+    });
+
+    _mapClose.addEventListener('click', function(e) {
+        e.stopPropagation();
+        _mapModal.style.display = 'none';
+    });
+
+    // Also close on backdrop click (clicking the dark area outside the box)
+    _mapModal.addEventListener('click', function(e) {
+        if (e.target === _mapModal) _mapModal.style.display = 'none';
+    });
+    </script>
+    <!-- Splash screen with sequenced intro -->
+    <div id="splash-screen">
+        <model-viewer id="splash-model"
+            src="3d model.glb"
+            auto-rotate
+            disable-zoom
+            orientation="160deg 0deg 0deg"
+            style="position:absolute; width:520px; height:520px; background:transparent; pointer-events:none;">
+        </model-viewer>
+        <div id="splash-circle">
+            <div id="splash-phrase"></div>
+        </div>
+        <div id="splash-logo">
+            <img src="just_text.png" alt="MILIEU" />
+            <div id="splash-subtitle">Connecting you to your landscape</div>
+        </div>
+        <button id="splash-enter">Enter</button>
+    </div>
+
+<!-- Bottom-right collapsible info panel -->
+    <div id="bottom-bar-wrapper" class="hidden-ui">
+        <div id="bottom-bar">
+            <button id="box-other" class="measure-box">
+                <span class="measure-label">More info</span>
+            </button>
+            <button id="soundmarks-box">
+                <span id="soundmarks-label">Soundmarks</span>
+                <div id="soundmarks-tags"><span class="soundmark-tag" style="opacity:0.4;">—</span></div>
+            </button>
+            <button id="details-btn"><span id="entropy-scale"><svg width="300" height="44">
+                    <text x="134" y="8" font-size="11" fill="#aaa" font-family="miller-text, serif" font-style="italic" text-anchor="middle" dominant-baseline="middle">Sonic complexity</text>
+                    <line x1="52" y1="22" x2="248" y2="22" stroke="#ccc" stroke-width="1.5" />
+                    <text x="0" y="36" font-size="11" fill="#888" font-family="miller-text, serif" font-style="italic" text-anchor="start" dominant-baseline="middle">Order</text>
+                    <text x="300" y="36" font-size="11" fill="#888" font-family="miller-text, serif" font-style="italic" text-anchor="end" dominant-baseline="middle">Disorder</text>
+                </svg></span></button>
+        </div>
+        <button id="bottom-bar-toggle">Details</button>
+    </div>
+
+    <!-- Details info box -->
+    <div id="details-box">
+        <div id="details-content">—</div>
+    </div>
+
+    <!-- Soundmarks definition box -->
+    <div id="soundmarks-def-box" class="definition-box">
+        <div id="soundmarks-def-content">Sounds that are significant to a particular place, the identifiable qualities of an environment</div>
+    </div>
+
+    <!-- Other info panel -->
+    <div id="other-info-box" class="definition-box">
+        <div class="other-row">
+            <div class="other-label">Keynote</div>
+            <div id="val-keynote" class="measure-value other-val">—</div>
+            <button class="other-expand-btn" data-target="keynote-def">?</button>
+        </div>
+        <div id="keynote-def" class="other-def">The key or tonality of a particular composition<br><br>Measured in Hz, the median pitch of the recording (60–2000 Hz)</div>
+        <div class="other-divider"></div>
+        <div class="other-row">
+            <div class="other-label">Signal</div>
+            <div id="val-signal" class="measure-value other-val">—</div>
+            <button class="other-expand-btn" data-target="signal-def">?</button>
+        </div>
+        <div id="signal-def" class="other-def">A foreground sound that is consciously listened to, designed to attract attention<br><br>0 = tonal &nbsp;·&nbsp; 1 = noise</div>
+    </div>
+
+    <!-- Central orb -->
+    <div id="orb-container">
+        <div class="orbit-ring"></div>
+        <div class="orbit-ring"></div>
+        <div class="orbit-ring"></div>
+        <div id="orb">
+            <model-viewer id="orb-model"
+                src="3d model.glb"
+                disable-zoom
+                camera-orbit="0deg 75deg 105%"
+                orientation="160deg 0deg 0deg"
+                style="width:520px; height:520px; background:transparent; border-radius:50%; pointer-events:none;">
+            </model-viewer>
+            <img id="orb-title" src="just_text.png" alt="MILIEU" />
+            <div id="orb-label">Press to begin</div>
+            <div id="orb-sublabel">Guided Meditation</div>
+        </div>
+    </div>
+
+    <script>
+        // Helper: position a popup to the LEFT of a button, aligned to its top
+        function positionPopupLeft(popup, btn) {
+            const rect = btn.getBoundingClientRect();
+            const popW = popup.offsetWidth || 240;
+            popup.style.right = (window.innerWidth - rect.left + 8) + 'px';
+            popup.style.left = '';
+            popup.style.top = Math.max(8, rect.top) + 'px';
+            popup.style.bottom = '';
+        }
+
+        // Details button toggle
+        const detailsBtn = document.getElementById('details-btn');
+        const detailsBox = document.getElementById('details-box');
+        const detailsContent = document.getElementById('details-content');
+        detailsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const wasVisible = detailsBox.classList.contains('visible');
+            detailsBox.classList.remove('visible');
+            if (!wasVisible) {
+                positionPopupLeft(detailsBox, this);
+                detailsBox.classList.add('visible');
+            }
+        });
+
+        // Soundmarks button toggle
+        document.getElementById('soundmarks-box').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const popup = document.getElementById('soundmarks-def-box');
+            const wasVisible = popup.classList.contains('visible');
+            popup.classList.remove('visible');
+            document.getElementById('other-info-box').classList.remove('visible');
+            if (!wasVisible) {
+                positionPopupLeft(popup, this);
+                popup.classList.add('visible');
+            }
+        });
+
+        // Other info button toggle
+        document.getElementById('box-other').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const popup = document.getElementById('other-info-box');
+            const wasVisible = popup.classList.contains('visible');
+            popup.classList.remove('visible');
+            document.getElementById('soundmarks-def-box').classList.remove('visible');
+            if (!wasVisible) {
+                positionPopupLeft(popup, this);
+                popup.classList.add('visible');
+            }
+        });
+
+        // Expand/collapse individual definitions inside the panel
+        document.querySelectorAll('.other-expand-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const def = document.getElementById(this.dataset.target);
+                def.classList.toggle('open');
+            });
+        });
+        // Store last analysis for session reflection
+        window._lastAnalysis = null;
+
+        // Called from sketch.js after analysis completes to populate the box
+        window.updateDetailsBox = function(me, se, rms, kn, sig, complexityNorm) {
+            const cn = (complexityNorm !== null && complexityNorm !== undefined && !isNaN(complexityNorm))
+                ? Math.max(0, Math.min(1, complexityNorm)) : 0.5;
+            window._lastAnalysis = window._lastAnalysis || {};
+            window._lastAnalysis.complexityNorm = cn;
+            window._lastAnalysis.keynote = kn;
+            window._lastAnalysis.signal = sig;
+            window._lastAnalysis.rms = rms;
+            window._lastAnalysis.meanEntropy = me;
+            window._lastAnalysis.stdEntropy = se;
+            // Use blended complexity (mean entropy + SD) if provided, else fall back to mean entropy
+            let norm = 0.5;
+            if (complexityNorm !== null && complexityNorm !== undefined && !isNaN(complexityNorm)) {
+                norm = Math.max(0, Math.min(1, complexityNorm));
+            } else if (!isNaN(parseFloat(me))) {
+                norm = Math.max(0, Math.min(1, (parseFloat(me) - 6.7) / (8.3 - 6.7)));
+            }
+            document.getElementById('entropy-scale').innerHTML = `<svg width="300" height="44">
+                <text x="134" y="8" font-size="11" fill="#aaa" font-family="miller-text, serif" font-style="italic" text-anchor="middle" dominant-baseline="middle">Sonic complexity</text>
+                <line x1="52" y1="22" x2="248" y2="22" stroke="#ccc" stroke-width="1.5" />
+                <defs>
+                  <radialGradient id="ballGrad" cx="38%" cy="32%" r="60%">
+                    <stop offset="0%" stop-color="rgba(255,255,255,0.90)"/>
+                    <stop offset="40%" stop-color="rgba(180,215,240,0.85)"/>
+                    <stop offset="100%" stop-color="rgba(140,185,220,0.60)"/>
+                  </radialGradient>
+                </defs>
+                <circle cx="${52 + 196 * norm}" cy="22" r="6" fill="url(#ballGrad)" stroke="rgba(160,195,220,0.5)" stroke-width="1" />
+                <text x="0" y="36" font-size="11" fill="#888" font-family="miller-text, serif" font-style="italic" text-anchor="start" dominant-baseline="middle">Order</text>
+                <text x="300" y="36" font-size="11" fill="#888" font-family="miller-text, serif" font-style="italic" text-anchor="end" dominant-baseline="middle">Disorder</text>
+            </svg>`;
+
+            // Update individual measure boxes
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = val; el.classList.add('live'); }
+            };
+            setVal('val-keynote', kn);
+            setVal('val-signal', sig);
+
+            // Populate the popup box
+            detailsContent.innerHTML =
+                'Mean Entropy: &nbsp;' + me  + '<br>' +
+                'Std Entropy: &nbsp;&nbsp;' + se  + '<br>' +
+                'Mean RMS: &nbsp;&nbsp;&nbsp;&nbsp;' + rms;
+        };
+
+        // Called from sketch.js to show detected soundmarks
+        window.updateSoundmarks = function(categories) {
+            window._lastAnalysis = window._lastAnalysis || {};
+            window._lastAnalysis.soundmarks = categories || [];
+            const tags = document.getElementById('soundmarks-tags');
+            if (!categories || categories.length === 0) {
+                tags.innerHTML = '<span class="soundmark-tag" style="opacity:0.4;">—</span>';
+                return;
+            }
+            tags.innerHTML = categories.map(cat =>
+                `<span class="soundmark-tag">${cat.replace(/_/g, ' ')}</span>`
+            ).join('');
+        };
+
+        const orbContainer = document.getElementById('orb-container');
+        const orbLabel = document.getElementById('orb-label');
+
+        // Dismiss splash screen
+        function hideInfoOverlay() {
+            const splash = document.getElementById('splash-screen');
+            if (splash) {
+                splash.classList.add('fade-out');
+                setTimeout(() => splash.remove(), 1050);
+            }
+        }
+
+        // Enter button skips straight to interface
+        document.getElementById('splash-enter').onclick = function() {
+            hideInfoOverlay();
+        };
+
+        // Intro phrase sequence
+        (function runSplashSequence() {
+            const phrases = [
+                "Come into contact with your surroundings",
+                "Listen to what’s around you",
+                "Notice the space you’re in",
+                "Take a moment",
+                // The logo is shown after these steps, as before
+            ];
+            const phraseEl  = document.getElementById('splash-phrase');
+            const logoEl    = document.getElementById('splash-logo');
+            const enterBtn  = document.getElementById('splash-enter');
+            const modelEl   = document.getElementById('splash-model');
+            const FADE      = 700;   // ms fade in / out
+            const HOLD      = 2500;  // ms fully visible
+
+            let index = 0;
+
+            function showPhrase() {
+                if (index >= phrases.length) {
+                    // Fade out model, then show logo + enter button, then auto-dismiss
+                    modelEl.classList.add('hide');
+                    logoEl.classList.add('visible');
+                    setTimeout(hideInfoOverlay, HOLD);
+                    return;
+                }
+                phraseEl.textContent = phrases[index];
+                phraseEl.classList.add('visible');
+                setTimeout(() => {
+                    phraseEl.classList.remove('visible');
+                    setTimeout(() => {
+                        index++;
+                        showPhrase();
+                    }, FADE);
+                }, HOLD);
+            }
+
+            // Small initial pause before first phrase
+            setTimeout(showPhrase, 600);
+        })();
+
+        // Orb click handler
+        function orbClickHandler() {
+            if (window._sessionActive) {
+                // During session: first click starts recording (advancing to playback step),
+                // second click (while recording) stops it
+                if (orbContainer.classList.contains('recording')) {
+                    if (typeof toggleMic === 'function') toggleMic();
+                } else if (_sess.steps[_sess.idx] && _sess.steps[_sess.idx].type === 'record') {
+                    window._lastAnalysis = null; // clear for this recording
+                    sessionAdvance();             // moves to playback step, sets onVisualisationComplete
+                    if (typeof toggleMic === 'function') toggleMic();
+                } else if (window._selfDirected) {
+                    // In self-directed, allow orb click to trigger recording at any time
+                    const sdBtn = document.getElementById('sd-session-prompt-btn');
+                    if (sdBtn && sdBtn.style.display !== 'none') {
+                        sdBtn.click();
+                    }
+                }
+                return;
+            }
+            // Normal (non-session) flow
+            if (orbContainer.classList.contains('recording')) {
+                if (typeof toggleMic === 'function') toggleMic();
+            } else if (window._selfDirected) {
+                // Self directed: go straight to pre-record modal, no session
+                document.getElementById('prerecord-name').value = '';
+                document.getElementById('prerecord-location').value = '';
+                document.getElementById('prerecord-date').value = (d => `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`)(new Date());
+                document.getElementById('prerecord-time').value = new Date().toTimeString().slice(0, 5);
+                document.getElementById('prerecord-save').checked = true;
+                document.getElementById('prerecord-modal').classList.add('open');
+            } else {
+                // Guided session: open duration modal
+                document.getElementById('duration-modal').classList.add('open');
+            }
+        }
+        document.getElementById('orb').addEventListener('click', orbClickHandler);
+
+        // Drag events on orb
+        orbContainer.addEventListener('dragenter', e => { e.preventDefault(); orbContainer.classList.add('drag-over'); });
+        orbContainer.addEventListener('dragover', e => { e.preventDefault(); orbLabel.textContent = 'Press to begin'; });
+        orbContainer.addEventListener('dragleave', e => { orbContainer.classList.remove('drag-over'); orbLabel.textContent = 'Press to begin'; });
+        orbContainer.addEventListener('drop', e => {
+            e.preventDefault();
+            e.stopPropagation();             // prevent document drop handler firing too
+            orbContainer.classList.remove('drag-over');
+            orbLabel.textContent = 'Press to begin';
+            hideInfoOverlay();
+            let file = e.dataTransfer.files[0];
+            if (file && typeof analyseFileOffline === 'function') analyseFileOffline(file);
+        });
+
+        // Drop anywhere on document
+        document.addEventListener('dragover', e => e.preventDefault());
+        document.addEventListener('drop', e => {
+            e.preventDefault();
+            hideInfoOverlay();
+            let file = e.dataTransfer.files[0];
+            if (file && typeof analyseFileOffline === 'function') analyseFileOffline(file);
+        });
+
+        // Proximity detection: only affects orb when it's hidden (during visualisation)
+        const ORB_SHOW_RADIUS = 250;
+        document.addEventListener('mousemove', (e) => {
+            // Only run if orb is hidden and not in a guided session
+            if (!orbContainer.classList.contains('hidden')) return;
+            if (window._sessionActive) return;
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
+            const dx = e.clientX - cx;
+            const dy = e.clientY - cy;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < ORB_SHOW_RADIUS) {
+                orbContainer.style.opacity = Math.min(1, (ORB_SHOW_RADIUS - dist) / 120) * 0.95;
+                orbContainer.style.pointerEvents = 'all';
+            } else {
+                orbContainer.style.opacity = '0';
+                orbContainer.style.pointerEvents = 'none';
+            }
+        });
+
+        // Orb state functions (called from sketch.js)
+        const _bottomBar    = document.getElementById('bottom-bar-wrapper');
+        const _galleryPanel = document.getElementById('gallery-panel');
+        const _globeBtnRec  = document.getElementById('globe-btn');
+
+        // Toggle the info panel open/closed
+        document.getElementById('bottom-bar-toggle').addEventListener('click', () => {
+            const bar = document.getElementById('bottom-bar');
+            const tog = document.getElementById('bottom-bar-toggle');
+            const isOpen = bar.classList.toggle('open');
+            tog.textContent = isOpen ? 'Close' : 'Details';
+        });
+
+        // Close bar and popups when clicking elsewhere
+        document.addEventListener('click', e => {
+            const wrapper = document.getElementById('bottom-bar-wrapper');
+            const popups = ['details-box','soundmarks-def-box','other-info-box'];
+            const clickedPopup = popups.some(id => document.getElementById(id).contains(e.target));
+            if (!wrapper.contains(e.target) && !clickedPopup) {
+                document.getElementById('bottom-bar').classList.remove('open');
+                document.getElementById('bottom-bar-toggle').textContent = 'Details';
+                popups.forEach(id => document.getElementById(id).classList.remove('visible'));
+            }
+        });
+        window.setOrbRecording = function(active) {
+            orbContainer.classList.toggle('recording', active);
+            // Always show 'Recording...' when recording, regardless of session state
+            if (active) {
+                orbLabel.textContent = 'Recording...';
+                orbLabel.style.opacity = '';
+                if (!window._sessionActive || window._selfDirected) {
+                    orbSublabel.textContent = 'Record at least 30s for best results';
+                    orbSublabel.style.opacity = '1';
+                }
+                // Hide both SD buttons while recording is active
+                const _sdBtnRec = document.getElementById('sd-session-prompt-btn');
+                if (_sdBtnRec) _sdBtnRec.style.display = 'none';
+            } else {
+                if (window._sessionActive) {
+                    orbLabel.textContent = '';
+                } else {
+                    orbLabel.textContent = 'Press to begin';
+                }
+                orbLabel.style.opacity = '';
+                orbSublabel.textContent = 'Guided Meditation';
+                orbSublabel.style.opacity = window._selfDirected ? '0' : '';
+            }
+            if (!window._sessionActive) {
+                _bottomBar.classList.toggle('hidden-ui', active);
+                if (active) { document.getElementById('bottom-bar').classList.remove('open'); document.getElementById('bottom-bar-toggle').textContent = 'Details'; }
+                _galleryPanel.classList.toggle('hidden-ui', active);
+            }
+            _globeBtnRec.classList.toggle('hidden-ui', active);
+        };
+        let _analysingInterval = null;
+        window.setOrbAnalysing = function(active) {
+            if (active) {
+                orbLabel.classList.add('analysing');
+                const words = ['Analysing...', 'Listening...'];
+                let i = 0;
+                orbLabel.textContent = words[i];
+                clearInterval(_analysingInterval);
+                _analysingInterval = setInterval(() => {
+                    orbLabel.style.transition = 'opacity 0.35s';
+                    orbLabel.style.opacity = '0';
+                    setTimeout(() => {
+                        i = (i + 1) % 2;
+                        orbLabel.textContent = words[i];
+                        orbLabel.style.opacity = '';
+                    }, 380);
+                }, 1900);
+            } else {
+                orbLabel.classList.remove('analysing');
+                clearInterval(_analysingInterval);
+                _analysingInterval = null;
+                if (!window._sessionActive) {
+                    orbLabel.style.opacity = '';
+                    orbLabel.style.transition = '';
+                    orbLabel.textContent = 'Press to begin';
+                    _bottomBar.classList.remove('hidden-ui');
+                    _galleryPanel.classList.remove('hidden-ui');
+                }
+            }
+        };
+        window.hideOrb = function() {
+            orbContainer.classList.add('hidden');
+            document.getElementById('session-overlay').classList.add('orb-hidden');
+            if (!window._sessionActive) {
+                document.getElementById('reset-btn').classList.add('visible');
+                document.getElementById('quick-save-btn').classList.add('visible');
+                document.getElementById('home-btn').style.display = 'flex';
+                document.getElementById('bottom-bar-wrapper').classList.remove('hidden-ui');
+            }
+        };
+        window.showOrb = function() {
+            orbContainer.classList.remove('hidden');
+            orbContainer.style.opacity = '';
+            orbContainer.style.pointerEvents = '';
+            document.getElementById('session-overlay').classList.remove('orb-hidden');
+            if (!window._sessionActive) {
+                document.getElementById('reset-btn').classList.remove('visible');
+                document.getElementById('quick-save-btn').classList.remove('visible');
+                document.getElementById('save-prompt').classList.remove('visible');
+                document.getElementById('home-btn').style.display = 'none';
+            }
+        };
+
+        // ── Gallery / IndexedDB ───────────────────────────────────────────────
+        const galleryPanel = document.getElementById('gallery-panel');
+        const galleryGrid  = document.getElementById('gallery-grid');
+        const lightbox     = document.getElementById('gallery-lightbox');
+
+        // IndexedDB
+        let db = null;
+        const dbReady = new Promise(resolve => {
+            const req = indexedDB.open('milieu_db', 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore('visuals', { keyPath: 'id', autoIncrement: true });
+            req.onsuccess = e => { db = e.target.result; resolve(); };
+            req.onerror = () => resolve();
+        });
+        const dbGetAll = () => new Promise(r => {
+            if (!db) return r([]);
+            db.transaction('visuals','readonly').objectStore('visuals').getAll().onsuccess = e => r(e.target.result.reverse());
+        });
+        const dbAdd = (blob, label, location, date, time, thumbnail, placeholder, analysis) => new Promise(r => {
+            if (!db) return r(null);
+            const req = db.transaction('visuals','readwrite').objectStore('visuals').add({
+                blob, label, location: location || '', date: date || '', time: time || '',
+                ts: Date.now(), thumbnail: thumbnail || '', placeholder: placeholder || false,
+                analysis: analysis || null, description: '', imageDataURL: ''
+            });
+            req.onsuccess = e => r(e.target.result);
+        });
+        const dbUpdate = (id, fields) => new Promise(r => {
+            if (!db || !id) return r();
+            const store = db.transaction('visuals','readwrite').objectStore('visuals');
+            store.get(id).onsuccess = e => {
+                const item = e.target.result;
+                if (!item) return r();
+                Object.assign(item, fields);
+                store.put(item).onsuccess = r;
+            };
+        });
+
+        async function _makePlaceholderBlob() {
+            const meta = window._recordMeta || {};
+            const now = new Date();
+            const dateStr = meta.date || now.toLocaleDateString('en-GB', {day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'.');
+            const timeStr = meta.time || now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+            const c = document.createElement('canvas');
+            c.width = 300; c.height = 200;
+            const ctx = c.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 300, 200);
+            grad.addColorStop(0, '#9fb8d0');
+            grad.addColorStop(1, '#7a9ab8');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 300, 200);
+            ctx.textAlign = 'center';
+            const name = meta.name || '';
+            const loc  = meta.location || '';
+            let y = 85;
+            if (name) {
+                ctx.fillStyle = 'rgba(255,255,255,0.90)';
+                ctx.font = 'italic 15px Georgia,"Times New Roman",serif';
+                ctx.fillText(name, 150, y); y += 24;
+            }
+            if (loc) {
+                ctx.fillStyle = 'rgba(255,255,255,0.65)';
+                ctx.font = '12px Georgia,"Times New Roman",serif';
+                ctx.fillText(loc, 150, y); y += 20;
+            }
+            ctx.fillStyle = 'rgba(255,255,255,0.80)';
+            ctx.font = '13px Georgia,"Times New Roman",serif';
+            ctx.fillText(dateStr, 150, y + 8);
+            ctx.fillText(timeStr, 150, y + 28);
+            const dataURL = c.toDataURL('image/png');
+            const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+            return { blob, dataURL, dateStr, timeStr };
+        }
+        const dbDel = id => new Promise(r => {
+            if (!db) return r();
+            db.transaction('visuals','readwrite').objectStore('visuals').delete(id).onsuccess = r;
+        });
+
+        async function renderGallery() {
+            const items = await dbGetAll();
+            galleryGrid.innerHTML = '';
+            if (!items.length) { galleryGrid.innerHTML = '<div id="gallery-empty">No landscapes saved yet</div>'; return; }
+            function parseItemDate(str) {
+                if (!str) return null;
+                const dd = str.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+                if (dd) return new Date(+dd[3], +dd[2]-1, +dd[1]);
+                const d = new Date(str); return isNaN(d) ? null : d;
+            }
+            function buildLightboxContent(item, url) {
+                function cLabel(n) {
+                    if (n < 0.2) return 'Highly ordered';
+                    if (n < 0.4) return 'Mostly ordered';
+                    if (n < 0.6) return 'Moderately complex';
+                    if (n < 0.8) return 'Mostly disordered';
+                    return 'Highly disordered';
+                }
+                const inner = document.createElement('div');
+                inner.id = 'lightbox-inner';
+                const cls = document.createElement('button');
+                cls.id = 'lightbox-close'; cls.textContent = '×';
+                cls.addEventListener('click', () => lightbox.classList.remove('open'));
+                inner.appendChild(cls);
+                if (item.placeholder) {
+                    const img = document.createElement('img');
+                    img.src = url; img.id = 'lightbox-img-full'; inner.appendChild(img);
+                } else {
+                    const v = document.createElement('video');
+                    v.src = url; v.controls = true; v.autoplay = true; v.id = 'lightbox-video';
+                    inner.appendChild(v);
+                }
+                const meta = document.createElement('div');
+                meta.id = 'lightbox-meta';
+                // Session details
+                const hasDetails = item.label || item.location || item.date || item.time;
+                if (hasDetails) {
+                    const sec = document.createElement('div');
+                    sec.innerHTML = '<div class="lb-section-title">Session</div>';
+                    const row1 = document.createElement('div'); row1.className = 'lb-row';
+                    if (item.label) row1.innerHTML += `<div class="lb-field"><div class="lb-label">Name</div><div class="lb-value">${item.label}</div></div>`;
+                    if (item.date)  row1.innerHTML += `<div class="lb-field"><div class="lb-label">Date</div><div class="lb-value">${item.date}</div></div>`;
+                    if (row1.innerHTML) sec.appendChild(row1);
+                    const row2 = document.createElement('div'); row2.className = 'lb-row';
+                    if (item.location) row2.innerHTML += `<div class="lb-field"><div class="lb-label">Location</div><div class="lb-value">${item.location}</div></div>`;
+                    if (item.time)     row2.innerHTML += `<div class="lb-field"><div class="lb-label">Time</div><div class="lb-value">${item.time}</div></div>`;
+                    if (row2.innerHTML) sec.appendChild(row2);
+                    meta.appendChild(sec);
+                }
+                // Analysis — use stored data, fall back to last session's analysis
+                const _la = window._lastAnalysis;
+                const a = item.analysis || (_la ? {
+                    complexity: _la.complexityNorm,
+                    soundmarks: _la.soundmarks || [],
+                    keynote:    _la.keynote,
+                    signal:     _la.signal
+                } : null);
+                if (a) {
+                    const sec = document.createElement('div');
+                    sec.innerHTML = '<div class="lb-divider"></div><div class="lb-section-title" style="margin-top:8px;">Analysis</div>';
+                    if (a.complexity !== null && a.complexity !== undefined) {
+                        const f = document.createElement('div'); f.className = 'lb-field';
+                        f.innerHTML = `<div class="lb-label">Measure of Order to Disorder</div><div class="lb-complexity-box">${cLabel(a.complexity)}</div>`;
+                        sec.appendChild(f);
+                    }
+                    if (a.soundmarks && a.soundmarks.length) {
+                        const f = document.createElement('div'); f.className = 'lb-field';
+                        f.innerHTML = '<div class="lb-label">Soundmarks</div>';
+                        const tags = document.createElement('div'); tags.className = 'lb-tags';
+                        a.soundmarks.slice(0, 8).forEach(cat => {
+                            const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180,195,215];
+                            const t = document.createElement('div'); t.className = 'lb-tag';
+                            t.innerHTML = `<span class="lb-tag-dot" style="background:rgb(${col[0]},${col[1]},${col[2]})"></span>${cat.replace(/_/g,' ')}`;
+                            tags.appendChild(t);
+                        });
+                        f.appendChild(tags); sec.appendChild(f);
+                    }
+                    if (a.keynote !== undefined || a.signal !== undefined) {
+                        const row = document.createElement('div'); row.className = 'lb-row';
+                        if (a.keynote !== undefined && a.keynote !== null) row.innerHTML += `<div class="lb-field"><div class="lb-label">Keynote</div><div class="lb-value">${a.keynote}</div></div>`;
+                        if (a.signal  !== undefined && a.signal  !== null) row.innerHTML += `<div class="lb-field"><div class="lb-label">Signal</div><div class="lb-value">${typeof a.signal === 'number' ? a.signal.toFixed(2) : a.signal}</div></div>`;
+                        if (row.innerHTML) sec.appendChild(row);
+                    }
+                    meta.appendChild(sec);
+                }
+                // Notes
+                if (item.description) {
+                    const sec = document.createElement('div');
+                    sec.innerHTML = '<div class="lb-divider"></div><div class="lb-section-title" style="margin-top:8px;">Notes</div>';
+                    const p = document.createElement('div'); p.className = 'lb-description';
+                    p.textContent = item.description; sec.appendChild(p); meta.appendChild(sec);
+                }
+                // Uploaded image
+                if (item.imageDataURL) {
+                    const img = document.createElement('img');
+                    img.src = item.imageDataURL; img.className = 'lb-uploaded-img';
+                    meta.appendChild(img);
+                }
+                inner.appendChild(meta);
+                return inner;
+            }
+            function addThumbListeners(thumb, url, item) {
+                if (!item.thumbnail) {
+                    const vid = thumb.querySelector('video');
+                    vid.addEventListener('loadedmetadata', () => { vid.currentTime = vid.duration * 0.5; });
+                    vid.addEventListener('mouseenter', () => vid.play());
+                    vid.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = vid.duration * 0.5; });
+                }
+                thumb.addEventListener('click', e => {
+                    if (e.target.classList.contains('thumb-del')) return;
+                    lightbox.innerHTML = '';
+                    lightbox.appendChild(buildLightboxContent(item, url));
+                    lightbox.scrollTop = 0;
+                    lightbox.classList.add('open');
+                });
+                thumb.querySelector('.thumb-del').addEventListener('click', async e => {
+                    e.stopPropagation();
+                    await dbDel(item.id); renderGallery();
+                });
+            }
+            // Group by month
+            const groups = {};
+            items.forEach(item => {
+                const d = parseItemDate(item.date);
+                const key = d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : 'unknown';
+                const monthLabel = d ? d.toLocaleString('en-GB', { month: 'long', year: 'numeric' }) : '';
+                if (!groups[key]) groups[key] = { monthLabel, items: [] };
+                groups[key].items.push({ ...item, _d: d });
+            });
+            Object.keys(groups).sort().reverse().forEach(key => {
+                const g = groups[key];
+                if (g.monthLabel) {
+                    const hdr = document.createElement('div');
+                    hdr.className = 'gallery-month-header';
+                    hdr.textContent = g.monthLabel;
+                    galleryGrid.appendChild(hdr);
+                }
+                g.items.forEach(item => {
+                    const url = URL.createObjectURL(item.blob);
+                    const thumb = document.createElement('div');
+                    thumb.className = 'gallery-thumb';
+                    const _mStyle = 'width:100%;height:160px;object-fit:contain;display:block;background:#dde3ec;';
+                    const media = item.thumbnail
+                        ? `<img src="${item.thumbnail}" alt="" style="${_mStyle}">`
+                        : `<video src="${url}" muted playsinline style="${_mStyle}"></video>`;
+                    const _dt = [item.date, item.time].filter(Boolean).join(' · ');
+                    const _a = item.analysis;
+                    function _cLbl(n) {
+                        if (n < 0.2) return 'Highly ordered';
+                        if (n < 0.4) return 'Mostly ordered';
+                        if (n < 0.6) return 'Moderately complex';
+                        if (n < 0.8) return 'Mostly disordered';
+                        return 'Highly disordered';
+                    }
+                    const _smDots = (_a && _a.soundmarks && _a.soundmarks.length)
+                        ? '<div class="thumb-sm-dots">' + _a.soundmarks.slice(0,5).map(cat => {
+                            const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180,195,215];
+                            return `<span class="thumb-sm-dot" style="background:rgb(${col[0]},${col[1]},${col[2]})" title="${cat.replace(/_/g,' ')}"></span>`;
+                          }).join('') + '</div>' : '';
+                    const infoLines = [
+                        item.label ? `<div class="gallery-thumb-name">${item.label}</div>` : '',
+                        _dt        ? `<div class="gallery-thumb-sub">${_dt}</div>` : '',
+                        item.location ? `<div class="gallery-thumb-sub">${item.location}</div>` : '',
+                        _a && _a.complexity != null ? `<div class="gallery-thumb-sub gallery-thumb-complexity">${_cLbl(_a.complexity)}</div>` : '',
+                        _smDots,
+                        (_a && (_a.keynote != null || _a.signal != null))
+                            ? `<div class="gallery-thumb-sub">${[_a.keynote ? `${_a.keynote} Hz` : '', _a.signal != null ? `Signal ${typeof _a.signal==='number'?_a.signal.toFixed(2):_a.signal}` : ''].filter(Boolean).join(' · ')}</div>` : ''
+                    ].filter(Boolean).join('');
+                    const infoHtml = infoLines ? `<div class="gallery-thumb-info">${infoLines}</div>` : '';
+                    thumb.innerHTML = `${media}${infoHtml}<button class="thumb-del">×</button>`;
+                    addThumbListeners(thumb, url, item);
+                    galleryGrid.appendChild(thumb);
+                });
+            });
+        }
+
+        // ── Canvas + audio recording ──────────────────────────────────────────
+        let _rec = null, _chunks = [], _recLabel = '';
+        window._lastSavedRecordId = null;
+
+        window.startVisualRecording = function(audioEl, label) {
+            _recLabel = label || new Date().toLocaleTimeString();
+            _chunks = [];
+            try {
+                const canvas = document.querySelector('canvas');
+                const stream = canvas.captureStream(30);
+                if (audioEl && audioEl.captureStream) {
+                    audioEl.captureStream().getAudioTracks().forEach(t => stream.addTrack(t));
+                }
+                const mime = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
+                    .find(m => MediaRecorder.isTypeSupported(m)) || '';
+                _rec = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
+                _rec.ondataavailable = e => { if (e.data.size > 0) _chunks.push(e.data); };
+                _rec.start(200);
+            } catch(err) { console.warn('Recording failed:', err); }
+        };
+
+        window.stopVisualRecording = async function() {
+            if (!_rec || _rec.state === 'inactive') return;
+            // Capture canvas snapshot before stopping recorder
+            let thumbnail = '';
+            try {
+                const _cv = document.querySelector('canvas');
+                if (_cv) thumbnail = _cv.toDataURL('image/png');
+            } catch(e) {}
+            await new Promise(r => { _rec.onstop = r; _rec.stop(); });
+            if (!_chunks.length) { _rec = null; _chunks = []; return; }
+            const blob = new Blob(_chunks, { type: _rec.mimeType || 'video/webm' });
+            _rec = null; _chunks = [];
+            const meta = window._recordMeta || {};
+            if (meta.shouldSave !== false) {
+                await dbReady;
+                const _la = window._lastAnalysis;
+                const _analysis = _la ? {
+                    complexity: _la.complexityNorm,
+                    soundmarks: _la.soundmarks || [],
+                    keynote:    _la.keynote,
+                    signal:     _la.signal
+                } : null;
+                window._lastSavedRecordId = await dbAdd(blob, meta.name || '', meta.location || '', meta.date || '', meta.time || '', thumbnail, false, _analysis);
+            }
+        };
+
+        // "store" quick button — save recording and restart
+        const _quickCapBtn = document.getElementById('quick-capture-btn');
+        if (_quickCapBtn) _quickCapBtn.addEventListener('click', async () => {
+            const btn = _quickCapBtn;
+            btn.textContent = 'Storing…'; btn.disabled = true;
+            await window.stopVisualRecording();
+            if (typeof state !== 'undefined' && (state === 'visualising' || state === 'fading')) {
+                window.startVisualRecording(
+                    typeof playbackAudio !== 'undefined' ? playbackAudio : null, _recLabel
+                );
+            }
+            if (galleryPanel.classList.contains('open')) renderGallery();
+            btn.textContent = 'Saved ✓'; btn.disabled = false;
+            setTimeout(() => { btn.textContent = 'Save'; }, 1800);
+        });
+
+        // AE black bg toggle
+        window.blackBgMode = false;
+        document.getElementById('ae-btn').addEventListener('click', () => {
+            window.blackBgMode = !window.blackBgMode;
+            document.getElementById('ae-btn').classList.toggle('active', window.blackBgMode);
+            if (typeof drawBackground === 'function') drawBackground(-1);
+        });
+
+        // Sound toggle
+        window.soundMuted = false;
+        document.getElementById('sound-btn').addEventListener('click', () => {
+            window.soundMuted = !window.soundMuted;
+            document.getElementById('sound-icon-on').style.display  = window.soundMuted ? 'none' : '';
+            document.getElementById('sound-icon-off').style.display = window.soundMuted ? '' : 'none';
+            if (typeof playbackAudio !== 'undefined' && playbackAudio) {
+                playbackAudio.muted = window.soundMuted;
+            }
+        });
+
+        // Gallery panel — tab click to open/close
+        const galleryHandle = document.getElementById('gallery-handle');
+        function openGallery()  { galleryPanel.classList.add('open');    renderGallery(); }
+        function closeGallery() { galleryPanel.classList.remove('open'); }
+
+        galleryHandle.addEventListener('click', () => {
+            galleryPanel.classList.contains('open') ? closeGallery() : openGallery();
+        });
+        document.getElementById('gallery-close').addEventListener('click', closeGallery);
+
+        lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('open'); });
+        lightbox.querySelector('#lightbox-close').addEventListener('click', () => lightbox.classList.remove('open'));
+    </script>
+
+    <!-- Duration selection modal -->
+    <div id="duration-modal">
+        <div id="duration-box">
+            <h3>How long do you have?</h3>
+            <div id="duration-options">
+                <button class="duration-btn" data-min="5">5 min</button>
+                <button class="duration-btn" data-min="10">10 min</button>
+                <button class="duration-btn" data-min="15">15 min</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session overlay — prompts shown during guided session -->
+    <div id="session-overlay">
+        <div id="session-prompt-text"></div>
+        <div id="session-breath-label"></div>
+        <div id="session-data-display"></div>
+    </div>
+
+    <!-- Session end modal -->
+    <div id="session-end-modal">
+        <div id="session-end-box">
+            <!-- Page 1: analysis summary -->
+            <div id="session-end-page1" style="display:flex;flex-direction:column;gap:14px;width:100%;">
+                <h3>Your Session</h3>
+                <div class="send-section">
+                    <div class="send-subtitle">Measure of Order to Disorder detected in your landscape</div>
+                    <div class="send-box" id="session-end-complexity">—</div>
+                </div>
+                <div class="send-section">
+                    <div class="send-subtitle">Soundmarks</div>
+                    <div class="send-tags" id="session-end-soundmarks"><div class="send-tag">—</div></div>
+                </div>
+                <div class="send-section">
+                    <div class="send-subtitle">Keynote</div>
+                    <div class="send-box" id="session-end-keynote">—</div>
+                </div>
+                <div class="send-section">
+                    <div class="send-subtitle">Signal</div>
+                    <div class="send-box" id="session-end-signal">—</div>
+                </div>
+                <div class="modal-btn-row">
+                    <button id="session-end-next-btn" class="modal-btn">Next</button>
+                </div>
+            </div>
+            <!-- Page 2: reflection -->
+            <div id="session-end-page2" style="display:none;flex-direction:column;gap:14px;width:100%;">
+                <h3>Take these thoughts into your day…</h3>
+                <p>Your session</p>
+                <textarea id="session-description" placeholder="Describe what you noticed..."></textarea>
+                <label class="session-image-label">
+                    <input type="file" id="session-image" accept="image/*" style="display:none">
+                    + Add an image
+                </label>
+                <img id="session-preview-img" alt="session image">
+                <button id="session-save-btn">Save to My Landscapes</button>
+                <button id="session-discard-btn">Discard Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Self-Directed Session Modal (3-step) -->
+    <div id="self-directed-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(30,40,60,0.22);align-items:center;justify-content:center;">
+        <div id="sd-modal-inner" style="background:rgba(245,247,250,0.98);border-radius:14px;box-shadow:0 4px 32px rgba(0,0,0,0.14);padding:30px 32px;min-width:300px;max-width:95vw;width:340px;display:flex;flex-direction:column;align-items:center;gap:18px;">
+            <div class="sd-modal-step" id="sd-step-1">
+                <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Self-Directed Session</h3>
+                <div style="font-family:'miller-text',serif;font-style:italic;font-size:14px;color:rgba(40,42,50,0.65);text-align:center;max-width:320px;">
+                    In this mode, you can guide and record your own soundscape without structure.
+                </div>
+                <div class="modal-btn-row">
+                    <button class="sd-next-btn prerecord-start modal-btn">Next</button>
+                </div>
+            </div>
+            <div class="sd-modal-step" id="sd-step-2" style="display:none;width:100%;">
+                <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Before you record</h3>
+                <div class="prerecord-field"><label>Name</label><input type="text" id="sd-name" placeholder="e.g. morning walk..."></div>
+                <div class="prerecord-field"><label>Location</label><input type="text" id="sd-location" placeholder="e.g. brixton, london..."></div>
+                <div class="prerecord-field"><label>Date</label><input type="text" id="sd-date" placeholder="DD.MM.YYYY" maxlength="10"></div>
+                <div class="prerecord-field"><label>Time</label><input type="time" id="sd-time"></div>
+                <div class="prerecord-save-row"><label>Save to my landscapes</label><input type="checkbox" id="sd-save" checked></div>
+                <div class="modal-btn-row">
+                    <button class="sd-back-btn prerecord-cancel modal-btn">Back</button>
+                    <button class="sd-next-btn prerecord-start modal-btn">Next</button>
+                </div>
+            </div>
+            <div class="sd-modal-step" id="sd-step-3" style="display:none;width:100%;">
+                <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Structure your session</h3>
+                <div style="font-family:'miller-text',serif;font-style:italic;font-size:13px;color:rgba(40,42,50,0.65);text-align:center;max-width:320px;margin-bottom:10px;">Choose your session steps:</div>
+                <ul id="sd-structure-list" style="list-style:none;padding:0;width:100%;margin-bottom:10px;">
+                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Breathing</span></label></li>
+                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Set Intentions</span></label></li>
+                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Mindful Listening</span></label></li>
+                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Engaging with surroundings</span></label></li>
+                </ul>
+                <div class="modal-btn-row">
+                    <button class="sd-back-btn prerecord-cancel modal-btn">Back</button>
+                    <button id="sd-begin-btn" class="prerecord-start modal-btn">Begin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pre-record modal -->
+    <div id="prerecord-modal">
+        <div id="prerecord-box">
+            <h3>Before you record</h3>
+            <div class="prerecord-field">
+                <label>Name</label>
+                <input type="text" id="prerecord-name" placeholder="e.g. morning walk...">
+            </div>
+            <div class="prerecord-field">
+                <label>Location</label>
+                <input type="text" id="prerecord-location" placeholder="e.g. brixton, london...">
+            </div>
+            <div class="prerecord-field">
+                <label>Date</label>
+                <input type="text" id="prerecord-date" placeholder="DD.MM.YYYY" maxlength="10">
+            </div>
+            <div class="prerecord-field">
+                <label>Time</label>
+                <input type="time" id="prerecord-time">
+            </div>
+            <div class="prerecord-save-row">
+                <label>Save to my landscapes</label>
+                <input type="checkbox" id="prerecord-save" checked>
+            </div>
+            <button id="prerecord-start">Begin</button>
+            <button id="prerecord-cancel">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Quick save button (visible during visualisation) -->
+    <button id="quick-save-btn">Save</button>
+
+    <!-- Saved confirmation -->
+    <div id="saved-confirm">Saved ✓</div>
+
+    <!-- Save prompt -->
+    <div id="save-prompt">
+        <span>Save to My Landscapes?</span>
+        <button id="save-prompt-yes">Save</button>
+        <button id="save-prompt-no">Discard</button>
+    </div>
+
+    <!-- Reset button -->
+    <button id="reset-btn">Reset</button>
+
+    <script>
+        // Reset button + save prompt
+        const resetBtn   = document.getElementById('reset-btn');
+        const savePrompt = document.getElementById('save-prompt');
+        const homeBtn    = document.getElementById('home-btn');
+
+        function fullReset() {
+            // Clear session state
+            _sess.active = false;
+            window._sessionActive = false;
+            window._pendingSessionDuration = null;
+            window.onVisualisationComplete = null;
+            clearTimeout(_sess._timer);
+            clearInterval(_sess._promptTimer);
+            clearInterval(_sess._breathInterval);
+            orbContainer.classList.remove('breathing');
+            document.getElementById('session-breath-label').classList.remove('visible');
+            document.getElementById('session-overlay').style.display = 'none';
+            document.getElementById('session-overlay').classList.remove('orb-hidden');
+            document.getElementById('session-prompt-text').style.opacity = '0';
+            document.getElementById('session-data-display').classList.remove('visible');
+            document.getElementById('session-end-modal').classList.remove('open');
+            document.getElementById('duration-modal').classList.remove('open');
+            document.getElementById('orb-title').style.opacity = '';
+            document.getElementById('orb-sublabel').style.opacity = '';
+            orbLabel.style.opacity = '';
+            // Stop mic if it's active
+            if (typeof window.stopMicIfActive === 'function') window.stopMicIfActive();
+            // Restore all UI
+            window.setOrbRecording(false);
+            window.setOrbAnalysing(false);
+            if (_rec && _rec.state !== 'inactive') { _rec.stop(); }
+            _rec = null; _chunks = [];
+            if (typeof window.resetSketch === 'function') window.resetSketch();
+            document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
+            document.getElementById('gallery-panel').classList.remove('hidden-ui');
+            document.getElementById('self-directed-btn').classList.remove('hidden-ui');
+            document.getElementById('details-btn').style.display = '';
+            document.getElementById('soundmarks-box').style.display = '';
+            // Fully reset self-directed mode
+            if (window._selfDirected) {
+                window._selfDirected = false;
+                selfDirectedBtn.classList.remove('active', 'hidden-ui');
+                selfDirectedBtn.textContent = 'Self Directed';
+            }
+            homeBtn.textContent = 'Home';
+            window._lastSavedRecordId = null;
+            window.showOrb();  // hides home-btn because _sessionActive is now false
+            savePrompt.classList.remove('visible');
+            orbLabel.textContent = 'Press to begin';
+            document.getElementById('orb-sublabel').style.opacity = '';
+            // Hide both SD buttons (session is ending)
+            const _sdBtnReset = document.getElementById('sd-session-prompt-btn');
+            if (_sdBtnReset) _sdBtnReset.style.display = 'none';
+        }
+
+        resetBtn.addEventListener('click', () => {
+            savePrompt.classList.add('visible');
+            resetBtn.classList.remove('visible');
+        });
+
+        document.getElementById('save-prompt-yes').addEventListener('click', async () => {
+            savePrompt.classList.remove('visible');
+            await window.stopVisualRecording();
+            await renderGallery();
+            fullReset();
+            const savedConfirm = document.getElementById('saved-confirm');
+            savedConfirm.classList.add('visible');
+            setTimeout(() => savedConfirm.classList.remove('visible'), 1500);
+        });
+
+        document.getElementById('save-prompt-no').addEventListener('click', () => {
+            fullReset();
+        });
+
+        homeBtn.addEventListener('click', () => {
+            if (window._selfDirected && window._sessionActive) {
+                // Formal end: stop prompts, grab data, run fade + modal
+                if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
+                if (typeof window.stopMicIfActive === 'function') window.stopMicIfActive();
+                document.getElementById('sd-session-prompt-btn').style.display = 'none';
+                if (window._lastAnalysis && !_sess.recordings.length) {
+                    _sess.recordings.push(Object.assign({}, window._lastAnalysis));
+                }
+                window._selfDirected = false;
+                sessionEndFlow();
+            } else {
+                fullReset();
+            }
+        });
+
+        // Pre-record modal
+        window._recordMeta = { name: '', location: '', shouldSave: true };
+        document.getElementById('prerecord-start').addEventListener('click', () => {
+            window._recordMeta = {
+                name: document.getElementById('prerecord-name').value.trim() || new Date().toLocaleTimeString(),
+                location: document.getElementById('prerecord-location').value.trim(),
+                date: document.getElementById('prerecord-date').value,
+                time: document.getElementById('prerecord-time').value,
+                shouldSave: document.getElementById('prerecord-save').checked
+            };
+            document.getElementById('prerecord-modal').classList.remove('open');
+            if (window._pendingSessionDuration) {
+                const dur = window._pendingSessionDuration;
+                window._pendingSessionDuration = null;
+                sessionStart(dur);
+            } else {
+                if (typeof toggleMic === 'function') toggleMic();
+            }
+        });
+        document.getElementById('prerecord-cancel').addEventListener('click', () => {
+            document.getElementById('prerecord-modal').classList.remove('open');
+        });
+
+        // ── Self Directed mode ────────────────────────────────────────────────────
+        window._selfDirected = false;
+        const selfDirectedBtn = document.getElementById('self-directed-btn');
+        const orbSublabel = document.getElementById('orb-sublabel');
+        selfDirectedBtn.addEventListener('click', () => {
+                // --- Modal logic for navigation and ordering ---
+            window._selfDirected = !window._selfDirected;
+            selfDirectedBtn.classList.toggle('active', window._selfDirected);
+            selfDirectedBtn.textContent = 'Self Directed';
+            const detailsBtn = document.getElementById('details-btn');
+            const soundmarksBox = document.getElementById('soundmarks-box');
+            const sdModal = document.getElementById('self-directed-modal');
+            const steps = [
+                document.getElementById('sd-step-1'),
+                document.getElementById('sd-step-2'),
+                document.getElementById('sd-step-3')
+            ];
+            let sdStep = 0;
+            function showStep(idx) {
+                steps.forEach((el, i) => el.style.display = i === idx ? '' : 'none');
+            }
+            // --- Structure ordering logic ---
+            function updateNumbers() {
+                const items = sdModal.querySelectorAll('.sd-structure-item');
+                items.forEach((li, i) => {
+                    li.querySelector('span').textContent = (i + 1) + '. ' + li.querySelector('span').textContent.replace(/^\d+\. /, '').replace(/^\d+\. /, '');
+                });
+            }
+            function moveItem(li, dir) {
+                const list = document.getElementById('sd-structure-list');
+                if (!li) return;
+                if (dir === 'up' && li.previousElementSibling) {
+                    list.insertBefore(li, li.previousElementSibling);
+                } else if (dir === 'down' && li.nextElementSibling) {
+                    list.insertBefore(li.nextElementSibling, li);
+                }
+                updateNumbers();
+            }
+            if (window._selfDirected) {
+                sdModal.style.display = 'flex';
+                sdStep = 0;
+                showStep(sdStep);
+
+                // Autofill date and time on step 2
+                const dateInput = document.getElementById('sd-date');
+                const timeInput = document.getElementById('sd-time');
+                const now = new Date();
+                // Format date as DD.MM.YYYY
+                const pad = n => n.toString().padStart(2, '0');
+                const dateStr = pad(now.getDate()) + '.' + pad(now.getMonth() + 1) + '.' + now.getFullYear();
+                dateInput.value = dateStr;
+                // Format time as HH:MM
+                const timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
+                timeInput.value = timeStr;
+
+                // Navigation logic
+                function nextStep() {
+                    if (sdStep < steps.length - 1) {
+                        sdStep++;
+                        showStep(sdStep);
+                    }
+                }
+                function prevStep() {
+                    if (sdStep > 0) {
+                        sdStep--;
+                        showStep(sdStep);
+                    }
+                }
+                Array.from(sdModal.querySelectorAll('.sd-next-btn')).forEach(btn => {
+                    btn.onclick = nextStep;
+                });
+                Array.from(sdModal.querySelectorAll('.sd-back-btn')).forEach(btn => {
+                    btn.onclick = prevStep;
+                });
+                // No reordering for structure step; only checkboxes
+                // Begin button
+                const beginBtn = document.getElementById('sd-begin-btn');
+                beginBtn.onclick = function() {
+                    // Collect session structure and duration
+                    const checkedSteps = Array.from(document.querySelectorAll('#sd-structure-list input[type=checkbox]:checked'));
+                    const stepLabels = checkedSteps.map(cb => cb.parentElement.querySelector('span').textContent.trim());
+                    if (stepLabels.length === 0) {
+                        alert('Please select at least one session step.');
+                        return;
+                    }
+                    // Map step labels to session step types
+                    const labelToType = {
+                        'Breathing': 'breathe',
+                        'Set Intentions': 'set_intentions',
+                        'Mindful Listening': 'record',
+                        'Engaging with surroundings': 'playback'
+                    };
+                    // Build custom steps array (no durations needed)
+                    const customSteps = stepLabels.map(label => {
+                        const type = labelToType[label] || 'breathe';
+                        let prompts = [];
+                        if (type === 'breathe') prompts = ['Breathe with Milieu', 'Focus on the space around you', 'Notice what you hear', 'Follow your breath'];
+                        else if (type === 'set_intentions') prompts = ['Set an intention for this practice', 'How do you want to feel today', 'Release the need to ‘do’ and absorb the current moment'];
+                        else if (type === 'record') prompts = ['When you’re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'];
+                        else if (type === 'playback') prompts = ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels', 'Track a path'];
+                        return {
+                            type,
+                            prompts
+                        };
+                    });
+                    // Always end with 'end' step
+                    customSteps.push({ type: 'end' });
+                    // Hide modal UI
+                    sdModal.style.display = 'none';
+                    setTimeout(async () => {
+                        document.getElementById('orb-title').style.opacity = '0';
+                        document.getElementById('orb-sublabel').style.opacity = '0';
+                        orbLabel.style.opacity = '0';
+                        document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
+                        document.getElementById('gallery-panel').classList.add('hidden-ui');
+                        selfDirectedBtn.classList.add('hidden-ui');
+                        document.getElementById('home-btn').style.display = 'flex';
+                        document.getElementById('home-btn').textContent = 'Home / End Session';
+                        if (detailsBtn) {
+                            detailsBtn.classList.add('hidden-ui');
+                            detailsBtn.style.display = 'none';
+                        }
+                        if (soundmarksBox) {
+                            soundmarksBox.classList.add('hidden-ui');
+                            soundmarksBox.style.display = 'none';
+                        }
+                        const volBtn = document.getElementById('volume-btn');
+                        if (volBtn) volBtn.style.display = '';
+                        const mobileNav = document.getElementById('mobile-nav');
+                        if (mobileNav) mobileNav.classList.add('hidden-ui');
+                        orbLabel.textContent = 'Drop audio / Click to record';
+                        orbSublabel.style.opacity = '0';
+
+                        // Capture session metadata from the SD form for saving
+                        window._recordMeta = {
+                            name: document.getElementById('sd-name').value.trim() || new Date().toLocaleTimeString(),
+                            location: document.getElementById('sd-location').value.trim(),
+                            date: document.getElementById('sd-date').value,
+                            time: document.getElementById('sd-time').value,
+                            shouldSave: document.getElementById('sd-save').checked
+                        };
+
+                        // Start ambient self-directed session
+                        _sess.steps = customSteps;
+                        _sess.idx = 0;
+                        _sess.active = true;
+                        window._sessionActive = true;
+                        _sess.recordings = [];
+                        _sess._usedPrompts = new Set();
+                        _sess.bank = null;
+                        try {
+                            const _r = await Promise.race([
+                                fetch('http://127.0.0.1:5000/prompts'),
+                                new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+                            ]);
+                            if (_r.ok) _sess.bank = await _r.json();
+                        } catch(e) { console.warn('[sd-session] prompt bank unavailable'); }
+                        document.getElementById('session-overlay').style.display = 'block';
+                        const _sdBtn = document.getElementById('sd-session-prompt-btn');
+                        if (_sdBtn) { _sdBtn.style.display = ''; _sdBtn.onclick = triggerSdRecord; }
+
+                        // Start ambient self-directed session logic
+                        stopBreathing();
+                        orbContainer.classList.remove('breathing');
+
+                        // Map each step type to bank categories.
+                        // Regular keys (e.g. BREATHE) come from column 3 of the sheet.
+                        // Section keys (e.g. SOUND, ENVIRO) come from column 1 (_sections).
+                        const stepBankCategories = {
+                            'breathe':       { keys: ['BREATHE'],          useSection: false },
+                            'set_intentions':{ keys: ['SET INTENTIONS'],   useSection: false },
+                            'record':        { keys: ['SOUND'],            useSection: true  },
+                            'playback':      { keys: ['ENVIRO'],           useSection: true  }
+                        };
+                        const stepFallbacks = {
+                            'breathe':       ['Breathe with Milieu', 'Focus on the space around you', 'Notice what you hear', 'Follow your breath'],
+                            'set_intentions':['Set an intention for this practice', 'How do you want to feel today', 'Release the need to do and absorb the current moment'],
+                            'record':        ['Notice the sounds closest to you', 'What can you hear in the distance?', 'Listen without judgement', 'What sounds are constant? What changes?'],
+                            'playback':      ['Notice what surrounds you', 'Gently re-engage with your surroundings', 'Feel the air around you', 'What does this space feel like?']
+                        };
+                        const _sections = (_sess.bank && _sess.bank._sections) || {};
+                        let ambientPrompts = [];
+                        for (const step of customSteps) {
+                            if (step.type === 'end') continue;
+                            const cfg = stepBankCategories[step.type];
+                            if (!cfg) continue;
+                            let added = false;
+                            for (const cat of cfg.keys) {
+                                const pool = cfg.useSection ? _sections[cat] : (_sess.bank && _sess.bank[cat]);
+                                if (pool && pool.length) {
+                                    ambientPrompts.push(...pool);
+                                    added = true;
+                                }
+                            }
+                            if (!added) ambientPrompts.push(...(stepFallbacks[step.type] || []));
+                        }
+                        ambientPrompts = [...new Set(ambientPrompts.filter(Boolean))];
+                        // Shuffle prompts for variety (use a better random seed)
+                        function shuffle(arr) {
+                            // Use a time-based seed for better randomness per session
+                            let seed = Date.now() + Math.floor(Math.random() * 100000);
+                            for (let i = arr.length - 1; i > 0; i--) {
+                                seed = (seed * 9301 + 49297) % 233280;
+                                const rand = seed / 233280;
+                                const j = Math.floor(rand * (i + 1));
+                                [arr[i], arr[j]] = [arr[j], arr[i]];
+                            }
+                        }
+                        shuffle(ambientPrompts);
+
+                        let ambientPromptIdx = 0;
+                        let ambientPromptTimer = null;
+                        let ambientResumeTimer = null;
+                        let pausedForRecording = false;
+                        let pausedForDrawing = false;
+                        function showAmbientPrompt() {
+                            if (!_sess.active || !_sess.steps.length || pausedForRecording) return;
+                            if (ambientPrompts.length === 0) return;
+                            if (pausedForDrawing || orbContainer.classList.contains('hidden')) {
+                                // Orb not visible — hide prompt and do not cycle
+                                const promptEl = document.getElementById('session-prompt-text');
+                                if (promptEl) {
+                                    promptEl.style.opacity = '0';
+                                    promptEl.classList.add('hidden');
+                                }
+                                return;
+                            }
+                            sessPrompt(ambientPrompts[ambientPromptIdx % ambientPrompts.length]);
+                            ambientPromptIdx++;
+                            // Next prompt in 18–38 seconds (irregular)
+                            const nextMs = 18000 + Math.floor(Math.random() * 20000);
+                            ambientPromptTimer = setTimeout(showAmbientPrompt, nextMs);
+                        }
+                        showAmbientPrompt();
+                        _sess._ambientPromptTimer = ambientPromptTimer;
+
+                        // Pause prompts when recording or drawing, resume after
+                        window._pauseAmbientPrompts = function(type) {
+                            clearTimeout(ambientPromptTimer);
+                            clearTimeout(ambientResumeTimer);
+                            if (type === 'drawing') {
+                                pausedForDrawing = true;
+                                // Cancel any pending sessPrompt 820ms callback by advancing generation
+                                sessPrompt('');
+                                const promptEl = document.getElementById('session-prompt-text');
+                                if (promptEl) {
+                                    promptEl.style.opacity = '0';
+                                    promptEl.classList.add('hidden');
+                                }
+                            } else {
+                                pausedForRecording = true;
+                            }
+                        };
+                        window._resumeAmbientPrompts = function(type) {
+                            clearTimeout(ambientPromptTimer);
+                            clearTimeout(ambientResumeTimer);
+                            if (type === 'drawing') {
+                                pausedForDrawing = false;
+                                if (!pausedForRecording) {
+                                    ambientPromptIdx = 0;
+                                    ambientResumeTimer = setTimeout(() => {
+                                        ambientResumeTimer = null;
+                                        const promptEl = document.getElementById('session-prompt-text');
+                                        if (promptEl && window._selfDirected && window._sessionActive) {
+                                            promptEl.style.opacity = '';
+                                            promptEl.classList.remove('hidden');
+                                        }
+                                        showAmbientPrompt();
+                                    }, 600);
+                                }
+                            } else {
+                                pausedForRecording = false;
+                                if (!pausedForDrawing) {
+                                    ambientPromptIdx = 0;
+                                    ambientResumeTimer = setTimeout(() => {
+                                        ambientResumeTimer = null;
+                                        const promptEl = document.getElementById('session-prompt-text');
+                                        if (promptEl && window._selfDirected && window._sessionActive) {
+                                            promptEl.style.opacity = '';
+                                            promptEl.classList.remove('hidden');
+                                        }
+                                        showAmbientPrompt();
+                                    }, 600);
+                                }
+                            }
+                        };
+                    }, 350); // Wait for modal close animation if any
+                };
+                // Optionally: swipe support for mobile
+                let touchStartX = null;
+                sdModal.ontouchstart = e => {
+                    if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
+                };
+                sdModal.ontouchend = e => {
+                    if (touchStartX !== null && e.changedTouches.length === 1) {
+                        const dx = e.changedTouches[0].clientX - touchStartX;
+                        if (dx < -50) nextStep();
+                        else if (dx > 50) prevStep();
+                    }
+                    touchStartX = null;
+                };
+            } else {
+                document.getElementById('orb-title').style.opacity = '';
+                document.getElementById('orb-sublabel').style.opacity = '';
+                orbLabel.style.opacity = '';
+                document.getElementById('bottom-bar-wrapper').classList.remove('hidden-ui');
+                document.getElementById('gallery-panel').classList.remove('hidden-ui');
+                selfDirectedBtn.classList.remove('hidden-ui');
+                document.getElementById('home-btn').style.display = 'none';
+                if (detailsBtn) {
+                    detailsBtn.classList.remove('hidden-ui');
+                    detailsBtn.style.display = '';
+                }
+                if (soundmarksBox) {
+                    soundmarksBox.classList.remove('hidden-ui');
+                    soundmarksBox.style.display = '';
+                }
+                const volBtn = document.getElementById('volume-btn');
+                if (volBtn) volBtn.style.display = '';
+                const mobileNav = document.getElementById('mobile-nav');
+                if (mobileNav) mobileNav.classList.remove('hidden-ui');
+                orbLabel.textContent = 'Press to begin';
+                orbSublabel.style.opacity = '';
+            }
+        });
+
+        // ── Duration modal ────────────────────────────────────────────────────────
+        document.querySelectorAll('.duration-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mins = parseInt(btn.dataset.min);
+                window._pendingSessionDuration = mins;
+                document.getElementById('duration-modal').classList.remove('open');
+                // Open pre-record modal next
+                document.getElementById('prerecord-name').value = '';
+                document.getElementById('prerecord-location').value = '';
+                document.getElementById('prerecord-date').value = (d => `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`)(new Date());
+                document.getElementById('prerecord-time').value = new Date().toTimeString().slice(0, 5);
+                document.getElementById('prerecord-save').checked = true;
+                document.getElementById('prerecord-modal').classList.add('open');
+            });
+        });
+
+        // ── Session Controller ────────────────────────────────────────────────────
+        const SESSION_5MIN = [
+            {
+                type: 'breathe', duration: 60000,
+                prompts: [
+                    'Breathe with Milieu',
+                    'Focus on the space around you',
+                    'Notice what you hear',
+                    'Follow your breath'
+                ]
+            },
+            {
+                type: 'set_intentions', duration: 45000,
+                prompts: [
+                    'Set an intention for this practice',
+                    'How do you want to feel today',
+                    'Release the need to ‘do’ and absorb the current moment'
+                ]
+            },
+            {
+                type: 'record',
+                prompts: [
+                    'When you’re ready, press the orb to begin recording the sound around you',
+                    'Bring your focus back to what you can hear'
+                ]
+            },
+            {
+                type: 'playback',
+                prompts: [
+                    'Trace the pattern as it builds from the sounds you experienced',
+                    'Watch as it curves and travels',
+                    'Track a path'
+                ]
+            },
+            {
+                type: 'reflect', duration: 90000,
+                prompts: [
+                    null,
+                    null,
+                    null,
+                    'How does this make you feel?',
+                    'Gently re-engage with your surroundings',
+                    'Notice how you perceive the sound now'
+                ]
+            },
+            {
+                type: 'winddown', duration: 30000,
+                prompts: [
+                    'Draw your attention back to your breath',
+                    'Centre your attention back onto the image you’ve created today',
+                    'Slowly come back into the present'
+                ]
+            },
+            { type: 'end' }
+        ];
+
+
+        const SESSION_10MIN = [
+            {
+                type: 'breathe', duration: 90000,
+                prompts: [
+                    'Breathe with Milieu',
+                    'Focus on the space around you',
+                    'Notice what you hear',
+                    'Follow your breath'
+                ]
+            },
+            {
+                type: 'set_intentions', duration: 60000,
+                prompts: [
+                    'Set an intention for this practice',
+                    'How do you want to feel today',
+                    'Release the need to ’do’ and absorb the current moment'
+                ]
+            },
+            { type: 'record', prompts: ['When you’re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
+            { type: 'playback', drawingMin: 90, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels', 'Track a path'] },
+            {
+                type: 'reflect', duration: 150000, longHold: 45000,
+                prompts: [null, null, null, null, null, null, null, null]
+            },
+            {
+                type: 'winddown', duration: 60000, bankCount: 3,
+                prompts: [
+                    'Draw your attention back to your breath',
+                    'Centre your attention back onto the image you’ve created today',
+                    'Slowly come back into the present'
+                ]
+            },
+            { type: 'end' }
+        ];
+
+        const SESSION_15MIN = [
+            {
+                type: 'breathe', duration: 120000,
+                prompts: [
+                    'Breathe with Milieu',
+                    'Focus on the space around you',
+                    'Notice what you hear',
+                    'Follow your breath'
+                ]
+            },
+            {
+                type: 'set_intentions', duration: 90000,
+                prompts: [
+                    'Set an intention for this practice',
+                    'How do you want to feel today',
+                    'Release the need to ’do’ and absorb the current moment'
+                ]
+            },
+            { type: 'record', prompts: ['When you’re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
+            { type: 'playback', drawingMin: 120, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels', 'Track a path'] },
+            {
+                type: 'reflect', duration: 240000, longHold: 60000,
+                prompts: [null, null, null, null, null, null, null, null, null, null]
+            },
+            {
+                type: 'winddown', duration: 90000, bankCount: 4,
+                prompts: [
+                    'Draw your attention back to your breath',
+                    'Centre your attention back onto the image you’ve created today',
+                    'Gently re-engage with your surroundings',
+                    'Slowly come back into the present'
+                ]
+            },
+            { type: 'end' }
+        ];
+
+        const _sess = {
+            active: false, idx: 0, steps: [],
+            recordings: [], _timer: null, _promptTimer: null, _breathInterval: null, bank: null, _usedPrompts: null
+        };
+
+        let _sessPromptGen = 0;
+        function sessPrompt(text) {
+            const el = document.getElementById('session-prompt-text');
+            if (el) {
+                el.style.opacity = '0';
+                const gen = ++_sessPromptGen;
+                if (!text) return;
+                setTimeout(() => {
+                    if (gen !== _sessPromptGen) return; // stale callback — a newer prompt superseded this one
+                    el.innerHTML = text.replace(/\n/g, '<br>');
+                    el.style.opacity = '1';
+                }, 820);
+            }
+        }
+
+        function pickPrompt(context) {
+            if (!_sess.bank) return null;
+            const pool = _sess.bank[context.toUpperCase()];
+            if (!pool || !pool.length) return null;
+            const unused = pool.filter(p => !_sess._usedPrompts.has(p));
+            const candidates = unused.length > 0 ? unused : pool;
+            const p = candidates[Math.floor(Math.random() * candidates.length)];
+            _sess._usedPrompts.add(p);
+            return p;
+        }
+
+        function sessDataClear() {
+            const el = document.getElementById('session-data-display');
+            el.classList.remove('visible');
+            setTimeout(() => { el.innerHTML = ''; }, 820);
+        }
+
+        function sessBuildScale(norm) {
+            const n = isNaN(norm) ? 0.5 : Math.max(0, Math.min(1, norm));
+            return `<svg width="260" height="44">
+                <text x="116" y="8" font-size="11" fill="rgba(160,165,180,0.80)" font-family="miller-text, serif" font-style="italic" text-anchor="middle" dominant-baseline="middle">Sonic complexity</text>
+                <line x1="40" y1="22" x2="220" y2="22" stroke="rgba(190,198,212,0.65)" stroke-width="1.5"/>
+                <defs><radialGradient id="sBg" cx="38%" cy="32%" r="60%">
+                    <stop offset="0%" stop-color="rgba(255,255,255,0.90)"/>
+                    <stop offset="40%" stop-color="rgba(180,215,240,0.85)"/>
+                    <stop offset="100%" stop-color="rgba(140,185,220,0.60)"/>
+                </radialGradient></defs>
+                <circle cx="${40 + 180 * n}" cy="22" r="6" fill="url(#sBg)" stroke="rgba(160,195,220,0.5)" stroke-width="1"/>
+                <text x="0" y="36" font-size="11" fill="rgba(155,160,175,0.75)" font-family="miller-text, serif" font-style="italic" text-anchor="start" dominant-baseline="middle">Order</text>
+                <text x="260" y="36" font-size="11" fill="rgba(155,160,175,0.75)" font-family="miller-text, serif" font-style="italic" text-anchor="end" dominant-baseline="middle">Disorder</text>
+            </svg>`;
+        }
+
+        let _breathGen = 0; // incremented on every stop — cancels any pending 300ms callbacks
+
+        function startBreathing() {
+            stopBreathing();
+            const _gen = ++_breathGen;
+            orbContainer.classList.remove('breathing');
+            void orbContainer.offsetWidth;
+            orbContainer.classList.add('breathing');
+            orbLabel.textContent = '';
+            const _bl = document.getElementById('session-breath-label');
+            if (_bl) {
+                const _ph = ['In', 'Out'];
+                let _bpi = 0;
+                function _nb() {
+                    _bl.classList.remove('visible');
+                    setTimeout(() => {
+                        if (_breathGen !== _gen) return; // stale — stopBreathing was called
+                        _bl.textContent = _ph[_bpi++ % 2];
+                        _bl.classList.add('visible');
+                    }, 300);
+                }
+                _nb();
+                _sess._breathInterval = setInterval(_nb, 4500);
+            }
+        }
+
+        function stopBreathing() {
+            ++_breathGen; // invalidate any in-flight 300ms callbacks
+            clearInterval(_sess._breathInterval);
+            _sess._breathInterval = null;
+            orbContainer.classList.remove('breathing');
+            const _bl = document.getElementById('session-breath-label');
+            if (_bl) {
+                _bl.classList.remove('visible');
+                _bl.textContent = '';
+            }
+        }
+
+        function triggerSdRecord() {
+            clearTimeout(_sess._timer);
+            clearInterval(_sess._promptTimer);
+            stopBreathing();
+            sessPrompt('');
+            const _sdBtn = document.getElementById('sd-session-prompt-btn');
+            if (_sdBtn) _sdBtn.style.display = 'none';
+            // Pause prompts while drawing
+            if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
+            const playbackStep = _sess.steps.find(s => s.type === 'playback');
+            window.onVisualisationStart = () => {
+                // During drawing in self-directed sessions, do NOT show any prompts
+                if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
+                clearInterval(_sess._promptTimer);
+                sessPrompt('');
+            };
+            window.onVisualisationComplete = async function() {
+                window.onVisualisationComplete = null;
+                clearInterval(_sess._promptTimer);
+                if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
+                // Save the canvas recording to My Landscapes
+                if (window.stopVisualRecording) await window.stopVisualRecording();
+                if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
+                // Stay on the completed drawing for 2s, then fade back to orb
+                setTimeout(() => {
+                    state = 'fading';
+                    fadeAlpha = 0;
+                }, 2000);
+            };
+            if (typeof toggleMic === 'function') toggleMic();
+        }
+
+        function sessionAdvance() {
+            _sess.idx++;
+            sessionRunStep();
+        }
+
+        function sessionRunStep() {
+            const step = _sess.steps[_sess.idx];
+            if (!step) { sessionEndFlow(); return; }
+            clearTimeout(_sess._timer);
+            clearInterval(_sess._promptTimer);
+
+            if (step.type === 'breathe') {
+                window.showOrb && window.showOrb();
+                startBreathing();
+                const _bPool = [];
+                if (_sess.bank) {
+                    for (let _i = 0; _i < 4; _i++) { const _p = pickPrompt('BREATHE'); if (_p) _bPool.push(_p); }
+                }
+                const _bPrompts = _bPool.length ? _bPool : step.prompts;
+                const interval = Math.min(12000, Math.floor(step.duration / _bPrompts.length));
+                const _hr = new Date().getHours();
+                const _greeting = _hr < 12 ? 'Good morning' : _hr < 17 ? 'Good afternoon' : 'Good evening';
+                sessPrompt(_greeting);
+                _sess._promptTimer = setTimeout(() => {
+                    sessPrompt('Breathe with Milieu');
+                    _sess._promptTimer = setTimeout(() => {
+                        // start at 1 for fallback prompts — index 0 is 'Breathe with Milieu'
+                        // which was already shown above; bank prompts start at 0 (different text)
+                        let pi = _bPool.length ? 0 : 1;
+                        function nextPrompt() { sessPrompt(_bPrompts[pi++ % _bPrompts.length]); }
+                        nextPrompt();
+                        _sess._promptTimer = setInterval(nextPrompt, interval);
+                    }, 3500);
+                }, 3000);
+
+                _sess._timer = setTimeout(() => {
+                    clearInterval(_sess._promptTimer);
+                    stopBreathing();
+                    sessionAdvance();
+                }, step.duration);
+            }
+
+            else if (step.type === 'set_intentions') {
+                window.showOrb && window.showOrb();
+                startBreathing();
+                const _siPool = [];
+                if (_sess.bank) {
+                    for (let _i = 0; _i < 4; _i++) { const _p = pickPrompt('SET INTENTIONS'); if (_p) _siPool.push(_p); }
+                }
+                const _siPrompts = _siPool.length ? _siPool : step.prompts;
+                const _siInterval = Math.min(12000, Math.floor(step.duration / _siPrompts.length));
+                let _siPi = 0;
+                function _siNext() { sessPrompt(_siPrompts[_siPi++ % _siPrompts.length]); }
+                _siNext();
+                _sess._promptTimer = setInterval(_siNext, _siInterval);
+                _sess._timer = setTimeout(() => {
+                    clearInterval(_sess._promptTimer);
+                    stopBreathing();
+                    sessionAdvance();
+                }, step.duration);
+            }
+
+            else if (step.type === 'record') {
+                window.showOrb && window.showOrb();
+                orbContainer.classList.remove('breathing');
+                if (window._selfDirected) {
+                    // Show a prompt and wait — the persistent button triggers recording
+                    sessPrompt(step.prompts[0] || 'When you\'re ready, record the sound around you');
+                } else {
+                    sessPrompt('Milieu will now take in and record your surrounding sounds');
+                    sessDataClear();
+                    // Auto-start recording after a brief pause
+                    _sess._timer = setTimeout(() => {
+                        window._lastAnalysis = null;
+                        sessionAdvance();
+                        if (typeof toggleMic === 'function') toggleMic();
+                    }, 6000);
+                }
+            }
+
+            else if (step.type === 'playback') {
+                if (window._selfDirected) { triggerSdRecord(); return; }
+                // During recording: prompts from RECORDING bank or fallback
+                const _recPool = [];
+                if (_sess.bank) {
+                    for (let _i = 0; _i < 5; _i++) { const _p = pickPrompt('RECORDING'); if (_p) _recPool.push(_p); }
+                }
+                if (!_recPool.length) {
+                    const _rs = _sess.steps[_sess.idx - 1];
+                    if (_rs && _rs.prompts) _recPool.push(..._rs.prompts.slice(1).filter(Boolean));
+                }
+                let rpi = 0;
+                function showRecordingPrompt() {
+                    if (rpi < _recPool.length) sessPrompt(_recPool[rpi++]);
+                }
+                showRecordingPrompt();
+                _sess._promptTimer = setInterval(showRecordingPrompt, 20000);
+
+                window['onVisualisationStart'] = () => {
+                    clearInterval(_sess._promptTimer);
+                    window._lastRecordingDuration = Math.max(step.drawingMin || 60, window._lastRecordingDuration || 30);
+                    const _drawPool = [];
+                    if (_sess.bank) {
+                        for (let _i = 0; _i < 4; _i++) { const _p = pickPrompt('PLAYBACK'); if (_p) _drawPool.push(_p); }
+                    }
+                    const prompts = _drawPool.length ? _drawPool : step.prompts;
+                    let pi = 0;
+                    sessPrompt(prompts[pi++]);
+                    const interval = Math.floor((window._lastRecordingDuration * 1000) / prompts.length);
+                    _sess._promptTimer = setInterval(() => {
+                        if (pi < prompts.length) sessPrompt(prompts[pi++]);
+                        else clearInterval(_sess._promptTimer);
+                    }, interval);
+                };
+                window.onVisualisationComplete = async () => {
+                    window.onVisualisationComplete = null;
+                    clearInterval(_sess._promptTimer);
+                    sessPrompt('');
+                    await (window.stopVisualRecording && window.stopVisualRecording());
+                    if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
+                    sessionAdvance();
+                };
+            }
+
+               else if (step.type === 'reflect') {
+                document.getElementById('session-overlay').classList.add('orb-hidden');
+                orbContainer.classList.add('hidden');
+                const rec = _sess.recordings[0];
+                const cn = rec && rec.complexityNorm !== undefined ? rec.complexityNorm : 0.5;
+                function complexityLabel(n) {
+                    if (n < 0.2) return 'highly ordered';
+                    if (n < 0.4) return 'mostly ordered';
+                    if (n < 0.6) return 'moderately complex';
+                    if (n < 0.8) return 'mostly disordered';
+                    return 'highly disordered';
+                }
+                // Soundmarks as natural language list e.g. 'voices and cars'
+                const _smList = (rec && rec.soundmarks ? rec.soundmarks.slice(0, 3) : []).map(s => s.replace(/_/g, ' '));
+                const _smsText = _smList.length === 0 ? null
+                    : _smList.length === 1 ? _smList[0]
+                    : _smList.slice(0, -1).join(', ') + ' and ' + _smList[_smList.length - 1];
+                // Pull flexible prompts from REFLECT bank
+                const _rPool = [];
+                if (_sess.bank) {
+                    for (let _i = 0; _i < 4; _i++) { const _p = pickPrompt('REFLECT'); if (_p) _rPool.push(_p); }
+                }
+                const _rFallback = step.prompts.filter(p => p !== null);
+                const _rPrompts = _rPool.length ? _rPool : _rFallback;
+                // Assemble sequence
+                const resolvedPrompts = [
+                    'Milieu understood your surroundings as … ' + complexityLabel(cn)
+                ];
+                if (_smsText) {
+                    resolvedPrompts.push('Milieu also heard … ' + _smsText);
+                    resolvedPrompts.push('Did you notice this?');
+                }
+                _rPrompts.forEach(p => { if (p) resolvedPrompts.push(p); });
+                // 4th prompt lingers twice as long
+                const _longHold = step.longHold || 30000;
+                const _otherDur = Math.floor((step.duration - _longHold) / Math.max(1, resolvedPrompts.length - 1));
+                const durations = resolvedPrompts.map((_, i) => i === 3 ? _longHold : _otherDur);
+                let pi = 0;
+                function showNext() {
+                    if (pi >= resolvedPrompts.length) {
+                        sessPrompt('');
+                        window.showOrb && window.showOrb();
+                        sessionAdvance();
+                        return;
+                    }
+                    const dur = durations[pi];
+                    sessPrompt(resolvedPrompts[pi++]);
+                    _sess._timer = setTimeout(showNext, dur);
+                }
+                showNext();
+            }
+            else if (step.type === 'winddown') {
+                document.getElementById('session-overlay').classList.remove('orb-hidden');
+                // Slow fade-in: set transition before removing hidden, force reflow for sync
+                orbContainer.style.transition = 'opacity 2.5s ease';
+                void orbContainer.offsetWidth;
+                orbContainer.classList.remove('hidden');
+                orbContainer.style.opacity = '';
+                orbContainer.style.pointerEvents = '';
+                setTimeout(() => { orbContainer.style.transition = ''; }, 2600);
+                startBreathing();
+                let _wPrompts;
+                if (_sess.bank) {
+                    const sp = _sess.bank.special || {};
+                    _wPrompts = [];
+                    const _wCount = step.bankCount || 2;
+                    for (let _i = 0; _i < _wCount; _i++) { const _p = pickPrompt('WINDDOWN'); if (_p) _wPrompts.push(_p); }
+                    if (_wPrompts.length === 0) _wPrompts = [...step.prompts];
+                    const _dur = window._pendingSessionDuration;
+                    const _last = (sp.last || 'You have been present for {duration}')
+                        .replace('{duration}', _dur ? _dur + ' minutes' : 'this session')
+                        .replace('(INSERT SELECTED TIME FRAME)', _dur ? _dur + ' minutes' : 'this session');
+                    _wPrompts.push(_last);
+                } else {
+                    _wPrompts = step.prompts;
+                }
+                let pi = 0;
+                const interval = Math.floor(step.duration / _wPrompts.length);
+                function nextPrompt() { sessPrompt(_wPrompts[pi++ % _wPrompts.length]); }
+                nextPrompt();
+                _sess._promptTimer = setInterval(nextPrompt, interval);
+                _sess._timer = setTimeout(() => {
+                    clearInterval(_sess._promptTimer);
+                    sessionAdvance();
+                }, step.duration);
+            }
+
+            else if (step.type === 'closing') {
+                window.showOrb && window.showOrb();
+                orbContainer.classList.add('breathing');
+                orbLabel.textContent = '';
+                document.getElementById('session-overlay').classList.remove('orb-hidden');
+                const items = step.items;
+                const tpi = Math.floor(step.duration / items.length);
+                const allSm = [...new Set([
+                    ...(_sess.recordings[0] ? _sess.recordings[0].soundmarks || [] : []),
+                    ...(_sess.recordings[1] ? _sess.recordings[1].soundmarks || [] : [])
+                ])];
+                const avgN = _sess.recordings.reduce((s,r) => s + (r.complexityNorm || 0.5), 0) / Math.max(1, _sess.recordings.length);
+                let ci = 0;
+                function showClosing() {
+                    if (ci >= items.length) {
+                        orbContainer.classList.remove('breathing');
+                        sessionAdvance(); return;
+                    }
+                    const item = items[ci++];
+                    const dataEl = document.getElementById('session-data-display');
+                    sessDataClear();
+                    if (item.kind === 'text+data') {
+                        sessPrompt(item.text);
+                        setTimeout(() => {
+                            dataEl.innerHTML = `
+                                <div class="session-tags-row">${allSm.map(s => `<span class="session-tag">${s.replace(/_/g,' ')}</span>`).join('') || '<span class="session-tag" style="opacity:0.4">—</span>'}</div>
+                                ${sessBuildScale(avgN)}`;
+                            dataEl.classList.add('visible');
+                        }, 820);
+                    } else {
+                        sessPrompt(item.text);
+                    }
+                    _sess._timer = setTimeout(showClosing, tpi);
+                }
+                showClosing();
+            }
+
+            else if (step.type === 'end') {
+                sessionEndFlow();
+            }
+        }
+
+        async function sessionStart(duration) {
+            _sess.active = true;
+            window._sessionActive = true;
+            _sess.idx = 0;
+            _sess.steps = duration === 10 ? SESSION_10MIN
+                        : duration === 15 ? SESSION_15MIN
+                        : SESSION_5MIN;
+            _sess.recordings = [];
+            document.getElementById('orb-title').style.opacity = '0';
+            document.getElementById('orb-sublabel').style.opacity = '0';
+            orbLabel.style.opacity = '0';
+            document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
+            document.getElementById('gallery-panel').classList.add('hidden-ui');
+            document.getElementById('self-directed-btn').classList.add('hidden-ui');
+            document.getElementById('home-btn').style.display = 'flex';
+            document.getElementById('home-btn').textContent = 'Home';
+            document.getElementById('session-overlay').style.display = 'block';
+            document.getElementById('soundmarks-box').style.display = 'none';
+            document.getElementById('details-btn').style.display = 'none';
+            _sess._usedPrompts = new Set();
+            _sess.bank = null;
+            try {
+                const _r = await Promise.race([
+                    fetch('http://127.0.0.1:5000/prompts'),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+                ]);
+                if (_r.ok) _sess.bank = await _r.json();
+            } catch(e) { console.warn('[session] prompt bank unavailable'); }
+            sessionRunStep();
+        }
+
+        function sessionEndFlow() {
+            // Only end session if not self-directed, or if user clicked home
+            if (window._selfDirected) {
+                // Resume ambient prompts and keep session open
+                if (typeof window._resumeAmbientPrompts === 'function') window._resumeAmbientPrompts();
+                // Optionally clear any overlays or reset UI as needed, but do NOT end session
+                document.getElementById('session-prompt-text').style.opacity = '0';
+                document.getElementById('session-data-display').classList.remove('visible');
+                const _sdBtnEnd = document.getElementById('sd-session-prompt-btn');
+                if (_sdBtnEnd) _sdBtnEnd.style.display = '';
+                return;
+            }
+            // Guided session: normal end flow
+            _sess.active = false;
+            window._sessionActive = false;
+            clearTimeout(_sess._timer);
+            clearInterval(_sess._promptTimer);
+            clearInterval(_sess._breathInterval);
+            clearTimeout(_sess._ambientPromptTimer);
+            orbContainer.classList.remove('breathing');
+            const _blEnd = document.getElementById('session-breath-label');
+            if (_blEnd) _blEnd.classList.remove('visible');
+            document.getElementById('session-prompt-text').style.opacity = '0';
+            document.getElementById('session-data-display').classList.remove('visible');
+            const _sdBtnEnd = document.getElementById('sd-session-prompt-btn');
+            if (_sdBtnEnd) _sdBtnEnd.style.display = 'none';
+            // Fade canvas out before clearing and showing end modal
+            const _endFade = document.createElement('div');
+            _endFade.style.cssText = 'position:fixed;inset:0;background:rgb(245,244,242);opacity:0;transition:opacity 1.5s ease;z-index:50;pointer-events:none;';
+            document.body.appendChild(_endFade);
+            setTimeout(() => { _endFade.style.opacity = '1'; }, 50);
+            setTimeout(() => {
+                window.clearCanvasOnly && window.clearCanvasOnly();
+                document.getElementById('session-overlay').style.display = 'none';
+                document.getElementById('soundmarks-box').style.display = '';
+                document.getElementById('details-btn').style.display = '';
+                document.getElementById('orb-title').style.opacity = '';
+
+                // Populate page 1 with analysis data before opening modal
+                const _endRec = _sess.recordings[0] || window._lastAnalysis || {};
+                const _endCn = (_endRec.complexityNorm !== undefined) ? _endRec.complexityNorm : 0.5;
+
+                // Order to disorder label
+                function _cLabel(n) {
+                    if (n < 0.2) return 'Highly ordered';
+                    if (n < 0.4) return 'Mostly ordered';
+                    if (n < 0.6) return 'Moderately complex';
+                    if (n < 0.8) return 'Mostly disordered';
+                    return 'Highly disordered';
+                }
+                document.getElementById('session-end-complexity').textContent = _cLabel(_endCn);
+
+                // Soundmarks with coloured dots
+                const _endSmCats = (_endRec.soundmarks || []).slice(0, 6);
+                const _smEl = document.getElementById('session-end-soundmarks');
+                if (_endSmCats.length) {
+                    _smEl.innerHTML = _endSmCats.map(cat => {
+                        const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat])
+                            ? CATEGORY_COLORS[cat] : [180, 195, 215];
+                        const name = cat.replace(/_/g, ' ');
+                        return `<div class="send-tag"><span class="send-tag-dot" style="background:rgb(${col[0]},${col[1]},${col[2]})"></span>${name}</div>`;
+                    }).join('');
+                } else {
+                    _smEl.innerHTML = '<div class="send-tag">—</div>';
+                }
+
+                // Keynote and Signal
+                document.getElementById('session-end-keynote').textContent = _endRec.keynote || '—';
+                document.getElementById('session-end-signal').textContent = _endRec.signal || '—';
+                // Skip page 1 if no recording was made (no analysis data to show)
+                const _hasData = _sess.recordings.length > 0 || (window._lastAnalysis && window._lastAnalysis.complexityNorm !== undefined);
+                document.getElementById('session-end-page1').style.display = _hasData ? 'flex' : 'none';
+                document.getElementById('session-end-page2').style.display = _hasData ? 'none' : 'flex';
+
+                document.getElementById('session-end-modal').classList.add('open');
+                _endFade.remove();
+            }, 1600);
+        }
+
+        // Session end modal — page navigation
+        document.getElementById('session-end-next-btn').addEventListener('click', () => {
+            document.getElementById('session-end-page1').style.display = 'none';
+            document.getElementById('session-end-page2').style.display = 'flex';
+        });
+
+        // Session end modal — save / discard
+        document.getElementById('session-image').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            const img = document.getElementById('session-preview-img');
+            img.src = URL.createObjectURL(file);
+            img.style.display = 'block';
+            this.closest('label').style.display = 'none';
+        });
+
+        document.getElementById('session-save-btn').addEventListener('click', async () => {
+            document.getElementById('session-end-modal').classList.remove('open');
+            // If no recording was made, save a dusty-blue placeholder entry
+            if (_sess.recordings.length === 0 && !(window._lastAnalysis && window._lastAnalysis.complexityNorm !== undefined)) {
+                await dbReady;
+                const ph = await _makePlaceholderBlob();
+                const meta = window._recordMeta || {};
+                await dbAdd(ph.blob, meta.name || '', meta.location || '', ph.dateStr, ph.timeStr, ph.dataURL, true);
+            }
+            const savedConfirm = document.getElementById('saved-confirm');
+            savedConfirm.classList.add('visible');
+            setTimeout(() => savedConfirm.classList.remove('visible'), 1500);
+            await renderGallery();
+            fullReset();
+        });
+
+        document.getElementById('session-discard-btn').addEventListener('click', () => {
+            document.getElementById('session-end-modal').classList.remove('open');
+            fullReset();
+        });
+
+        // Quick save during visualisation — saves clip and restarts recording
+        document.getElementById('quick-save-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('quick-save-btn');
+            btn.textContent = 'Saving...'; btn.disabled = true;
+            // Stop current recording and save it
+            await window.stopVisualRecording();
+            await renderGallery();
+            // Restart recording immediately so visualisation keeps being captured
+            const canvas = document.querySelector('canvas');
+            if (canvas && _rec === null) {
+                window.startVisualRecording(
+                    typeof playbackAudio !== 'undefined' ? playbackAudio : null,
+                    (window._recordMeta && window._recordMeta.name) || _recLabel
+                );
+            }
+            // Show confirmation
+            const savedConfirm = document.getElementById('saved-confirm');
+            savedConfirm.classList.add('visible');
+            setTimeout(() => savedConfirm.classList.remove('visible'), 1500);
+            btn.textContent = 'Save'; btn.disabled = false;
+        });
+    </script>
+    <!-- Self-Directed: persistent record button, no overlay -->
+    <button id="sd-session-prompt-btn" style="display:none;position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:100;font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:13px;color:rgba(35,50,75,0.55);background:none;border:1px solid rgba(80,100,130,0.28);border-radius:20px;padding:7px 22px;cursor:pointer;white-space:nowrap;">Click at any time to record and visualise sound</button>
+
+    <script>
+        // Smooth orb rotation — RAF with delta time, 3 deg/s (one rotation every ~120s)
+        (function() {
+            const m = document.getElementById('orb-model');
+            let angle = 0, last = null;
+            function tick(t) {
+                if (last !== null) {
+                    angle += 3 * (t - last) / 1000;
+                    if (angle >= 360) angle -= 360;
+                }
+                last = t;
+                m.setAttribute('camera-orbit', angle + 'deg 75deg 105%');
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        })();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+</html>

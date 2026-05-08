@@ -1,0 +1,15 @@
+OUTPUTS/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.c4d
+*.obj
+Untitled.*
+process/
+new.glb
+final_itteration.glb
+Screenshot*.png
+logo1.png
+logo2.png
+.venv/
