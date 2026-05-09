@@ -1,4 +1,13 @@
-import os, io, time, csv, random
+import os, io, time, csv, random, sys, types
+
+# pkg_resources shim — required by tensorflow_hub on Python 3.12 in some envs
+try:
+    import pkg_resources
+except ImportError:
+    _mod = types.ModuleType('pkg_resources')
+    _mod.parse_version = lambda v: tuple(int(x) for x in str(v).split('.')[:3] if x.isdigit())
+    sys.modules['pkg_resources'] = _mod
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # suppress TF boot noise
 import numpy as np
 import librosa
