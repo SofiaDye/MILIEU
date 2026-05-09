@@ -299,6 +299,7 @@
             gap: 10px; align-content: start;
         }
         #gallery-empty {
+            grid-column: 1 / -1; width: 100%;
             text-align: center;
             font-family: "miller-text", serif; font-style: italic; font-size: 13px;
             color: rgba(40,42,50,0.35); padding: 40px 0;
@@ -773,7 +774,9 @@
             #session-prompt-text { font-size: 18px; max-width: 85vw; }
 
             /* Gallery panel: take more of the screen width */
-            #gallery-panel  { width: min(85vw, 300px); }
+            #gallery-panel  { width: 270px; }
+            #sound-btn      { top: 14px; right: 56px; width: 34px; height: 34px; }
+            #self-directed-btn { position: fixed; bottom: 24px; left: 16px; height: 70px; padding: 0 16px; }
 
             /* Map modal */
             #map-container  { width: 95vw; height: 75vh; }
