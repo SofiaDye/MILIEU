@@ -157,6 +157,15 @@
         }
 
         /* Home button */
+        #home-tagline {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 26px; color: rgba(80,85,95,0.55);
+            letter-spacing: 0.04em; white-space: nowrap;
+            z-index: 100; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #home-tagline.hidden-ui { opacity: 0; }
         #home-btn {
             position: fixed; top: 22px; left: 24px;
             height: 34px; padding: 0 14px;
@@ -194,7 +203,7 @@
         #ae-btn {
             position: fixed; top: 22px; right: 116px;
             height: 28px; padding: 0 12px;
-            background: rgba(220,225,235,0.92);
+            background: rgba(195,215,245,0.95);
             border: none; border-radius: 6px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 12px; color: rgba(40,42,50,0.70);
@@ -203,7 +212,7 @@
             letter-spacing: 0.06em;
             transition: background 0.15s;
         }
-        #ae-btn:hover { background: rgba(200,207,220,1); }
+        #ae-btn:hover { background: rgba(168,200,235,1); }
         #ae-btn.active {
             background: rgba(20,20,20,0.88);
             color: rgba(255,255,255,0.85);
@@ -226,7 +235,7 @@
             position: absolute; top: 50%; right: -28px;
             transform: translateY(-50%);
             width: 28px; height: 140px;
-            background: rgba(220,225,235,0.92);
+            background: rgba(195,215,245,0.95);
             border-radius: 0 10px 10px 0;
             box-shadow: 2px 0 10px rgba(0,0,0,0.10);
             display: flex; align-items: center; justify-content: center;
@@ -235,7 +244,7 @@
         }
         #gallery-handle:hover {
             width: 34px;
-            background: rgba(200,207,220,1);
+            background: rgba(168,200,235,1);
         }
         #gallery-handle span {
             writing-mode: vertical-rl;
@@ -252,7 +261,7 @@
         #quick-capture-btn {
             position: fixed; top: 70px; left: 24px;
             height: 28px; padding: 0 12px;
-            background: rgba(220,225,235,0.92);
+            background: rgba(195,215,245,0.95);
             border: none; border-radius: 6px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 12px; color: rgba(40,42,50,0.80);
@@ -261,7 +270,7 @@
             transition: background 0.15s, opacity 0.2s;
             white-space: nowrap;
         }
-        #quick-capture-btn:hover { background: rgba(200,207,220,1); }
+        #quick-capture-btn:hover { background: rgba(168,200,235,1); }
 
         /* Gallery panel */
         #gallery-panel {
@@ -322,18 +331,20 @@
         }
         .gallery-thumb:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
         .gallery-thumb video,
-        .gallery-thumb > img { width: 100%; aspect-ratio: 3/2; object-fit: contain; display: block; background: #dde3ec; }
+        .gallery-thumb > img { width: 100%; height: 120px; object-fit: contain; display: block; background: #dde3ec; }
         .gallery-thumb-info {
-            padding: 8px 10px 9px;
-            border-top: 1px solid rgba(0,0,0,0.05);
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 18px 8px 7px;
+            background: linear-gradient(transparent, rgba(200,210,228,0.92));
+            pointer-events: none;
         }
         .gallery-thumb-name {
             font-family: "miller-text", serif; font-style: italic;
-            font-size: 13px; color: rgba(40,42,50,0.80);
+            font-size: 12px; color: rgba(30,40,60,0.88);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .gallery-thumb-sub {
-            font-size: 11px; color: rgba(40,42,50,0.42); margin-top: 2px;
+            font-size: 10px; color: rgba(30,40,60,0.60); margin-top: 1px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .gallery-thumb-complexity {
@@ -426,13 +437,25 @@
 
         /* Central orb container */
         #orb-container {
-            
             position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             z-index: 15; pointer-events: all;
             transition: opacity 0.8s ease;
         }
         #orb-container.hidden { opacity: 0; pointer-events: none; }
+        #orb-container::before {
+            content: '';
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 340px; height: 340px;
+            border-radius: 50%;
+            background: radial-gradient(circle,
+                rgba(170,200,255,0.22) 0%,
+                rgba(150,185,250,0.12) 35%,
+                rgba(120,160,235,0.05) 60%,
+                transparent 100%);
+            z-index: -1; pointer-events: none;
+        }
 
         #orb {
             width: 520px; height: 520px;
@@ -482,7 +505,7 @@
             transform: translate(-50%, -50%);
             width: 320px;
             opacity: 0.8;
-            user-select: none; z-index: 2;
+            user-select: none; z-index: 20;
             pointer-events: none;
         }
         #orb-label {
@@ -536,18 +559,18 @@
         #details-btn {
             height: 56px;
             padding: 0 20px;
-            background: rgba(220,225,235,1); border: none; border-radius: 8px;
+            background: rgba(195,215,245,1); border: none; border-radius: 8px;
             cursor: pointer; z-index: 50;
             transition: background 0.15s;
             display: flex; align-items: center;
         }
-        #details-btn:hover { background: rgba(200,207,220,1); }
+        #details-btn:hover { background: rgba(168,200,235,1); }
         #entropy-scale svg { display: block; }
 
         /* Soundmarks box */
         #soundmarks-box {
             height: 48px;
-            background: rgba(220,225,235,1);
+            background: rgba(195,215,245,1);
             border: none;
             border-radius: 8px;
             padding: 0 18px;
@@ -560,7 +583,7 @@
             max-width: 320px;
             cursor: pointer;
         }
-        #soundmarks-box:hover { background: rgba(200,207,220,1); }
+        #soundmarks-box:hover { background: rgba(168,200,235,1); }
         #soundmarks-label {
             white-space: nowrap;
             color: rgba(0,0,0,0.50);
@@ -596,7 +619,7 @@
         /* Toggle pill button */
         #bottom-bar-toggle {
             height: 38px; padding: 0 20px;
-            background: rgba(220,225,235,0.92);
+            background: rgba(195,215,245,0.95);
             border: none; border-radius: 20px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 13px; letter-spacing: 0.08em;
@@ -604,7 +627,7 @@
             cursor: pointer; transition: background 0.15s;
             box-shadow: 0 2px 10px rgba(0,0,0,0.07);
         }
-        #bottom-bar-toggle:hover { background: rgba(200,207,220,1); color: rgba(20,25,40,0.85); }
+        #bottom-bar-toggle:hover { background: rgba(168,200,235,1); color: rgba(20,25,40,0.85); }
 
         /* Expandable bar — hidden by default, opens upward */
         #bottom-bar {
@@ -621,7 +644,7 @@
         #gallery-panel { transition: transform 0.35s ease, opacity 0.4s ease; }
         .measure-box {
             height: 48px;
-            background: rgba(220,225,235,1);
+            background: rgba(195,215,245,1);
             border: none;
             border-radius: 8px;
             padding: 0 16px;
@@ -633,7 +656,7 @@
             cursor: default;
         }
         button.measure-box { cursor: pointer; }
-        button.measure-box:hover { background: rgba(200,207,220,1); }
+        button.measure-box:hover { background: rgba(168,200,235,1); }
         .measure-label {
             font-size: 10px; font-style: normal;
             letter-spacing: 0.03em;
@@ -754,29 +777,38 @@
             #globe-btn  { top: 14px; right: 14px; width: 34px; height: 34px; }
             #sound-btn  { top: 14px; right: 56px; width: 34px; height: 34px; }
 
-            /* Home button — shorter text fits on small screens */
+            /* Home button */
             #home-btn { font-size: 11px; padding: 0 10px; }
 
-            /* Bottom bar wrapper: adjust position on mobile */
+            /* Home tagline */
+            #home-tagline { font-size: 16px; white-space: normal; text-align: center; width: 80vw; }
+
+            /* Bottom bar wrapper */
             #bottom-bar-wrapper { bottom: 16px; right: 12px; }
             #bottom-bar { align-items: flex-end; gap: 6px; }
             #details-btn  { width: auto; }
             #entropy-scale svg { width: 220px; }
             #soundmarks-box { max-width: 260px; }
 
-            /* Self-directed button: smaller on mobile */
-            #self-directed-btn { height: 70px; padding: 0 16px; bottom: 24px; left: 24px; }
+            /* Self-directed button */
+            #self-directed-btn { height: 88px; padding: 0 18px; bottom: 12px; left: 8px; font-size: 12px; }
 
-            /* SD session prompt button: lift above self-directed button */
+            /* SD session prompt button */
             #sd-session-prompt-btn { bottom: 108px; font-size: 12px; }
 
-            /* Session prompt text: slightly smaller on mobile */
+            /* Session prompt text */
             #session-prompt-text { font-size: 18px; max-width: 85vw; }
 
-            /* Gallery panel: take more of the screen width */
+            /* Session progress bar */
+            #session-progress { left: 10px; }
+
+            /* Info panel during drawing */
+            #info-viz-panel { bottom: 16px; right: 12px; gap: 6px; }
+            .ivp-label { font-size: 9px; }
+            .ivp-value { font-size: 12px; }
+
+            /* Gallery panel */
             #gallery-panel  { width: 270px; }
-            #sound-btn      { top: 14px; right: 56px; width: 34px; height: 34px; }
-            #self-directed-btn { position: fixed; bottom: 24px; left: 16px; height: 70px; padding: 0 16px; }
 
             /* Map modal */
             #map-container  { width: 95vw; height: 75vh; }
@@ -830,11 +862,11 @@
         }
         #prerecord-start {
             height: 38px; border: none; border-radius: 8px;
-            background: rgba(180,200,225,0.9); color: rgba(20,30,50,0.85);
+            background: rgba(195,215,245,0.95); color: rgba(20,30,50,0.85);
             font-family: "miller-text", serif; font-style: italic;
             font-size: 13px; cursor: pointer; transition: background 0.15s;
         }
-        #prerecord-start:hover { background: rgba(160,185,215,1); }
+        #prerecord-start:hover { background: rgba(168,200,235,1); }
         #prerecord-cancel {
             height: 28px; border: none; background: none;
             font-family: "miller-text", serif; font-style: italic;
@@ -847,7 +879,7 @@
         #quick-save-btn {
             position: fixed; bottom: 96px; left: calc(50% + 70px);
             height: 38px; padding: 0 22px;
-            background: rgba(180,200,225,0.92);
+            background: rgba(195,215,245,0.95);
             border: none; border-radius: 20px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 13px; letter-spacing: 0.08em;
@@ -857,8 +889,34 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.09);
         }
         #quick-save-btn.visible { display: block; }
-        #quick-save-btn:hover { background: rgba(160,185,215,1); }
+        #quick-save-btn:hover { background: rgba(168,200,235,1); }
 
+        /* Visualisation info button */
+        #info-viz-panel {
+            position: fixed; bottom: 24px; right: 20px;
+            display: none; flex-direction: column; gap: 8px;
+            z-index: 100; pointer-events: none;
+            opacity: 0; transition: opacity 0.8s ease;
+        }
+        #info-viz-panel.visible { display: flex; }
+        #info-viz-panel.shown { opacity: 1; }
+        .ivp-label {
+            font-size: 10px; color: rgba(40,42,50,0.42);
+            text-transform: uppercase; letter-spacing: 0.07em;
+            margin-bottom: 2px;
+        }
+        .ivp-value {
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.75);
+        }
+        .ivp-dots { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; margin-top: 2px; }
+        .ivp-dot-tag {
+            display: flex; align-items: center; gap: 4px;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 11px; color: rgba(40,42,50,0.65);
+        }
+        .ivp-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .ivp-section { text-align: right; }
         /* Gallery thumbnail label */
         .thumb-label {
             position: absolute; bottom: 0; left: 0; right: 0;
@@ -889,17 +947,17 @@
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 12px; cursor: pointer; transition: background 0.15s;
         }
-        #save-prompt-yes { background: rgba(180,200,225,0.9); color: rgba(20,30,50,0.85); }
-        #save-prompt-yes:hover { background: rgba(160,185,215,1); }
-        #save-prompt-no { background: rgba(220,225,235,0.9); color: rgba(40,42,50,0.75); }
-        #save-prompt-no:hover { background: rgba(200,207,220,1); }
+        #save-prompt-yes { background: rgba(195,215,245,0.95); color: rgba(20,30,50,0.85); }
+        #save-prompt-yes:hover { background: rgba(168,200,235,1); }
+        #save-prompt-no { background: rgba(195,215,245,0.9); color: rgba(40,42,50,0.75); }
+        #save-prompt-no:hover { background: rgba(168,200,235,1); }
 
         /* Reset button */
         #reset-btn {
             position: fixed; bottom: 96px; left: 50%;
             transform: translateX(-50%);
             height: 38px; padding: 0 24px;
-            background: rgba(220,225,235,0.92);
+            background: rgba(195,215,245,0.95);
             border: none; border-radius: 20px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 13px; letter-spacing: 0.08em;
@@ -910,7 +968,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.09);
         }
         #reset-btn.visible { display: block; }
-        #reset-btn:hover { background: rgba(200,207,220,1); color: rgba(20,25,40,0.90); }
+        #reset-btn:hover { background: rgba(168,200,235,1); color: rgba(20,25,40,0.90); }
 
         /* Saved confirmation */
         #saved-confirm {
@@ -937,12 +995,12 @@
 
         /* Self Directed tab — bottom left */
         #self-directed-btn {
-            position: fixed; bottom: 32px; left: 32px;
-            height: 96px; padding: 0 24px;
+            position: fixed; bottom: 16px; left: 8px;
+            height: 120px; padding: 0 28px;
             background: url('button.png') center / contain no-repeat;
             border: none; border-radius: 0;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 13px; letter-spacing: 0.08em;
+            font-size: 13px; letter-spacing: 0.08em; line-height: 1.5;
             color: rgba(40,42,50,0.60);
             cursor: pointer; z-index: 100;
             transition: filter 0.15s, color 0.15s, opacity 0.4s;
@@ -978,18 +1036,36 @@
         #duration-options { display: flex; gap: 10px; }
         .duration-btn {
             flex: 1; height: 46px; padding: 0 22px;
-            background: rgba(220,225,235,0.92); border: none; border-radius: 10px;
+            background: rgba(195,215,245,0.95); border: none; border-radius: 10px;
             font-family: "miller-text", serif; font-style: italic;
             font-size: 14px; color: rgba(40,42,50,0.72);
             cursor: pointer; transition: background 0.15s; white-space: nowrap;
         }
-        .duration-btn:hover { background: rgba(180,200,225,0.92); color: rgba(20,30,50,0.88); }
+        .duration-btn:hover { background: rgba(168,200,235,1); color: rgba(20,30,50,0.88); }
 
         /* Session overlay — above orb so text renders on top of it */
         #session-overlay {
             position: fixed; inset: 0; z-index: 16;
             pointer-events: none;
             display: none;
+        }
+        #session-progress {
+            position: fixed; left: 22px; top: 50%; transform: translateY(-50%);
+            display: none; flex-direction: column; align-items: center;
+            z-index: 50; pointer-events: none;
+        }
+        #session-progress.visible { display: flex; }
+        .sp-dot {
+            width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+            border: 1.5px solid rgba(100,140,200,0.55);
+            background: transparent;
+            transition: background 0.5s, border-color 0.5s;
+        }
+        .sp-dot.done    { background: rgba(100,140,200,0.45); border-color: rgba(100,140,200,0.55); }
+        .sp-dot.active  { background: rgba(100,140,200,0.90); border-color: rgba(100,140,200,0.90); }
+        .sp-seg {
+            width: 1.5px; height: 28px; flex-shrink: 0;
+            background: rgba(100,140,200,0.25);
         }
         /* Prompt text — centred on screen (= centre of orb) */
         #session-prompt-text {
@@ -1075,11 +1151,11 @@
         #session-preview-img { width: 100%; border-radius: 6px; display: none; margin-top: 4px; }
         #session-save-btn {
             height: 38px; border: none; border-radius: 8px;
-            background: rgba(180,200,225,0.9); color: rgba(20,30,50,0.85);
+            background: rgba(195,215,245,0.95); color: rgba(20,30,50,0.85);
             font-family: "miller-text", serif; font-style: italic;
             font-size: 13px; cursor: pointer; transition: background 0.15s;
         }
-        #session-save-btn:hover { background: rgba(160,185,215,1); }
+        #session-save-btn:hover { background: rgba(168,200,235,1); }
         #session-discard-btn {
             height: 28px; border: none; background: none;
             font-family: "miller-text", serif; font-style: italic;
@@ -1102,7 +1178,7 @@
             color: rgba(60,65,80,0.45);
         }
         .send-box {
-            background: rgba(220,225,235,0.55);
+            background: rgba(195,215,245,0.55);
             border-radius: 8px; padding: 9px 13px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 13px; color: rgba(40,42,50,0.80);
@@ -1110,7 +1186,7 @@
         .send-tags { display: flex; flex-wrap: wrap; gap: 6px; }
         .send-tag {
             display: flex; align-items: center; gap: 7px;
-            background: rgba(220,225,235,0.55);
+            background: rgba(195,215,245,0.55);
             border-radius: 8px; padding: 7px 12px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 13px; color: rgba(40,42,50,0.80);
@@ -1126,7 +1202,7 @@
 </head>
     <body>
         <!-- Self Directed mode tab -->
-        <button id="self-directed-btn">Self Directed</button>
+        <button id="self-directed-btn">Self Directed<br>Meditation</button>
 
         <!-- Home button top left -->
         <button id="home-btn" title="Return to start">Home</button>
@@ -1189,7 +1265,7 @@
         const aeBtn    = document.getElementById('ae-btn');
         const splashVisible = !!(splash && splash.parentNode);
         globeBtn.style.display = 'none';
-        soundBtn.style.display = splashVisible ? 'none' : '';
+        soundBtn.style.display = 'none';
         // homeBtn is controlled by recording/visualising state, not splash
         aeBtn.style.display    = 'none';
     }
@@ -1231,7 +1307,7 @@
     <!-- Splash screen with sequenced intro -->
     <div id="splash-screen">
         <model-viewer id="splash-model"
-            src="3d model.glb"
+            src="model.glb"
             auto-rotate
             disable-zoom
             orientation="160deg 0deg 0deg"
@@ -1301,17 +1377,19 @@
         <div class="orbit-ring"></div>
         <div id="orb">
             <model-viewer id="orb-model"
-                src="3d model.glb"
+                src="model.glb"
                 disable-zoom
                 camera-orbit="0deg 75deg 105%"
                 orientation="160deg 0deg 0deg"
-                style="width:520px; height:520px; background:transparent; border-radius:50%; pointer-events:none;">
+                style="width:520px; height:520px; background:transparent; border-radius:50%; pointer-events:none; position:relative; z-index:0;">
             </model-viewer>
             <img id="orb-title" src="just_text.png" alt="MILIEU" />
             <div id="orb-label">Press to begin</div>
             <div id="orb-sublabel">Guided Meditation</div>
         </div>
     </div>
+
+    <div id="home-tagline">Sonic meditation grounded in your landscape</div>
 
     <script>
         // Helper: position a popup to the LEFT of a button, aligned to its top
@@ -1495,6 +1573,99 @@
             setTimeout(showPhrase, 600);
         })();
 
+        // ── Standby mode ─────────────────────────────────────────────────────────
+        let _idleTimer = null;
+        let _standbyOverlay = null;
+
+        const IDLE_MS = 2 * 60 * 1000; // 2 minutes
+
+        function resetIdleTimer() {
+            if (window._sessionActive || _standbyOverlay) return;
+            clearTimeout(_idleTimer);
+            _idleTimer = setTimeout(enterStandby, IDLE_MS);
+        }
+
+        ['click','touchstart','keydown','mousemove','scroll'].forEach(e => {
+            document.addEventListener(e, resetIdleTimer, { passive: true });
+        });
+        resetIdleTimer();
+
+        function enterStandby() {
+            if (window._sessionActive || _standbyOverlay) return;
+
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:500;background:radial-gradient(ellipse at 50% 50%,rgba(235,242,255,1.0) 0%,rgba(210,225,248,1.0) 35%,rgba(185,208,240,1.0) 65%,rgba(160,190,228,1.0) 100%);display:flex;align-items:center;justify-content:center;';
+
+            overlay.innerHTML = `
+                <model-viewer src="model.glb" auto-rotate disable-zoom orientation="160deg 0deg 0deg"
+                    style="position:absolute;width:520px;height:520px;background:transparent;pointer-events:none;opacity:0.55;"></model-viewer>
+                <div style="width:520px;height:520px;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,0.68) 0%,rgba(245,248,255,0.44) 40%,rgba(220,232,248,0.14) 70%,rgba(200,218,240,0.0) 100%);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;"></div>
+                <div id="_sb_phrase" style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:22px;line-height:1.55;color:rgba(25,35,55,0.78);text-align:center;max-width:300px;opacity:0;transition:opacity 0.9s ease;position:relative;z-index:2;"></div>
+                <div id="_sb_logo" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity 1s ease;text-align:center;z-index:3;pointer-events:none;">
+                    <img src="just_text.png" style="width:min(280px,72vw);display:block;margin:0 auto 8px;">
+                    <div style="font-family:'miller-text',serif;font-style:italic;font-size:13px;color:rgba(40,42,50,0.45);">Connecting you to your landscape</div>
+                </div>
+                <button id="_sb_enter" style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);background:url('silverbutton.png') center/contain no-repeat;border:none;height:96px;padding:0 60px;cursor:pointer;font-family:'miller-text',serif;font-style:italic;font-size:13px;color:rgba(40,42,50,0.60);opacity:1;transition:opacity 0.7s ease;">Enter</button>
+            `;
+            document.body.appendChild(overlay);
+            _standbyOverlay = overlay;
+
+            const phraseEl = overlay.querySelector('#_sb_phrase');
+            const logoEl   = overlay.querySelector('#_sb_logo');
+            const enterBtn = overlay.querySelector('#_sb_enter');
+
+            const _sbPhrases = [
+                'Come into contact with your surroundings',
+                'Listen to what\'s around you',
+                'Notice the space you\'re in',
+                'Take a moment',
+            ];
+            const FADE = 700, HOLD = 2500;
+            let pi = 0, _sbTimer = null, _activated = false;
+
+            function _sbNext() {
+                if (_activated) return;
+                phraseEl.textContent = _sbPhrases[pi % _sbPhrases.length];
+                phraseEl.style.opacity = '1';
+                _sbTimer = setTimeout(() => {
+                    phraseEl.style.opacity = '0';
+                    _sbTimer = setTimeout(() => { pi++; _sbNext(); }, FADE);
+                }, HOLD);
+            }
+            _sbTimer = setTimeout(_sbNext, 600);
+
+            function onInteract() {
+                if (_activated) return;
+                _activated = true;
+                clearTimeout(_sbTimer);
+                phraseEl.style.opacity = '0';
+                setTimeout(() => {
+                    logoEl.style.opacity = '1';
+                    setTimeout(() => {
+                        enterBtn.style.opacity = '1';
+                        enterBtn.style.pointerEvents = '';
+                    }, 900);
+                }, 400);
+                overlay.removeEventListener('click',    onInteract);
+                overlay.removeEventListener('touchstart', onInteract);
+            }
+            overlay.addEventListener('click',     onInteract);
+            overlay.addEventListener('touchstart', onInteract, { passive: true });
+
+            enterBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                _activated = true;
+                clearTimeout(_sbTimer);
+                overlay.style.transition = 'opacity 1s ease';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.remove();
+                    _standbyOverlay = null;
+                    resetIdleTimer();
+                }, 1050);
+            });
+        }
+
         // Orb click handler
         function orbClickHandler() {
             if (window._sessionActive) {
@@ -1524,7 +1695,7 @@
                 document.getElementById('prerecord-location').value = '';
                 document.getElementById('prerecord-date').value = (d => `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`)(new Date());
                 document.getElementById('prerecord-time').value = new Date().toTimeString().slice(0, 5);
-                document.getElementById('prerecord-save').checked = true;
+                document.getElementById('prerecord-save').value = 'true';
                 document.getElementById('prerecord-modal').classList.add('open');
             } else {
                 // Guided session: open duration modal
@@ -1771,13 +1942,6 @@
                 const d = new Date(str); return isNaN(d) ? null : d;
             }
             function buildLightboxContent(item, url) {
-                function cLabel(n) {
-                    if (n < 0.2) return 'Highly ordered';
-                    if (n < 0.4) return 'Mostly ordered';
-                    if (n < 0.6) return 'Moderately complex';
-                    if (n < 0.8) return 'Mostly disordered';
-                    return 'Highly disordered';
-                }
                 const inner = document.createElement('div');
                 inner.id = 'lightbox-inner';
                 const cls = document.createElement('button');
@@ -1795,12 +1959,13 @@
                 const meta = document.createElement('div');
                 meta.id = 'lightbox-meta';
                 // Session details
-                const hasDetails = item.label || item.location || item.date || item.time;
+                const _lbName = _isTimestampLabel(item.label) ? '—' : (item.label || '—');
+                const hasDetails = _lbName || item.location || item.date || item.time;
                 if (hasDetails) {
                     const sec = document.createElement('div');
                     sec.innerHTML = '<div class="lb-section-title">Session</div>';
                     const row1 = document.createElement('div'); row1.className = 'lb-row';
-                    if (item.label) row1.innerHTML += `<div class="lb-field"><div class="lb-label">Name</div><div class="lb-value">${item.label}</div></div>`;
+                    row1.innerHTML += `<div class="lb-field"><div class="lb-label">Name</div><div class="lb-value">${_lbName}</div></div>`;
                     if (item.date)  row1.innerHTML += `<div class="lb-field"><div class="lb-label">Date</div><div class="lb-value">${item.date}</div></div>`;
                     if (row1.innerHTML) sec.appendChild(row1);
                     const row2 = document.createElement('div'); row2.className = 'lb-row';
@@ -1822,7 +1987,7 @@
                     sec.innerHTML = '<div class="lb-divider"></div><div class="lb-section-title" style="margin-top:8px;">Analysis</div>';
                     if (a.complexity !== null && a.complexity !== undefined) {
                         const f = document.createElement('div'); f.className = 'lb-field';
-                        f.innerHTML = `<div class="lb-label">Measure of Order to Disorder</div><div class="lb-complexity-box">${cLabel(a.complexity)}</div>`;
+                        f.innerHTML = `<div class="lb-label">Measure of Order to Disorder</div><div class="lb-complexity-box">${_complexityLabel(a.complexity)}</div>`;
                         sec.appendChild(f);
                     }
                     if (a.soundmarks && a.soundmarks.length) {
@@ -1901,33 +2066,24 @@
                     const url = URL.createObjectURL(item.blob);
                     const thumb = document.createElement('div');
                     thumb.className = 'gallery-thumb';
-                    const _mStyle = 'width:100%;height:160px;object-fit:contain;display:block;background:#dde3ec;';
+                    const _mStyle = 'width:100%;object-fit:contain;display:block;background:#dde3ec;';
                     const media = item.thumbnail
                         ? `<img src="${item.thumbnail}" alt="" style="${_mStyle}">`
                         : `<video src="${url}" muted playsinline style="${_mStyle}"></video>`;
                     const _dt = [item.date, item.time].filter(Boolean).join(' · ');
                     const _a = item.analysis;
-                    function _cLbl(n) {
-                        if (n < 0.2) return 'Highly ordered';
-                        if (n < 0.4) return 'Mostly ordered';
-                        if (n < 0.6) return 'Moderately complex';
-                        if (n < 0.8) return 'Mostly disordered';
-                        return 'Highly disordered';
-                    }
+                    const _displayName = _isTimestampLabel(item.label) ? '—' : (item.label || '—');
+                    const _displayDate = item.date || '—';
                     const _smDots = (_a && _a.soundmarks && _a.soundmarks.length)
                         ? '<div class="thumb-sm-dots">' + _a.soundmarks.slice(0,5).map(cat => {
                             const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180,195,215];
                             return `<span class="thumb-sm-dot" style="background:rgb(${col[0]},${col[1]},${col[2]})" title="${cat.replace(/_/g,' ')}"></span>`;
                           }).join('') + '</div>' : '';
+                    const _displayDateTime = [item.date, item.time].filter(Boolean).join(' · ') || '—';
                     const infoLines = [
-                        item.label ? `<div class="gallery-thumb-name">${item.label}</div>` : '',
-                        _dt        ? `<div class="gallery-thumb-sub">${_dt}</div>` : '',
-                        item.location ? `<div class="gallery-thumb-sub">${item.location}</div>` : '',
-                        _a && _a.complexity != null ? `<div class="gallery-thumb-sub gallery-thumb-complexity">${_cLbl(_a.complexity)}</div>` : '',
-                        _smDots,
-                        (_a && (_a.keynote != null || _a.signal != null))
-                            ? `<div class="gallery-thumb-sub">${[_a.keynote ? `${_a.keynote} Hz` : '', _a.signal != null ? `Signal ${typeof _a.signal==='number'?_a.signal.toFixed(2):_a.signal}` : ''].filter(Boolean).join(' · ')}</div>` : ''
-                    ].filter(Boolean).join('');
+                        `<div class="gallery-thumb-name">${_displayName}</div>`,
+                        `<div class="gallery-thumb-sub">${_displayDateTime}</div>`
+                    ].join('');
                     const infoHtml = infoLines ? `<div class="gallery-thumb-info">${infoLines}</div>` : '';
                     thumb.innerHTML = `${media}${infoHtml}<button class="thumb-del">×</button>`;
                     addThumbListeners(thumb, url, item);
@@ -2018,6 +2174,42 @@
             }
         });
 
+        function _isTimestampLabel(s) {
+            const t = (s || '').trim();
+            return !t || /^\d{1,2}:\d{2}(:\d{2})?(\s*(AM|PM))?$/i.test(t) || /^\d{2}\.\d{2}\.\d{4}/.test(t);
+        }
+        function _complexityLabel(n) {
+            if (!n && n !== 0) return '—';
+            if (n < 0.2) return 'Highly ordered';
+            if (n < 0.4) return 'Mostly ordered';
+            if (n < 0.6) return 'Moderately complex';
+            if (n < 0.8) return 'Mostly disordered';
+            return 'Highly disordered';
+        }
+
+        window.setPlaybackActive = function(active) {
+            document.getElementById('sound-btn').style.display = active ? '' : 'none';
+            const panel = document.getElementById('info-viz-panel');
+            if (active) {
+                const la = window._lastAnalysis || {};
+                const sms = la.soundmarks || [];
+                const dotsHtml = sms.length
+                    ? sms.map(cat => {
+                        const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180,195,215];
+                        return `<div class="ivp-dot-tag"><span class="ivp-dot" style="background:rgb(${col[0]},${col[1]},${col[2]})"></span>${cat.replace(/_/g,' ')}</div>`;
+                      }).join('')
+                    : '';
+                panel.innerHTML = `
+                    <div class="ivp-section"><div class="ivp-label">Milieu visuals detect landscape to be</div><div class="ivp-value">${_complexityLabel(la.complexityNorm)}</div></div>
+                    ${dotsHtml ? `<div class="ivp-section"><div class="ivp-label">Soundmarks</div><div class="ivp-dots">${dotsHtml}</div></div>` : ''}`;
+                panel.classList.add('visible');
+                setTimeout(() => panel.classList.add('shown'), 50);
+            } else {
+                panel.classList.remove('shown');
+                setTimeout(() => panel.classList.remove('visible'), 800);
+            }
+        };
+
         // Gallery panel — tab click to open/close
         const galleryHandle = document.getElementById('gallery-handle');
         function openGallery()  { galleryPanel.classList.add('open');    renderGallery(); }
@@ -2028,8 +2220,9 @@
         });
         document.getElementById('gallery-close').addEventListener('click', closeGallery);
 
-        lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('open'); });
-        lightbox.querySelector('#lightbox-close').addEventListener('click', () => lightbox.classList.remove('open'));
+        lightbox.addEventListener('click', e => {
+            if (e.target === lightbox || e.target.id === 'lightbox-close') lightbox.classList.remove('open');
+        });
     </script>
 
     <!-- Duration selection modal -->
@@ -2041,7 +2234,23 @@
                 <button class="duration-btn" data-min="10">10 min</button>
                 <button class="duration-btn" data-min="15">15 min</button>
             </div>
+            <div class="modal-btn-row" style="margin-top:14px;">
+                <button id="duration-back-btn" class="modal-btn">Back</button>
+            </div>
         </div>
+    </div>
+
+    <!-- Session step progress bar -->
+    <div id="session-progress">
+        <div class="sp-dot" id="sp-0"></div>
+        <div class="sp-seg"></div>
+        <div class="sp-dot" id="sp-1"></div>
+        <div class="sp-seg"></div>
+        <div class="sp-dot" id="sp-2"></div>
+        <div class="sp-seg"></div>
+        <div class="sp-dot" id="sp-3"></div>
+        <div class="sp-seg"></div>
+        <div class="sp-dot" id="sp-4"></div>
     </div>
 
     <!-- Session overlay — prompts shown during guided session -->
@@ -2080,7 +2289,10 @@
             <!-- Page 2: reflection -->
             <div id="session-end-page2" style="display:none;flex-direction:column;gap:14px;width:100%;">
                 <h3>Take these thoughts into your day…</h3>
-                <p>Your session</p>
+                <div class="prerecord-field">
+                    <label>Name this session</label>
+                    <input type="text" id="session-end-name" placeholder="e.g. morning walk...">
+                </div>
                 <textarea id="session-description" placeholder="Describe what you noticed..."></textarea>
                 <label class="session-image-label">
                     <input type="file" id="session-image" accept="image/*" style="display:none">
@@ -2102,6 +2314,7 @@
                     In this mode, you can guide and record your own soundscape without structure.
                 </div>
                 <div class="modal-btn-row">
+                    <button class="sd-back-btn modal-btn">Back</button>
                     <button class="sd-next-btn prerecord-start modal-btn">Next</button>
                 </div>
             </div>
@@ -2111,7 +2324,7 @@
                 <div class="prerecord-field"><label>Location</label><input type="text" id="sd-location" placeholder="e.g. brixton, london..."></div>
                 <div class="prerecord-field"><label>Date</label><input type="text" id="sd-date" placeholder="DD.MM.YYYY" maxlength="10"></div>
                 <div class="prerecord-field"><label>Time</label><input type="time" id="sd-time"></div>
-                <div class="prerecord-save-row"><label>Save to my landscapes</label><input type="checkbox" id="sd-save" checked></div>
+                <input type="hidden" id="sd-save" value="true">
                 <div class="modal-btn-row">
                     <button class="sd-back-btn prerecord-cancel modal-btn">Back</button>
                     <button class="sd-next-btn prerecord-start modal-btn">Next</button>
@@ -2154,14 +2367,14 @@
                 <label>Time</label>
                 <input type="time" id="prerecord-time">
             </div>
-            <div class="prerecord-save-row">
-                <label>Save to my landscapes</label>
-                <input type="checkbox" id="prerecord-save" checked>
-            </div>
+            <input type="hidden" id="prerecord-save" value="true">
             <button id="prerecord-start">Begin</button>
             <button id="prerecord-cancel">Cancel</button>
         </div>
     </div>
+
+    <!-- Analysis info panel shown during drawing -->
+    <div id="info-viz-panel"></div>
 
     <!-- Quick save button (visible during visualisation) -->
     <button id="quick-save-btn">Save</button>
@@ -2180,6 +2393,7 @@
     <button id="reset-btn">Reset</button>
 
     <script>
+
         // Reset button + save prompt
         const resetBtn   = document.getElementById('reset-btn');
         const savePrompt = document.getElementById('save-prompt');
@@ -2222,10 +2436,15 @@
             if (window._selfDirected) {
                 window._selfDirected = false;
                 selfDirectedBtn.classList.remove('active', 'hidden-ui');
-                selfDirectedBtn.textContent = 'Self Directed';
+                selfDirectedBtn.innerHTML = 'Self Directed<br>Meditation';
             }
             homeBtn.textContent = 'Home';
             window._lastSavedRecordId = null;
+            window._lastDrawingThumbnail = null;
+            if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
+            hideSessionProgress();
+            document.getElementById('home-tagline').classList.remove('hidden-ui');
+            resetIdleTimer(); // restart standby countdown after session ends
             window.showOrb();  // hides home-btn because _sessionActive is now false
             savePrompt.classList.remove('visible');
             orbLabel.textContent = 'Press to begin';
@@ -2278,7 +2497,7 @@
                 location: document.getElementById('prerecord-location').value.trim(),
                 date: document.getElementById('prerecord-date').value,
                 time: document.getElementById('prerecord-time').value,
-                shouldSave: document.getElementById('prerecord-save').checked
+                shouldSave: true
             };
             document.getElementById('prerecord-modal').classList.remove('open');
             if (window._pendingSessionDuration) {
@@ -2301,7 +2520,7 @@
                 // --- Modal logic for navigation and ordering ---
             window._selfDirected = !window._selfDirected;
             selfDirectedBtn.classList.toggle('active', window._selfDirected);
-            selfDirectedBtn.textContent = 'Self Directed';
+            selfDirectedBtn.innerHTML = 'Self Directed<br>Meditation';
             const detailsBtn = document.getElementById('details-btn');
             const soundmarksBox = document.getElementById('soundmarks-box');
             const sdModal = document.getElementById('self-directed-modal');
@@ -2359,6 +2578,10 @@
                     if (sdStep > 0) {
                         sdStep--;
                         showStep(sdStep);
+                    } else {
+                        sdModal.style.display = 'none';
+                        window._selfDirected = false;
+                        selfDirectedBtn.classList.remove('active');
                     }
                 }
                 Array.from(sdModal.querySelectorAll('.sd-next-btn')).forEach(btn => {
@@ -2432,10 +2655,11 @@
                             location: document.getElementById('sd-location').value.trim(),
                             date: document.getElementById('sd-date').value,
                             time: document.getElementById('sd-time').value,
-                            shouldSave: document.getElementById('sd-save').checked
+                            shouldSave: true
                         };
 
                         // Start ambient self-directed session
+                        document.getElementById('home-tagline').classList.add('hidden-ui');
                         _sess.steps = customSteps;
                         _sess.idx = 0;
                         _sess.active = true;
@@ -2620,6 +2844,10 @@
         });
 
         // ── Duration modal ────────────────────────────────────────────────────────
+        document.getElementById('duration-back-btn').addEventListener('click', () => {
+            document.getElementById('duration-modal').classList.remove('open');
+        });
+
         document.querySelectorAll('.duration-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const mins = parseInt(btn.dataset.min);
@@ -2630,7 +2858,7 @@
                 document.getElementById('prerecord-location').value = '';
                 document.getElementById('prerecord-date').value = (d => `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`)(new Date());
                 document.getElementById('prerecord-time').value = new Date().toTimeString().slice(0, 5);
-                document.getElementById('prerecord-save').checked = true;
+                document.getElementById('prerecord-save').value = 'true';
                 document.getElementById('prerecord-modal').classList.add('open');
             });
         });
@@ -2794,6 +3022,15 @@
             return p;
         }
 
+        function resolvePromptTemplate(p, complexityLbl, smsText) {
+            if (!p) return p;
+            return p
+                .replace(/\(soundmark written\)/gi, smsText || 'the sounds around you')
+                .replace(/\(orderly\s*→\s*disorderly\)/gi, complexityLbl || '')
+                .replace(/\(INSERT SELECTED TIME FRAME\)/gi, window._pendingSessionDuration ? window._pendingSessionDuration + ' minutes' : 'this session')
+                .replace(/\s*\([^)]*\)/g, ''); // strip any remaining unfilled placeholders
+        }
+
         function sessDataClear() {
             const el = document.getElementById('session-data-display');
             el.classList.remove('visible');
@@ -2865,23 +3102,24 @@
             if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
             const playbackStep = _sess.steps.find(s => s.type === 'playback');
             window.onVisualisationStart = () => {
-                // During drawing in self-directed sessions, do NOT show any prompts
                 if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
                 clearInterval(_sess._promptTimer);
                 sessPrompt('');
+                window.setPlaybackActive && window.setPlaybackActive(true);
             };
             window.onVisualisationComplete = async function() {
                 window.onVisualisationComplete = null;
+                clearTimeout(window._vizStopTimer); // prevent fallback timer from triggering fade early
                 clearInterval(_sess._promptTimer);
                 if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
                 // Save the canvas recording to My Landscapes
                 if (window.stopVisualRecording) await window.stopVisualRecording();
                 if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
-                // Stay on the completed drawing for 2s, then fade back to orb
+                // Stay on the completed drawing for 5s, then fade back to orb
                 setTimeout(() => {
                     state = 'fading';
                     fadeAlpha = 0;
-                }, 2000);
+                }, 5000);
             };
             if (typeof toggleMic === 'function') toggleMic();
         }
@@ -2891,11 +3129,30 @@
             sessionRunStep();
         }
 
+        const _SP_MAP = { breathe: 0, set_intentions: 1, record: 2, playback: 2, reflect: 3, winddown: 4 };
+        function updateSessionProgress(stepType) {
+            if (window._selfDirected) return;
+            const prog = document.getElementById('session-progress');
+            const dot = _SP_MAP[stepType];
+            if (dot === undefined) { prog.classList.remove('visible'); return; }
+            prog.classList.add('visible');
+            for (let i = 0; i < 5; i++) {
+                const el = document.getElementById('sp-' + i);
+                el.classList.remove('active', 'done');
+                if (i < dot) el.classList.add('done');
+                else if (i === dot) el.classList.add('active');
+            }
+        }
+        function hideSessionProgress() {
+            document.getElementById('session-progress').classList.remove('visible');
+        }
+
         function sessionRunStep() {
             const step = _sess.steps[_sess.idx];
             if (!step) { sessionEndFlow(); return; }
             clearTimeout(_sess._timer);
             clearInterval(_sess._promptTimer);
+            updateSessionProgress(step.type);
 
             if (step.type === 'breathe') {
                 window.showOrb && window.showOrb();
@@ -2986,6 +3243,7 @@
 
                 window['onVisualisationStart'] = () => {
                     clearInterval(_sess._promptTimer);
+                    window.setPlaybackActive && window.setPlaybackActive(true);
                     window._lastRecordingDuration = Math.max(step.drawingMin || 60, window._lastRecordingDuration || 30);
                     const _drawPool = [];
                     if (_sess.bank) {
@@ -3004,6 +3262,7 @@
                     window.onVisualisationComplete = null;
                     clearInterval(_sess._promptTimer);
                     sessPrompt('');
+                    try { const cv = document.querySelector('canvas'); if (cv) window._lastDrawingThumbnail = cv.toDataURL('image/png'); } catch(e) {}
                     await (window.stopVisualRecording && window.stopVisualRecording());
                     if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
                     sessionAdvance();
@@ -3011,8 +3270,9 @@
             }
 
                else if (step.type === 'reflect') {
-                document.getElementById('session-overlay').classList.add('orb-hidden');
-                orbContainer.classList.add('hidden');
+                document.getElementById('session-overlay').classList.remove('orb-hidden');
+                orbSublabel.style.opacity = '0';
+                window.showOrb && window.showOrb();
                 const rec = _sess.recordings[0];
                 const cn = rec && rec.complexityNorm !== undefined ? rec.complexityNorm : 0.5;
                 function complexityLabel(n) {
@@ -3034,15 +3294,18 @@
                 }
                 const _rFallback = step.prompts.filter(p => p !== null);
                 const _rPrompts = _rPool.length ? _rPool : _rFallback;
+                const _cLbl = complexityLabel(cn);
                 // Assemble sequence
                 const resolvedPrompts = [
-                    'Milieu understood your surroundings as … ' + complexityLabel(cn)
+                    'Milieu understood your surroundings as … ' + _cLbl
                 ];
                 if (_smsText) {
                     resolvedPrompts.push('Milieu also heard … ' + _smsText);
                     resolvedPrompts.push('Did you notice this?');
                 }
-                _rPrompts.forEach(p => { if (p) resolvedPrompts.push(p); });
+                _rPrompts.forEach(p => {
+                    if (p) resolvedPrompts.push(resolvePromptTemplate(p, _cLbl, _smsText));
+                });
                 // 4th prompt lingers twice as long
                 const _longHold = step.longHold || 30000;
                 const _otherDur = Math.floor((step.duration - _longHold) / Math.max(1, resolvedPrompts.length - 1));
@@ -3063,6 +3326,15 @@
             }
             else if (step.type === 'winddown') {
                 document.getElementById('session-overlay').classList.remove('orb-hidden');
+                // Fade drawing back in as background layer
+                if (window._lastDrawingThumbnail) {
+                    const _dOverlay = document.createElement('img');
+                    _dOverlay.src = window._lastDrawingThumbnail;
+                    _dOverlay.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:contain;z-index:14;opacity:0;transition:opacity 2.5s ease;pointer-events:none;';
+                    document.body.appendChild(_dOverlay);
+                    window._drawingOverlay = _dOverlay;
+                    setTimeout(() => { _dOverlay.style.opacity = '1'; }, 50);
+                }
                 // Slow fade-in: set transition before removing hidden, force reflow for sync
                 orbContainer.style.transition = 'opacity 2.5s ease';
                 void orbContainer.offsetWidth;
@@ -3140,6 +3412,8 @@
         }
 
         async function sessionStart(duration) {
+            clearTimeout(_idleTimer); // no standby during sessions
+            document.getElementById('home-tagline').classList.add('hidden-ui');
             _sess.active = true;
             window._sessionActive = true;
             _sess.idx = 0;
@@ -3256,6 +3530,7 @@
         });
 
         // Session end modal — save / discard
+        let _sessionImageDataURL = '';
         document.getElementById('session-image').addEventListener('change', function() {
             const file = this.files[0];
             if (!file) return;
@@ -3263,10 +3538,24 @@
             img.src = URL.createObjectURL(file);
             img.style.display = 'block';
             this.closest('label').style.display = 'none';
+            const reader = new FileReader();
+            reader.onload = e => { _sessionImageDataURL = e.target.result; };
+            reader.readAsDataURL(file);
         });
 
         document.getElementById('session-save-btn').addEventListener('click', async () => {
             document.getElementById('session-end-modal').classList.remove('open');
+            const _endName = document.getElementById('session-end-name').value.trim();
+            const _endDesc = document.getElementById('session-description').value.trim();
+            if (_endName && window._recordMeta) window._recordMeta.name = _endName;
+            if (window._lastSavedRecordId) {
+                const _fields = {};
+                if (_endName)             _fields.label        = _endName;
+                if (_endDesc)             _fields.description  = _endDesc;
+                if (_sessionImageDataURL) _fields.imageDataURL = _sessionImageDataURL;
+                if (Object.keys(_fields).length) await dbUpdate(window._lastSavedRecordId, _fields);
+            }
+            _sessionImageDataURL = '';
             // If no recording was made, save a dusty-blue placeholder entry
             if (_sess.recordings.length === 0 && !(window._lastAnalysis && window._lastAnalysis.complexityNorm !== undefined)) {
                 await dbReady;

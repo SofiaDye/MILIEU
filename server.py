@@ -170,16 +170,12 @@ def serve_index():
 def serve_sketch():
     return send_from_directory('.', 'sketch.js')
 
-@app.route('/model.glb')
-@app.route('/1.05.glb')
-def serve_model():
-    here = os.path.dirname(os.path.abspath(__file__))
-    return send_from_directory(here, '1.05.glb', mimetype='model/gltf-binary')
-
 @app.route('/<path:filename>')
 def serve_static(filename):
-    here = os.path.dirname(os.path.abspath(__file__))
-    return send_from_directory(here, filename)
+    mime = 'model/gltf-binary' if filename.endswith('.glb') else None
+    if mime:
+        return send_from_directory('.', filename, mimetype=mime)
+    return send_from_directory('.', filename)
 
 def remap(value, in_min, in_max, out_min, out_max):
     t = (value - in_min) / (in_max - in_min + 1e-9)

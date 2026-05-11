@@ -340,6 +340,7 @@ function draw() {
     }
     if (fadeAlpha >= 255) {
       state = 'idle';
+      if (window.setPlaybackActive) window.setPlaybackActive(false);
       clear();
       drawBackground(-1);
       statusMsg = '';
@@ -400,6 +401,7 @@ function startVisualising() {
   vizFrame = 0; fadeAlpha = 0;
   drawBackground(complexityNorm);
   state = 'visualising'; statusMsg = '';
+  if (window.setPlaybackActive) window.setPlaybackActive(true);
   if (window.hideOrb) window.hideOrb();
   // Pause prompts during drawing
   if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
