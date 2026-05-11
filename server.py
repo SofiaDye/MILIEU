@@ -106,7 +106,7 @@ def fetch_prompt_bank():
     try:
         r = requests.get(SHEET_URL, timeout=5)
         r.raise_for_status()
-        reader = csv.reader(io.StringIO(r.text))
+        reader = csv.reader(io.StringIO(r.content.decode('utf-8')))
         rows   = list(reader)[1:]   # skip header row
         bank     = {}
         sections = {}   # keyed by column-1 section heading — separate from context keys

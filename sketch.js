@@ -769,6 +769,7 @@ function toggleMic() {
         } else {
           // Pause prompts before fade starts; they resume only when fade fully completes in draw()
           if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
+          if (window.setPlaybackActive) window.setPlaybackActive(false);
           state = 'fading'; fadeAlpha = 0;
         }
       }

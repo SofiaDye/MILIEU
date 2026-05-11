@@ -19,6 +19,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { overflow: hidden; background: rgb(255, 255, 255); font-family: 'komet', sans-serif; font-weight: 300; }
+        model-viewer { --progress-bar-height: 0px; --progress-bar-color: transparent; }
 
         /* Consistent modal button style for all modals */
         .modal-btn {
@@ -160,7 +161,7 @@
         #home-tagline {
             position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 26px; color: rgba(80,85,95,0.55);
+            font-size: 21px; color: rgba(80,85,95,0.55);
             letter-spacing: 0.04em; white-space: nowrap;
             z-index: 100; pointer-events: none;
             transition: opacity 0.4s ease;
@@ -781,7 +782,7 @@
             #home-btn { font-size: 11px; padding: 0 10px; }
 
             /* Home tagline */
-            #home-tagline { font-size: 16px; white-space: normal; text-align: center; width: 80vw; }
+            #home-tagline { font-size: 13px; white-space: normal; text-align: center; width: 80vw; }
 
             /* Bottom bar wrapper */
             #bottom-bar-wrapper { bottom: 16px; right: 12px; }
@@ -896,7 +897,7 @@
             position: fixed; bottom: 24px; right: 20px;
             display: none; flex-direction: column; gap: 8px;
             z-index: 100; pointer-events: none;
-            opacity: 0; transition: opacity 0.8s ease;
+            opacity: 0; transition: opacity 2s ease;
         }
         #info-viz-panel.visible { display: flex; }
         #info-viz-panel.shown { opacity: 1; }
@@ -2230,6 +2231,8 @@
         <div id="duration-box">
             <h3>How long do you have?</h3>
             <div id="duration-options">
+                <button class="duration-btn" data-min="1">1 min (trial)</button>
+                <button class="duration-btn" data-min="2">2 min</button>
                 <button class="duration-btn" data-min="5">5 min</button>
                 <button class="duration-btn" data-min="10">10 min</button>
                 <button class="duration-btn" data-min="15">15 min</button>
@@ -2442,6 +2445,7 @@
             window._lastSavedRecordId = null;
             window._lastDrawingThumbnail = null;
             if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
+            if (window.setPlaybackActive) window.setPlaybackActive(false);
             hideSessionProgress();
             document.getElementById('home-tagline').classList.remove('hidden-ui');
             resetIdleTimer(); // restart standby countdown after session ends
@@ -2864,6 +2868,26 @@
         });
 
         // ── Session Controller ────────────────────────────────────────────────────
+        const SESSION_1MIN = [
+            { type: 'breathe', duration: 12000, bankCount: 1, prompts: ['Breathe with Milieu', 'Follow your breath'] },
+            { type: 'set_intentions', duration: 10000, bankCount: 1, prompts: ['Set an intention for this practice'] },
+            { type: 'record', prompts: ['When you\'re ready, press the orb to begin recording', 'Listen to what\'s around you'] },
+            { type: 'playback', drawingMin: 15, prompts: ['Trace the pattern as it builds', 'Watch as it curves and travels'] },
+            { type: 'reflect', duration: 20000, longHold: 8000, bankCount: 1, prompts: [null, null, 'How does this make you feel?'] },
+            { type: 'winddown', duration: 8000, bankCount: 1, prompts: ['Slowly come back into the present'] },
+            { type: 'end' }
+        ];
+
+        const SESSION_2MIN = [
+            { type: 'breathe', duration: 25000, bankCount: 2, prompts: ['Breathe with Milieu', 'Focus on the space around you', 'Follow your breath'] },
+            { type: 'set_intentions', duration: 18000, bankCount: 2, prompts: ['Set an intention for this practice', 'How do you want to feel today'] },
+            { type: 'record', prompts: ['When you\'re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
+            { type: 'playback', drawingMin: 25, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels'] },
+            { type: 'reflect', duration: 35000, longHold: 12000, bankCount: 2, prompts: [null, null, null, 'How does this make you feel?', 'Notice how you perceive the sound now'] },
+            { type: 'winddown', duration: 12000, bankCount: 1, prompts: ['Draw your attention back to your breath', 'Slowly come back into the present'] },
+            { type: 'end' }
+        ];
+
         const SESSION_5MIN = [
             {
                 type: 'breathe', duration: 60000,
@@ -3056,11 +3080,10 @@
         let _breathGen = 0; // incremented on every stop — cancels any pending 300ms callbacks
 
         function startBreathing() {
-            stopBreathing();
-            const _gen = ++_breathGen;
-            orbContainer.classList.remove('breathing');
-            void orbContainer.offsetWidth;
-            orbContainer.classList.add('breathing');
+            ++_breathGen;
+            clearInterval(_sess._breathInterval);
+            const _gen = _breathGen;
+            orbContainer.classList.add('breathing'); // keep animation running — no restart
             orbLabel.textContent = '';
             const _bl = document.getElementById('session-breath-label');
             if (_bl) {
@@ -3069,7 +3092,7 @@
                 function _nb() {
                     _bl.classList.remove('visible');
                     setTimeout(() => {
-                        if (_breathGen !== _gen) return; // stale — stopBreathing was called
+                        if (_breathGen !== _gen) return;
                         _bl.textContent = _ph[_bpi++ % 2];
                         _bl.classList.add('visible');
                     }, 300);
@@ -3080,10 +3103,10 @@
         }
 
         function stopBreathing() {
-            ++_breathGen; // invalidate any in-flight 300ms callbacks
+            ++_breathGen;
             clearInterval(_sess._breathInterval);
             _sess._breathInterval = null;
-            orbContainer.classList.remove('breathing');
+            // keep 'breathing' class so animation continues smoothly between steps
             const _bl = document.getElementById('session-breath-label');
             if (_bl) {
                 _bl.classList.remove('visible');
@@ -3117,6 +3140,7 @@
                 if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
                 // Stay on the completed drawing for 5s, then fade back to orb
                 setTimeout(() => {
+                    if (window.setPlaybackActive) window.setPlaybackActive(false);
                     state = 'fading';
                     fadeAlpha = 0;
                 }, 5000);
@@ -3159,10 +3183,10 @@
                 startBreathing();
                 const _bPool = [];
                 if (_sess.bank) {
-                    for (let _i = 0; _i < 4; _i++) { const _p = pickPrompt('BREATHE'); if (_p) _bPool.push(_p); }
+                    for (let _i = 0; _i < (step.bankCount || 4); _i++) { const _p = pickPrompt('BREATHE'); if (_p) _bPool.push(_p); }
                 }
                 const _bPrompts = _bPool.length ? _bPool : step.prompts;
-                const interval = Math.min(12000, Math.floor(step.duration / _bPrompts.length));
+                const interval = Math.max(5000, Math.min(12000, Math.floor(step.duration / _bPrompts.length)));
                 const _hr = new Date().getHours();
                 const _greeting = _hr < 12 ? 'Good morning' : _hr < 17 ? 'Good afternoon' : 'Good evening';
                 sessPrompt(_greeting);
@@ -3190,10 +3214,10 @@
                 startBreathing();
                 const _siPool = [];
                 if (_sess.bank) {
-                    for (let _i = 0; _i < 4; _i++) { const _p = pickPrompt('SET INTENTIONS'); if (_p) _siPool.push(_p); }
+                    for (let _i = 0; _i < (step.bankCount || 4); _i++) { const _p = pickPrompt('SET INTENTIONS'); if (_p) _siPool.push(_p); }
                 }
                 const _siPrompts = _siPool.length ? _siPool : step.prompts;
-                const _siInterval = Math.min(12000, Math.floor(step.duration / _siPrompts.length));
+                const _siInterval = Math.max(5000, Math.min(12000, Math.floor(step.duration / _siPrompts.length)));
                 let _siPi = 0;
                 function _siNext() { sessPrompt(_siPrompts[_siPi++ % _siPrompts.length]); }
                 _siNext();
@@ -3290,7 +3314,7 @@
                 // Pull flexible prompts from REFLECT bank
                 const _rPool = [];
                 if (_sess.bank) {
-                    for (let _i = 0; _i < 4; _i++) { const _p = pickPrompt('REFLECT'); if (_p) _rPool.push(_p); }
+                    for (let _i = 0; _i < (step.bankCount || 4); _i++) { const _p = pickPrompt('REFLECT'); if (_p) _rPool.push(_p); }
                 }
                 const _rFallback = step.prompts.filter(p => p !== null);
                 const _rPrompts = _rPool.length ? _rPool : _rFallback;
@@ -3417,7 +3441,9 @@
             _sess.active = true;
             window._sessionActive = true;
             _sess.idx = 0;
-            _sess.steps = duration === 10 ? SESSION_10MIN
+            _sess.steps = duration === 1  ? SESSION_1MIN
+                        : duration === 2  ? SESSION_2MIN
+                        : duration === 10 ? SESSION_10MIN
                         : duration === 15 ? SESSION_15MIN
                         : SESSION_5MIN;
             _sess.recordings = [];
