@@ -92,18 +92,6 @@
         }
         #splash-model.hide { opacity: 0; }
 
-        /* Silver logo background graphic */
-        #splash-silver {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 520px; height: 520px;
-            object-fit: contain;
-            opacity: 0.55;
-            pointer-events: none;
-            z-index: 500;
-        }
-
         /* soft white circle in centre */
         #splash-circle {
             width: 520px; height: 520px;
@@ -784,7 +772,6 @@
             #splash-logo    { width: 72vw; }
             #splash-logo img{ width: 72vw; }
             #splash-model   { width: 88vw !important; height: 88vw !important; }
-            #splash-silver  { width: 88vw; height: 88vw; }
             #splash-enter   { bottom: 32px; top: auto; height: 76px; }
 
             /* Top buttons */
@@ -1327,7 +1314,6 @@
             orientation="160deg 0deg 0deg"
             style="position:absolute; width:520px; height:520px; background:transparent; pointer-events:none;">
         </model-viewer>
-        <img id="splash-silver" src="silverbutton.png" alt="" />
         <div id="splash-circle">
             <div id="splash-phrase"></div>
         </div>
