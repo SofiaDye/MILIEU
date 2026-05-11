@@ -803,10 +803,19 @@
             /* Session progress bar */
             #session-progress { left: 10px; }
 
-            /* Info panel during drawing */
-            #info-viz-panel { bottom: 16px; right: 12px; gap: 6px; }
-            .ivp-label { font-size: 9px; }
-            .ivp-value { font-size: 12px; }
+            /* Info panel during drawing — hide verbose labels, just show value + dots */
+            #info-viz-panel { bottom: 16px; right: 12px; gap: 4px; }
+            .ivp-label { display: none; }
+            .ivp-value { font-size: 13px; }
+
+            /* Recording / orb label — compensate for 0.58 orb scale */
+            #orb-label    { font-size: 26px; }
+            #orb-sublabel { font-size: 20px; }
+
+            /* Duration modal — stack buttons vertically */
+            #duration-box { padding: 24px 20px; min-width: 0; width: min(88vw, 300px); }
+            #duration-options { flex-direction: column; align-items: stretch; gap: 8px; }
+            .duration-btn { width: 100%; padding: 0; }
 
             /* Gallery panel */
             #gallery-panel  { width: 270px; }

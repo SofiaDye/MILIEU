@@ -415,7 +415,9 @@ function startVisualising() {
   allTrailPoints = [];
 
   // Origins: sparse (low complexity) → dense (high complexity)
+  const _isMobile = windowWidth < 640;
   let numOrigins = int(lerp(2, 14, complexityNorm));
+  if (_isMobile) numOrigins = Math.max(1, int(numOrigins * 0.5));
   let origins = [];
   randomSeed(99);
   for (let o=0; o<numOrigins; o++) {
@@ -425,6 +427,7 @@ function startVisualising() {
   randomSeed(42);
 
   let particlesPerOrigin = int(lerp(4, 12, complexityNorm));
+  if (_isMobile) particlesPerOrigin = Math.max(2, int(particlesPerOrigin * 0.5));
   let allPaths = [];
   let seedCounter = 0;
 
