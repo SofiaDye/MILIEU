@@ -15,6 +15,10 @@ window.stopMicIfActive = function() {
   if (inputSource === 'mic') finishMicAnalysis();
 };
 
+window.fadeVisualization = function() {
+  if (state === 'visualising') { state = 'fading'; fadeAlpha = 0; }
+};
+
 window.resetSketch = function() {
   _sessionId++;                          // invalidates any in-flight async fetch
   clearInterval(window._revealTimer);
@@ -107,7 +111,7 @@ const CATEGORY_COLORS = {
 
 let liveSumE=0, liveSumBass=0, liveSumTreble=0, liveSumFlux=0;
 let liveFrames=0;
-const MAX_MIC_FRAMES = 30 * 60;
+const getMaxMicFrames = () => (window._sessMaxRecordSecs || 30) * 60;
 let lastSpectrum = [];
 let allTrailPoints = [];
 
@@ -297,8 +301,8 @@ function draw() {
     }
     lastSpectrum = spectrum.slice();
     liveSumE+=energy; liveSumBass+=bass; liveSumTreble+=treble; liveSumFlux+=flux; liveFrames++;
-    statusMsg = 'RECORDING  '+int((liveFrames/MAX_MIC_FRAMES)*100)+'%';
-    if (liveFrames >= MAX_MIC_FRAMES) finishMicAnalysis();
+    statusMsg = 'RECORDING  '+int((liveFrames/getMaxMicFrames())*100)+'%';
+    if (liveFrames >= getMaxMicFrames()) finishMicAnalysis();
   }
 
   // Visualising: category dots drawn periodically on top of particle lines

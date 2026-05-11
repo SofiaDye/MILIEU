@@ -2407,6 +2407,7 @@
             _sess.active = false;
             window._sessionActive = false;
             window._pendingSessionDuration = null;
+            window._sessMaxRecordSecs = 30;
             window.onVisualisationComplete = null;
             clearTimeout(_sess._timer);
             clearInterval(_sess._promptTimer);
@@ -2907,22 +2908,22 @@
                 ]
             },
             {
-                type: 'record',
+                type: ‘record’, maxRecordSecs: 45,
                 prompts: [
-                    'When you’re ready, press the orb to begin recording the sound around you',
-                    'Bring your focus back to what you can hear'
+                    ‘When you’re ready, press the orb to begin recording the sound around you’,
+                    ‘Bring your focus back to what you can hear’
                 ]
             },
             {
-                type: 'playback',
+                type: ‘playback’,
                 prompts: [
-                    'Trace the pattern as it builds from the sounds you experienced',
-                    'Watch as it curves and travels',
-                    'Track a path'
+                    ‘Trace the pattern as it builds from the sounds you experienced’,
+                    ‘Watch as it curves and travels’,
+                    ‘Track a path’
                 ]
             },
             {
-                type: 'reflect', duration: 90000,
+                type: ‘reflect’, duration: 90000,
                 prompts: [
                     null,
                     null,
@@ -2962,8 +2963,8 @@
                     'Release the need to ’do’ and absorb the current moment'
                 ]
             },
-            { type: 'record', prompts: ['When you’re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
-            { type: 'playback', drawingMin: 90, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels', 'Track a path'] },
+            { type: ‘record’, maxRecordSecs: 120, prompts: [‘When you’re ready, press the orb to begin recording the sound around you’, ‘Bring your focus back to what you can hear’] },
+            { type: ‘playback’, drawingMin: 120, prompts: [‘Trace the pattern as it builds from the sounds you experienced’, ‘Watch as it curves and travels’, ‘Track a path’] },
             {
                 type: 'reflect', duration: 150000, longHold: 45000,
                 prompts: [null, null, null, null, null, null, null, null]
@@ -2997,8 +2998,8 @@
                     'Release the need to ’do’ and absorb the current moment'
                 ]
             },
-            { type: 'record', prompts: ['When you’re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
-            { type: 'playback', drawingMin: 120, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels', 'Track a path'] },
+            { type: ‘record’, maxRecordSecs: 180, prompts: [‘When you’re ready, press the orb to begin recording the sound around you’, ‘Bring your focus back to what you can hear’] },
+            { type: ‘playback’, drawingMin: 180, prompts: [‘Trace the pattern as it builds from the sounds you experienced’, ‘Watch as it curves and travels’, ‘Track a path’] },
             {
                 type: 'reflect', duration: 240000, longHold: 60000,
                 prompts: [null, null, null, null, null, null, null, null, null, null]
@@ -3230,6 +3231,7 @@
             }
 
             else if (step.type === 'record') {
+                window._sessMaxRecordSecs = step.maxRecordSecs || 30;
                 window.showOrb && window.showOrb();
                 orbContainer.classList.remove('breathing');
                 if (window._selfDirected) {
@@ -3339,6 +3341,7 @@
                     if (pi >= resolvedPrompts.length) {
                         sessPrompt('');
                         window.showOrb && window.showOrb();
+                        if (window.fadeVisualization) window.fadeVisualization();
                         sessionAdvance();
                         return;
                     }
