@@ -2418,9 +2418,11 @@
             window._pendingSessionDuration = null;
             window._sessMaxRecordSecs = 30;
             window.onVisualisationComplete = null;
+            window.onVisualisationStart = null;
             clearTimeout(_sess._timer);
             clearInterval(_sess._promptTimer);
             clearInterval(_sess._breathInterval);
+            if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
             orbContainer.classList.remove('breathing');
             document.getElementById('session-breath-label').classList.remove('visible');
             document.getElementById('session-overlay').style.display = 'none';
@@ -3206,7 +3208,7 @@
                         // start at 1 for fallback prompts — index 0 is 'Breathe with Milieu'
                         // which was already shown above; bank prompts start at 0 (different text)
                         let pi = _bPool.length ? 0 : 1;
-                        function nextPrompt() { sessPrompt(_bPrompts[pi++ % _bPrompts.length]); }
+                        function nextPrompt() { if (pi < _bPrompts.length) sessPrompt(_bPrompts[pi++]); }
                         nextPrompt();
                         _sess._promptTimer = setInterval(nextPrompt, interval);
                     }, 3500);
@@ -3229,7 +3231,7 @@
                 const _siPrompts = _siPool.length ? _siPool : step.prompts;
                 const _siInterval = Math.max(5000, Math.min(12000, Math.floor(step.duration / _siPrompts.length)));
                 let _siPi = 0;
-                function _siNext() { sessPrompt(_siPrompts[_siPi++ % _siPrompts.length]); }
+                function _siNext() { if (_siPi < _siPrompts.length) sessPrompt(_siPrompts[_siPi++]); }
                 _siNext();
                 _sess._promptTimer = setInterval(_siNext, _siInterval);
                 _sess._timer = setTimeout(() => {
@@ -3343,8 +3345,9 @@
                 });
                 // 4th prompt lingers twice as long
                 const _longHold = step.longHold || 30000;
+                const _longIdx = Math.min(3, resolvedPrompts.length - 1);
                 const _otherDur = Math.floor((step.duration - _longHold) / Math.max(1, resolvedPrompts.length - 1));
-                const durations = resolvedPrompts.map((_, i) => i === 3 ? _longHold : _otherDur);
+                const durations = resolvedPrompts.map((_, i) => i === _longIdx ? _longHold : _otherDur);
                 let pi = 0;
                 function showNext() {
                     if (pi >= resolvedPrompts.length) {
@@ -3363,6 +3366,7 @@
             else if (step.type === 'winddown') {
                 document.getElementById('session-overlay').classList.remove('orb-hidden');
                 // Fade drawing back in as background layer
+                if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
                 if (window._lastDrawingThumbnail) {
                     const _dOverlay = document.createElement('img');
                     _dOverlay.src = window._lastDrawingThumbnail;
@@ -3459,6 +3463,7 @@
                         : duration === 15 ? SESSION_15MIN
                         : SESSION_5MIN;
             _sess.recordings = [];
+            window._lastDrawingThumbnail = null;
             document.getElementById('orb-title').style.opacity = '0';
             document.getElementById('orb-sublabel').style.opacity = '0';
             orbLabel.style.opacity = '0';
