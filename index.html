@@ -1802,7 +1802,7 @@
                 }
                 orbLabel.style.opacity = '';
                 orbSublabel.textContent = 'Guided Meditation';
-                orbSublabel.style.opacity = window._selfDirected ? '0' : '';
+                orbSublabel.style.opacity = (window._selfDirected || window._sessionActive) ? '0' : '';
             }
             if (!window._sessionActive) {
                 _bottomBar.classList.toggle('hidden-ui', active);
@@ -3396,7 +3396,7 @@
                 }
                 let pi = 0;
                 const interval = Math.floor(step.duration / _wPrompts.length);
-                function nextPrompt() { sessPrompt(_wPrompts[pi++ % _wPrompts.length]); }
+                function nextPrompt() { if (pi < _wPrompts.length) sessPrompt(_wPrompts[pi++]); }
                 nextPrompt();
                 _sess._promptTimer = setInterval(nextPrompt, interval);
                 _sess._timer = setTimeout(() => {
@@ -3474,7 +3474,7 @@
             _sess.bank = null;
             try {
                 const _r = await Promise.race([
-                    fetch('http://127.0.0.1:5000/prompts'),
+                    fetch('/prompts'),
                     new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
                 ]);
                 if (_r.ok) _sess.bank = await _r.json();
