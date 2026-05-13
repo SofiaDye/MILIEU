@@ -803,9 +803,8 @@
             /* Session progress bar */
             #session-progress { left: 10px; }
 
-            /* Info panel during drawing — hide verbose labels, just show value + dots */
+            /* Info panel during drawing */
             #info-viz-panel { bottom: 16px; right: 12px; gap: 4px; }
-            .ivp-label { display: none; }
             .ivp-value { font-size: 13px; }
 
             /* Recording / orb label — compensate for 0.58 orb scale */
@@ -910,11 +909,7 @@
         }
         #info-viz-panel.visible { display: flex; }
         #info-viz-panel.shown { opacity: 1; }
-        .ivp-label {
-            font-size: 10px; color: rgba(40,42,50,0.42);
-            text-transform: uppercase; letter-spacing: 0.07em;
-            margin-bottom: 2px;
-        }
+        .ivp-label { display: none; }
         .ivp-value {
             font-family: "miller-text", serif; font-style: italic;
             font-size: 13px; color: rgba(40,42,50,0.75);
