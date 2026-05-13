@@ -2193,7 +2193,15 @@
         }
 
         window.setPlaybackActive = function(active) {
-            document.getElementById('sound-btn').style.display = active ? '' : 'none';
+            const _isMobileView = window.innerWidth < 640;
+            const _soundBtn = document.getElementById('sound-btn');
+            const _globeBtn = document.getElementById('globe-btn');
+            _soundBtn.style.display = active ? '' : 'none';
+            if (_isMobileView) {
+                // On mobile, hide globe during drawing so sound btn sits at top-right
+                if (_globeBtn) _globeBtn.style.display = active ? 'none' : '';
+                _soundBtn.style.right = active ? '14px' : '';
+            }
             const panel = document.getElementById('info-viz-panel');
             if (active) {
                 const la = window._lastAnalysis || {};
