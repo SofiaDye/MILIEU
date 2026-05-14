@@ -3112,7 +3112,13 @@
             if (_bl) {
                 const _ph = ['In', 'Out'];
                 let _bpi = 0;
+                const MAX_LABELS = 6; // 3 full in/out cycles then stop
                 function _nb() {
+                    if (_bpi >= MAX_LABELS) {
+                        clearInterval(_sess._breathInterval);
+                        _bl.classList.remove('visible');
+                        return;
+                    }
                     _bl.classList.remove('visible');
                     setTimeout(() => {
                         if (_breathGen !== _gen) return;
