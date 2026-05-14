@@ -2213,7 +2213,7 @@
             const panel = document.getElementById('info-viz-panel');
             if (active) {
                 const la = window._lastAnalysis || {};
-                const sms = (la.soundmarks || []).filter(s => s !== 'silence');
+                const sms = la.soundmarks || [];
                 const dotsHtml = sms.length
                     ? sms.map(cat => {
                         const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180,195,215];
@@ -3336,8 +3336,8 @@
                     if (n < 0.8) return 'mostly disordered';
                     return 'highly disordered';
                 }
-                // Soundmarks as natural language list — filter silence (sounds odd in reflection)
-                const _smList = (rec && rec.soundmarks ? rec.soundmarks.filter(s => s !== 'silence').slice(0, 3) : []).map(s => s.replace(/_/g, ' '));
+                // Soundmarks as natural language list e.g. 'voices and cars'
+                const _smList = (rec && rec.soundmarks ? rec.soundmarks.slice(0, 3) : []).map(s => s.replace(/_/g, ' '));
                 const _smsText = _smList.length === 0 ? null
                     : _smList.length === 1 ? _smList[0]
                     : _smList.slice(0, -1).join(', ') + ' and ' + _smList[_smList.length - 1];
@@ -3355,7 +3355,8 @@
                 ];
                 if (_smsText) {
                     resolvedPrompts.push('Milieu also heard … ' + _smsText);
-                    resolvedPrompts.push('Did you notice this?');
+                    const _onlySilence = _smList.length > 0 && _smList.every(s => s === 'silence');
+                    if (!_onlySilence) resolvedPrompts.push('Did you notice this?');
                 }
                 _rPrompts.forEach(p => {
                     if (p) resolvedPrompts.push(resolvePromptTemplate(p, _cLbl, _smsText));
