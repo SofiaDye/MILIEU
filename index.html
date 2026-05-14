@@ -3464,11 +3464,16 @@
             }
 
             else if (step.type === 'end') {
-                sessPrompt('Listen to everything all the time and remind yourself when you are not listening');
+                const _endEl = document.getElementById('session-prompt-text');
+                ++_sessPromptGen; // cancel any pending sessPrompt fade-in
+                if (_endEl) {
+                    _endEl.innerHTML = 'Listen to everything all the time and remind yourself when you are not listening';
+                    _endEl.style.opacity = '1';
+                }
                 _sess._timer = setTimeout(() => {
-                    sessPrompt('');
+                    if (_endEl) _endEl.style.opacity = '0';
                     setTimeout(sessionEndFlow, 900);
-                }, 4000);
+                }, 5000);
             }
         }
 
