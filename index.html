@@ -3458,7 +3458,11 @@
             }
 
             else if (step.type === 'end') {
-                sessionEndFlow();
+                sessPrompt('Listen to everything all the time and remind yourself when you are not listening');
+                _sess._timer = setTimeout(() => {
+                    sessPrompt('');
+                    setTimeout(sessionEndFlow, 900);
+                }, 4000);
             }
         }
 
