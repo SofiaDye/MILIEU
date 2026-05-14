@@ -1389,8 +1389,8 @@
                 style="width:520px; height:520px; background:transparent; border-radius:50%; pointer-events:none; position:relative; z-index:0;">
             </model-viewer>
             <img id="orb-title" src="just_text.png" alt="MILIEU" />
-            <div id="orb-label">Press to begin</div>
-            <div id="orb-sublabel">Guided Meditation</div>
+            <div id="orb-label">Guided Meditation</div>
+            <div id="orb-sublabel">Press to begin</div>
         </div>
     </div>
 
@@ -1711,13 +1711,13 @@
 
         // Drag events on orb
         orbContainer.addEventListener('dragenter', e => { e.preventDefault(); orbContainer.classList.add('drag-over'); });
-        orbContainer.addEventListener('dragover', e => { e.preventDefault(); orbLabel.textContent = 'Press to begin'; });
-        orbContainer.addEventListener('dragleave', e => { orbContainer.classList.remove('drag-over'); orbLabel.textContent = 'Press to begin'; });
+        orbContainer.addEventListener('dragover', e => { e.preventDefault(); orbLabel.textContent = 'Guided Meditation'; });
+        orbContainer.addEventListener('dragleave', e => { orbContainer.classList.remove('drag-over'); orbLabel.textContent = 'Guided Meditation'; });
         orbContainer.addEventListener('drop', e => {
             e.preventDefault();
             e.stopPropagation();             // prevent document drop handler firing too
             orbContainer.classList.remove('drag-over');
-            orbLabel.textContent = 'Press to begin';
+            orbLabel.textContent = 'Guided Meditation';
             hideInfoOverlay();
             let file = e.dataTransfer.files[0];
             if (file && typeof analyseFileOffline === 'function') analyseFileOffline(file);
@@ -1793,10 +1793,10 @@
                 if (window._sessionActive) {
                     orbLabel.textContent = '';
                 } else {
-                    orbLabel.textContent = 'Press to begin';
+                    orbLabel.textContent = 'Guided Meditation';
                 }
                 orbLabel.style.opacity = '';
-                orbSublabel.textContent = 'Guided Meditation';
+                orbSublabel.textContent = 'Press to begin';
                 orbSublabel.style.opacity = (window._selfDirected || window._sessionActive) ? '0' : '';
             }
             if (!window._sessionActive) {
@@ -1838,7 +1838,7 @@
                 if (!window._sessionActive) {
                     orbLabel.style.opacity = '';
                     orbLabel.style.transition = '';
-                    orbLabel.textContent = 'Press to begin';
+                    orbLabel.textContent = 'Guided Meditation';
                     _bottomBar.classList.remove('hidden-ui');
                     _galleryPanel.classList.remove('hidden-ui');
                 }
@@ -2213,7 +2213,7 @@
             const panel = document.getElementById('info-viz-panel');
             if (active) {
                 const la = window._lastAnalysis || {};
-                const sms = la.soundmarks || [];
+                const sms = (la.soundmarks || []).filter(s => s !== 'silence');
                 const dotsHtml = sms.length
                     ? sms.map(cat => {
                         const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180,195,215];
@@ -2474,7 +2474,7 @@
             resetIdleTimer(); // restart standby countdown after session ends
             window.showOrb();  // hides home-btn because _sessionActive is now false
             savePrompt.classList.remove('visible');
-            orbLabel.textContent = 'Press to begin';
+            orbLabel.textContent = 'Guided Meditation';
             document.getElementById('orb-sublabel').style.opacity = '';
             // Hide both SD buttons (session is ending)
             const _sdBtnReset = document.getElementById('sd-session-prompt-btn');
@@ -2865,7 +2865,7 @@
                 if (volBtn) volBtn.style.display = '';
                 const mobileNav = document.getElementById('mobile-nav');
                 if (mobileNav) mobileNav.classList.remove('hidden-ui');
-                orbLabel.textContent = 'Press to begin';
+                orbLabel.textContent = 'Guided Meditation';
                 orbSublabel.style.opacity = '';
             }
         });
@@ -3336,8 +3336,8 @@
                     if (n < 0.8) return 'mostly disordered';
                     return 'highly disordered';
                 }
-                // Soundmarks as natural language list e.g. 'voices and cars'
-                const _smList = (rec && rec.soundmarks ? rec.soundmarks.slice(0, 3) : []).map(s => s.replace(/_/g, ' '));
+                // Soundmarks as natural language list — filter silence (sounds odd in reflection)
+                const _smList = (rec && rec.soundmarks ? rec.soundmarks.filter(s => s !== 'silence').slice(0, 3) : []).map(s => s.replace(/_/g, ' '));
                 const _smsText = _smList.length === 0 ? null
                     : _smList.length === 1 ? _smList[0]
                     : _smList.slice(0, -1).join(', ') + ' and ' + _smList[_smList.length - 1];
