@@ -2115,8 +2115,31 @@
             try {
                 const canvas = document.querySelector('canvas');
                 const stream = canvas.captureStream(30);
-                if (audioEl && audioEl.captureStream) {
-                    audioEl.captureStream().getAudioTracks().forEach(t => stream.addTrack(t));
+                if (audioEl) {
+                    // captureStream() works on Chrome/Edge but NOT Safari/iOS
+                    if (audioEl.captureStream) {
+                        try { audioEl.captureStream().getAudioTracks().forEach(t => stream.addTrack(t)); }
+                        catch(e) { console.warn('captureStream failed:', e); }
+                    } else if (audioEl.mozCaptureStream) {
+                        try { audioEl.mozCaptureStream().getAudioTracks().forEach(t => stream.addTrack(t)); }
+                        catch(e) { console.warn('mozCaptureStream failed:', e); }
+                    } else {
+                        // Safari fallback: Web Audio API MediaStreamDestination
+                        try {
+                            if (!window._recAudioCtx) {
+                                window._recAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                            }
+                            const _ctx = window._recAudioCtx;
+                            if (_ctx.state === 'suspended') _ctx.resume();
+                            if (!audioEl._recSrcNode) {
+                                audioEl._recSrcNode = _ctx.createMediaElementSource(audioEl);
+                                audioEl._recSrcNode.connect(_ctx.destination); // keep audio audible
+                            }
+                            const _dest = _ctx.createMediaStreamDestination();
+                            audioEl._recSrcNode.connect(_dest);
+                            _dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+                        } catch(e) { console.warn('Web Audio capture failed:', e); }
+                    }
                 }
                 const mime = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
                     .find(m => MediaRecorder.isTypeSupported(m)) || '';
