@@ -826,6 +826,39 @@
             #mic-toast { font-size: 12px; padding: 10px 16px; top: 60px; }
         }
 
+        /* Custom circular checkbox for SD session structure */
+        .sd-check-label {
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'miller-text', serif; font-style: italic;
+            font-size: 15px; color: rgba(40,42,50,0.78);
+            cursor: pointer; user-select: none;
+            padding: 6px 0;
+        }
+        .sd-check-label input[type="checkbox"] { display: none; }
+        .sd-check-circle {
+            width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+            border: 1.5px solid rgba(100,130,180,0.40);
+            background: transparent;
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .sd-check-circle::after {
+            content: '';
+            width: 10px; height: 10px; border-radius: 50%;
+            background: rgba(120,160,210,0.85);
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .sd-check-label input[type="checkbox"]:checked + .sd-check-circle {
+            border-color: rgba(120,160,210,0.70);
+            background: rgba(195,215,245,0.18);
+        }
+        .sd-check-label input[type="checkbox"]:checked + .sd-check-circle::after {
+            opacity: 1;
+        }
+        .sd-check-label:hover .sd-check-circle {
+            border-color: rgba(120,160,210,0.60);
+        }
+
         /* Pre-record modal */
         #prerecord-modal {
             position: fixed; inset: 0;
@@ -2380,10 +2413,10 @@
                 <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Structure your session</h3>
                 <div style="font-family:'miller-text',serif;font-style:italic;font-size:13px;color:rgba(40,42,50,0.65);text-align:center;max-width:320px;margin-bottom:10px;">Choose your session steps:</div>
                 <ul id="sd-structure-list" style="list-style:none;padding:0;width:100%;margin-bottom:10px;">
-                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Breathing</span></label></li>
-                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Set Intentions</span></label></li>
-                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Mindful Listening</span></label></li>
-                    <li class="sd-structure-item"><label style="display:flex;align-items:center;gap:8px;font-family:'miller-text',serif;font-size:15px;"><input type="checkbox" checked> <span>Engaging with surroundings</span></label></li>
+                    <li class="sd-structure-item"><label class="sd-check-label"><input type="checkbox" checked><span class="sd-check-circle"></span><span>Breathing</span></label></li>
+                    <li class="sd-structure-item"><label class="sd-check-label"><input type="checkbox" checked><span class="sd-check-circle"></span><span>Set Intentions</span></label></li>
+                    <li class="sd-structure-item"><label class="sd-check-label"><input type="checkbox" checked><span class="sd-check-circle"></span><span>Mindful Listening</span></label></li>
+                    <li class="sd-structure-item"><label class="sd-check-label"><input type="checkbox" checked><span class="sd-check-circle"></span><span>Engaging with surroundings</span></label></li>
                 </ul>
                 <div class="modal-btn-row">
                     <button class="sd-back-btn prerecord-cancel modal-btn">Back</button>
