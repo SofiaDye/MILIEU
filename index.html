@@ -3365,7 +3365,10 @@
                 const _longHold = step.longHold || 30000;
                 const _longIdx = Math.min(3, resolvedPrompts.length - 1);
                 const _otherDur = Math.floor((step.duration - _longHold) / Math.max(1, resolvedPrompts.length - 1));
-                const durations = resolvedPrompts.map((_, i) => i === _longIdx ? _longHold : _otherDur);
+                const durations = resolvedPrompts.map((_, i) => {
+                    if (resolvedPrompts.length === 1) return step.duration; // full duration if only one prompt
+                    return i === _longIdx ? _longHold : _otherDur;
+                });
                 let pi = 0;
                 function showNext() {
                     if (pi >= resolvedPrompts.length) {
@@ -3401,20 +3404,26 @@
                 orbContainer.style.pointerEvents = '';
                 setTimeout(() => { orbContainer.style.transition = ''; }, 2600);
                 startBreathing();
-                let _wPrompts;
+                // Each prompt needs at least 5s to be readable
+                const _minPromptMs = 5000;
+                const _maxWPrompts = Math.max(1, Math.floor(step.duration / _minPromptMs));
+                let _wPrompts = [];
                 if (_sess.bank) {
                     const sp = _sess.bank.special || {};
-                    _wPrompts = [];
-                    const _wCount = step.bankCount || 2;
-                    for (let _i = 0; _i < _wCount; _i++) { const _p = pickPrompt('WINDDOWN'); if (_p) _wPrompts.push(_p); }
-                    if (_wPrompts.length === 0) _wPrompts = [...step.prompts];
                     const _dur = window._pendingSessionDuration;
                     const _last = (sp.last || 'You have been present for {duration}')
                         .replace('{duration}', _dur ? _dur + ' minutes' : 'this session')
                         .replace('(INSERT SELECTED TIME FRAME)', _dur ? _dur + ' minutes' : 'this session');
+                    // Leave one slot for _last
+                    const _wCount = Math.min(step.bankCount || 2, _maxWPrompts - 1);
+                    for (let _i = 0; _i < _wCount; _i++) { const _p = pickPrompt('WINDDOWN'); if (_p) _wPrompts.push(_p); }
+                    // Only fall back to step.prompts if bank gave nothing, and only take what fits
+                    if (_wPrompts.length === 0) {
+                        _wPrompts = [...step.prompts].slice(0, Math.max(0, _maxWPrompts - 1));
+                    }
                     _wPrompts.push(_last);
                 } else {
-                    _wPrompts = step.prompts;
+                    _wPrompts = [...step.prompts].slice(0, _maxWPrompts);
                 }
                 let pi = 0;
                 const interval = Math.floor(step.duration / _wPrompts.length);
