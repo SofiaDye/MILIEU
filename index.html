@@ -1024,12 +1024,6 @@
         }
         #saved-confirm.visible { opacity: 1; }
 
-        /* Analysing label pulse */
-        @keyframes analysingFade {
-            0%, 100% { opacity: 0.45; }
-            50% { opacity: 1; }
-        }
-        #orb-label.analysing { animation: analysingFade 1.8s ease-in-out infinite; }
 
         /* Self Directed tab — bottom left */
         #self-directed-btn {
@@ -1811,23 +1805,14 @@
         });
         window.setOrbRecording = function(active) {
             orbContainer.classList.toggle('recording', active);
-            // Always show 'Recording...' when recording, regardless of session state
             if (active) {
                 orbLabel.textContent = 'Recording...';
                 orbLabel.style.opacity = '';
-                if (!window._sessionActive || window._selfDirected) {
-                    orbSublabel.textContent = 'Record at least 30s for best results';
-                    orbSublabel.style.opacity = '1';
-                }
-                // Hide both SD buttons while recording is active
+                orbSublabel.style.opacity = '0';
                 const _sdBtnRec = document.getElementById('sd-session-prompt-btn');
                 if (_sdBtnRec) _sdBtnRec.style.display = 'none';
             } else {
-                if (window._sessionActive) {
-                    orbLabel.textContent = '';
-                } else {
-                    orbLabel.textContent = 'Guided Meditation';
-                }
+                orbLabel.textContent = window._sessionActive ? '' : 'Guided Meditation';
                 orbLabel.style.opacity = '';
                 orbSublabel.textContent = 'Press to begin';
                 orbSublabel.style.opacity = (window._selfDirected || window._sessionActive) ? '0' : '';
@@ -1839,44 +1824,7 @@
             }
             _globeBtnRec.classList.toggle('hidden-ui', active);
         };
-        let _analysingInterval = null;
-        window.setOrbAnalysing = function(active) {
-            if (active) {
-                orbLabel.classList.add('analysing');
-                const words = ['Analysing...', 'Listening...'];
-                let i = 0;
-                orbLabel.textContent = words[i];
-                clearInterval(_analysingInterval);
-                _analysingInterval = setInterval(() => {
-                    orbLabel.style.transition = 'opacity 0.35s';
-                    orbLabel.style.opacity = '0';
-                    setTimeout(() => {
-                        i = (i + 1) % 2;
-                        orbLabel.textContent = words[i];
-                        orbLabel.style.opacity = '';
-                    }, 380);
-                }, 1900);
-                if (window._selfDirected) {
-                    orbSublabel.textContent = 'Processing...';
-                    orbSublabel.style.opacity = '1';
-                }
-            } else {
-                orbLabel.classList.remove('analysing');
-                clearInterval(_analysingInterval);
-                _analysingInterval = null;
-                if (window._selfDirected) {
-                    orbSublabel.textContent = '';
-                    orbSublabel.style.opacity = '0';
-                }
-                if (!window._sessionActive) {
-                    orbLabel.style.opacity = '';
-                    orbLabel.style.transition = '';
-                    orbLabel.textContent = 'Guided Meditation';
-                    _bottomBar.classList.remove('hidden-ui');
-                    _galleryPanel.classList.remove('hidden-ui');
-                }
-            }
-        };
+        window.setOrbAnalysing = function() {}; // no-op — analysing state removed
         window.hideOrb = function() {
             orbContainer.classList.add('hidden');
             document.getElementById('session-overlay').classList.add('orb-hidden');
