@@ -645,6 +645,7 @@ function finishMicAnalysis() {
   window._lastRecordingDuration = liveFrames > 0 ? liveFrames / 60 : 30;
 
   if (window.setOrbRecording) window.setOrbRecording(false);
+  if (window.setOrbAnalysing) window.setOrbAnalysing(true);
 
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   // onstop callback will call startVisualising() once audio is processed
@@ -747,6 +748,7 @@ function toggleMic() {
 
       } catch (err) {
         console.error('[onstop] Audio processing/server error:', err.message);
+        if (window.setOrbAnalysing) window.setOrbAnalysing(false);
         // Visualise with live-mic metrics computed in finishMicAnalysis
       }
 
@@ -761,6 +763,7 @@ function toggleMic() {
 
       // Abort if reset happened while fetch was in flight
       if (_sessionId !== _mySession) return;
+      if (window.setOrbAnalysing) window.setOrbAnalysing(false);
       inputSource = 'mic';
       startVisualising();
 
