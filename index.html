@@ -2458,6 +2458,7 @@
             clearInterval(_sess._breathInterval);
             if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
             orbContainer.classList.remove('breathing');
+            _breathAnimStart = null;
             document.getElementById('session-breath-label').classList.remove('visible');
             document.getElementById('session-overlay').style.display = 'none';
             document.getElementById('session-overlay').classList.remove('orb-hidden');
@@ -3123,35 +3124,68 @@
             </svg>`;
         }
 
-        let _breathGen = 0; // incremented on every stop — cancels any pending 300ms callbacks
+        let _breathGen = 0;
+        let _breathAnimStart = null; // when the orbBreathe animation last started
 
         function startBreathing() {
             ++_breathGen;
             clearInterval(_sess._breathInterval);
             const _gen = _breathGen;
-            orbContainer.classList.add('breathing'); // keep animation running — no restart
+            const _wasBreathing = orbContainer.classList.contains('breathing');
+            orbContainer.classList.add('breathing');
+            if (!_wasBreathing) _breathAnimStart = performance.now(); // animation just (re)started
             orbLabel.textContent = '';
             const _bl = document.getElementById('session-breath-label');
-            if (_bl) {
-                const _ph = ['In', 'Out'];
-                let _bpi = 0;
-                const MAX_LABELS = 6; // 3 full in/out cycles then stop
-                function _nb() {
-                    if (_bpi >= MAX_LABELS) {
-                        clearInterval(_sess._breathInterval);
-                        _bl.classList.remove('visible');
-                        return;
-                    }
-                    _bl.classList.remove('visible');
-                    setTimeout(() => {
-                        if (_breathGen !== _gen) return;
-                        _bl.textContent = _ph[_bpi++ % 2];
-                        _bl.classList.add('visible');
-                    }, 300);
-                }
-                _nb();
-                _sess._breathInterval = setInterval(_nb, 4500);
+            if (!_bl) return;
+
+            const HALF = 4500;   // half of 9s animation = one In or Out phase
+            const CYCLE = 9000;
+            const MAX_LABELS = 6; // 3 full in/out cycles then stop
+            let _bpi;
+
+            // Calculate where we are in the current animation cycle
+            if (_breathAnimStart !== null) {
+                const _elapsed = (performance.now() - _breathAnimStart) % CYCLE;
+                // 0–4500ms = expanding = In, 4500–9000ms = contracting = Out
+                const _inInPhase = _elapsed < HALF;
+                _bpi = _inInPhase ? 0 : 1; // start label at correct phase
+                // Delay first label until next phase boundary so interval stays locked to animation
+                const _toNext = _inInPhase ? (HALF - _elapsed) : (CYCLE - _elapsed);
+                // Show current phase immediately
+                _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
+                // Then snap interval to the animation's phase boundaries
+                _sess._breathInterval = setTimeout(() => {
+                    if (_breathGen !== _gen) return;
+                    _bpi++;
+                    _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
+                    _sess._breathInterval = setInterval(() => {
+                        _bpi++;
+                        _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
+                    }, HALF);
+                }, _toNext);
+            } else {
+                _bpi = 0;
+                _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
+                _sess._breathInterval = setInterval(() => {
+                    _bpi++;
+                    _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
+                }, HALF);
             }
+        }
+
+        function _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS) {
+            if (_bpi >= MAX_LABELS) {
+                clearInterval(_sess._breathInterval);
+                clearTimeout(_sess._breathInterval);
+                _bl.classList.remove('visible');
+                return;
+            }
+            _bl.classList.remove('visible');
+            setTimeout(() => {
+                if (_breathGen !== _gen) return;
+                _bl.textContent = _bpi % 2 === 0 ? 'In' : 'Out';
+                _bl.classList.add('visible');
+            }, 300);
         }
 
         function stopBreathing() {
