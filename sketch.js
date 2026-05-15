@@ -645,7 +645,6 @@ function finishMicAnalysis() {
   window._lastRecordingDuration = liveFrames > 0 ? liveFrames / 60 : 30;
 
   if (window.setOrbRecording) window.setOrbRecording(false);
-  if (window.setOrbAnalysing) window.setOrbAnalysing(true);
 
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   // onstop callback will call startVisualising() once audio is processed
@@ -698,7 +697,6 @@ function toggleMic() {
       playbackAudio.play().catch(e => console.warn('Mic playback error:', e));
 
       if (_sessionId !== _mySession) return;
-      if (window.setOrbAnalysing) window.setOrbAnalysing(false);
       inputSource = 'mic';
       startVisualising();
 
