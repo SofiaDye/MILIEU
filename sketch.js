@@ -685,74 +685,10 @@ function toggleMic() {
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
 
     mediaRecorder.onstop = async () => {
-      const _mySession = _sessionId;   // capture; if reset happens during fetch, this won't match
-      let rawBlob = new Blob(recordedChunks, { type: 'audio/webm' });
-      try {
-        // Re-encode as 16kHz WAV so librosa/YAMNet can decode it
-        let arrayBuf = await rawBlob.arrayBuffer();
-        let audioCtx = new AudioContext({ sampleRate: 16000 });
-        let decoded  = await Promise.race([
-          audioCtx.decodeAudioData(arrayBuf),
-          new Promise((_,reject) => setTimeout(() => reject(new Error('decodeAudioData timeout')), 2000))
-        ]);
-        audioCtx.close();
+      const _mySession = _sessionId;
+      const rawBlob = new Blob(recordedChunks, { type: 'audio/webm' });
 
-        let pcm    = decoded.getChannelData(0);
-        let wavBuf = new ArrayBuffer(44 + pcm.length * 2);
-        let view   = new DataView(wavBuf);
-        const ws   = (o,s) => { for(let i=0;i<s.length;i++) view.setUint8(o+i,s.charCodeAt(i)); };
-        ws(0,'RIFF'); view.setUint32(4,36+pcm.length*2,true);
-        ws(8,'WAVE'); ws(12,'fmt '); view.setUint32(16,16,true);
-        view.setUint16(20,1,true); view.setUint16(22,1,true);
-        view.setUint32(24,16000,true); view.setUint32(28,32000,true);
-        view.setUint16(32,2,true); view.setUint16(34,16,true);
-        ws(36,'data'); view.setUint32(40,pcm.length*2,true);
-        let off = 44;
-        for (let i=0; i<pcm.length; i++, off+=2) {
-          let s = Math.max(-1,Math.min(1,pcm[i]));
-          view.setInt16(off, s<0 ? s*0x8000 : s*0x7FFF, true);
-        }
-        let wavBlob  = new Blob([wavBuf], { type:'audio/wav' });
-        let formData = new FormData();
-        formData.append('file', wavBlob, 'recording.wav');
-
-        let response = await fetch('/analyse', { method:'POST', body:formData });
-        let data     = await response.json();
-
-        detectedCategories = (data&&Array.isArray(data.detected_categories)) ? data.detected_categories : [];
-        let m = (data&&data.measures) ? data.measures : {};
-        let p = (data&&data.params)   ? data.params   : {};
-
-        mEntropy  = (typeof m.mean_entropy==='number') ? m.mean_entropy : mEntropy;
-        mEntropySD= (typeof m.std_entropy ==='number') ? m.std_entropy  : mEntropySD;
-        mRMS      = (typeof m.mean_rms    ==='number') ? m.mean_rms     : mRMS;
-        mKeynote  = (typeof m.keynote_hz  ==='number') ? m.keynote_hz   : mKeynote;
-        mSignal   = (typeof m.signal      ==='number') ? m.signal       : mSignal;
-
-        dispMeanEntropy = (typeof m.mean_entropy==='number') ? m.mean_entropy.toFixed(4) : nf(mEntropy,1,4);
-        dispStdEntropy  = (typeof m.std_entropy ==='number') ? m.std_entropy.toFixed(4)  : nf(mEntropySD,1,4);
-        dispRMS         = (typeof m.mean_rms    ==='number') ? m.mean_rms.toFixed(4)     : nf(mRMS,1,4);
-        dispKeynote     = (typeof m.keynote_hz  ==='number') ? m.keynote_hz.toFixed(1)+' Hz' : nf(mKeynote,1,1)+' Hz';
-        dispSignal      = (typeof m.signal      ==='number') ? m.signal.toFixed(4)       : nf(mSignal,1,4);
-
-        if (window.updateDetailsBox)
-          window.updateDetailsBox(dispMeanEntropy, dispStdEntropy, dispRMS, dispKeynote, dispSignal,
-        (typeof m.mean_entropy==='number' && typeof m.std_entropy==='number')
-          ? constrain((map(m.mean_entropy,6.7,8.3,0,1)+map(m.std_entropy,0.10,0.45,0,1))*0.5, 0, 1)
-          : null);
-        if (window.updateSoundmarks)
-          window.updateSoundmarks(detectedCategories);
-
-        vParams.numOrigins = (typeof p.numOrigins==='number') ? p.numOrigins : vParams.numOrigins;
-        vParams.lineWeight = (typeof p.lineWeight==='number') ? p.lineWeight : vParams.lineWeight;
-
-      } catch (err) {
-        console.error('[onstop] Audio processing/server error:', err.message);
-        if (window.setOrbAnalysing) window.setOrbAnalysing(false);
-        // Visualise with live-mic metrics computed in finishMicAnalysis
-      }
-
-      // Playback raw webm recording
+      // ── Start playback + visualisation immediately with live metrics ──
       if (playbackAudio) { playbackAudio.pause(); playbackAudio = null; }
       const _micURL = URL.createObjectURL(rawBlob);
       playbackAudio = new Audio(_micURL);
@@ -761,13 +697,11 @@ function toggleMic() {
       stopOnUserInteraction = false;
       playbackAudio.play().catch(e => console.warn('Mic playback error:', e));
 
-      // Abort if reset happened while fetch was in flight
       if (_sessionId !== _mySession) return;
       if (window.setOrbAnalysing) window.setOrbAnalysing(false);
       inputSource = 'mic';
       startVisualising();
 
-      // Shared handler — fires when audio ends or timer expires (whichever comes first)
       function _onVizDone() {
         clearTimeout(window._vizStopTimer);
         if (playbackAudio) playbackAudio.removeEventListener('ended', _onVizDone);
@@ -777,18 +711,67 @@ function toggleMic() {
           window.onVisualisationComplete = null;
           cb();
         } else {
-          // Pause prompts before fade starts; they resume only when fade fully completes in draw()
           if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
           if (window.setPlaybackActive) window.setPlaybackActive(false);
           state = 'fading'; fadeAlpha = 0;
         }
       }
-      // Primary: audio ended event
       if (playbackAudio) playbackAudio.addEventListener('ended', _onVizDone, { once: true });
-      // Fallback: timer (recording duration + 1.5s grace)
       const _recDur = window._lastRecordingDuration || 30;
       clearTimeout(window._vizStopTimer);
       window._vizStopTimer = setTimeout(_onVizDone, (_recDur + 1.5) * 1000);
+
+      // ── Background: encode + send to server for soundmarks/refined measures ──
+      (async () => {
+        try {
+          let arrayBuf = await rawBlob.arrayBuffer();
+          let audioCtx = new AudioContext({ sampleRate: 16000 });
+          let decoded  = await Promise.race([
+            audioCtx.decodeAudioData(arrayBuf),
+            new Promise((_,reject) => setTimeout(() => reject(new Error('decode timeout')), 2000))
+          ]);
+          audioCtx.close();
+          let pcm    = decoded.getChannelData(0);
+          let wavBuf = new ArrayBuffer(44 + pcm.length * 2);
+          let view   = new DataView(wavBuf);
+          const ws   = (o,s) => { for(let i=0;i<s.length;i++) view.setUint8(o+i,s.charCodeAt(i)); };
+          ws(0,'RIFF'); view.setUint32(4,36+pcm.length*2,true);
+          ws(8,'WAVE'); ws(12,'fmt '); view.setUint32(16,16,true);
+          view.setUint16(20,1,true); view.setUint16(22,1,true);
+          view.setUint32(24,16000,true); view.setUint32(28,32000,true);
+          view.setUint16(32,2,true); view.setUint16(34,16,true);
+          ws(36,'data'); view.setUint32(40,pcm.length*2,true);
+          let off = 44;
+          for (let i=0; i<pcm.length; i++, off+=2) {
+            let s = Math.max(-1,Math.min(1,pcm[i]));
+            view.setInt16(off, s<0 ? s*0x8000 : s*0x7FFF, true);
+          }
+          let wavBlob  = new Blob([wavBuf], { type:'audio/wav' });
+          let formData = new FormData();
+          formData.append('file', wavBlob, 'recording.wav');
+          let response = await fetch('/analyse', { method:'POST', body:formData });
+          let data     = await response.json();
+          if (_sessionId !== _mySession) return;
+
+          detectedCategories = (data&&Array.isArray(data.detected_categories)) ? data.detected_categories : [];
+          let m = (data&&data.measures) ? data.measures : {};
+          mEntropy  = (typeof m.mean_entropy==='number') ? m.mean_entropy : mEntropy;
+          mEntropySD= (typeof m.std_entropy ==='number') ? m.std_entropy  : mEntropySD;
+          mRMS      = (typeof m.mean_rms    ==='number') ? m.mean_rms     : mRMS;
+          mKeynote  = (typeof m.keynote_hz  ==='number') ? m.keynote_hz   : mKeynote;
+          mSignal   = (typeof m.signal      ==='number') ? m.signal       : mSignal;
+          dispMeanEntropy = nf(mEntropy,1,4); dispStdEntropy = nf(mEntropySD,1,4);
+          dispRMS = nf(mRMS,1,4); dispKeynote = nf(mKeynote,1,1)+' Hz'; dispSignal = nf(mSignal,1,4);
+          if (window.updateDetailsBox)
+            window.updateDetailsBox(dispMeanEntropy, dispStdEntropy, dispRMS, dispKeynote, dispSignal,
+              (typeof m.mean_entropy==='number' && typeof m.std_entropy==='number')
+              ? constrain((map(m.mean_entropy,6.7,8.3,0,1)+map(m.std_entropy,0.10,0.45,0,1))*0.5, 0, 1)
+              : null);
+          if (window.updateSoundmarks) window.updateSoundmarks(detectedCategories);
+        } catch (err) {
+          console.error('[server analysis] error:', err.message);
+        }
+      })();
     };
 
     mediaRecorder.start();
