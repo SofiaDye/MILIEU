@@ -161,8 +161,8 @@ def tts():
     text = (data.get('text') or '').strip()
     if not text:
         return jsonify({'error': 'no text'}), 400
-    api_key = os.environ.get('ELEVENLABS_API_KEY', '')
-    voice_id = os.environ.get('ELEVENLABS_VOICE_ID', 'xGDJhCwcqw94ypljc95Z')
+    api_key = os.environ.get('ELEVENLABS_API_KEY', '').strip()
+    voice_id = os.environ.get('ELEVENLABS_VOICE_ID', 'xGDJhCwcqw94ypljc95Z').strip()
     if not api_key:
         return jsonify({'error': 'TTS not configured'}), 503
     try:
@@ -172,12 +172,14 @@ def tts():
             headers={'xi-api-key': api_key, 'Content-Type': 'application/json'},
             json={
                 'text': text,
-                'model_id': 'eleven_monolingual_v1',
+                'model_id': 'eleven_turbo_v2_5',
                 'voice_settings': {'stability': 0.72, 'similarity_boost': 0.75, 'style': 0.0, 'use_speaker_boost': True},
             },
             timeout=15,
         )
+        print(f'[tts] status={resp.status_code} key_prefix={api_key[:8]} voice={voice_id[:8]}')
         if resp.status_code != 200:
+            print(f'[tts] error body: {resp.text[:300]}')
             return jsonify({'error': resp.text}), resp.status_code
         return FlaskResponse(resp.content, mimetype='audio/mpeg')
     except Exception as e:
