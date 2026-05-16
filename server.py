@@ -161,25 +161,19 @@ def tts():
     text = (data.get('text') or '').strip()
     if not text:
         return jsonify({'error': 'no text'}), 400
-    api_key = os.environ.get('ELEVENLABS_API_KEY', '').strip()
-    voice_id = os.environ.get('ELEVENLABS_VOICE_ID', 'xGDJhCwcqw94ypljc95Z').strip()
+    api_key = os.environ.get('OPENAI_API_KEY', '').strip()
     if not api_key:
         return jsonify({'error': 'TTS not configured'}), 503
     try:
         from flask import Response as FlaskResponse
         resp = requests.post(
-            f'https://api.elevenlabs.io/v1/text-to-speech/{voice_id}',
-            headers={'xi-api-key': api_key, 'Content-Type': 'application/json'},
-            json={
-                'text': text,
-                'model_id': 'eleven_turbo_v2_5',
-                'voice_settings': {'stability': 0.72, 'similarity_boost': 0.75, 'style': 0.0, 'use_speaker_boost': True},
-            },
+            'https://api.openai.com/v1/audio/speech',
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+            json={'model': 'tts-1', 'input': text, 'voice': 'shimmer', 'speed': 0.88},
             timeout=15,
         )
-        print(f'[tts] status={resp.status_code} key_prefix={api_key[:8]} voice={voice_id[:8]}')
         if resp.status_code != 200:
-            print(f'[tts] error body: {resp.text[:300]}')
+            print(f'[tts] error {resp.status_code}: {resp.text[:200]}')
             return jsonify({'error': resp.text}), resp.status_code
         return FlaskResponse(resp.content, mimetype='audio/mpeg')
     except Exception as e:
