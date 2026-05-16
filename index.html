@@ -2251,6 +2251,17 @@
         </div>
     </div>
 
+    <!-- Exit session confirmation modal -->
+    <div id="exit-session-modal" style="position:fixed;inset:0;background:rgba(30,40,60,0.18);z-index:1500;display:none;align-items:center;justify-content:center;">
+        <div style="background:rgba(245,247,250,0.98);border-radius:14px;box-shadow:0 4px 32px rgba(0,0,0,0.12);padding:34px 38px;display:flex;flex-direction:column;align-items:center;gap:22px;min-width:300px;max-width:340px;">
+            <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:16px;color:rgba(40,42,50,0.72);margin:0;text-align:center;">Are you sure you want to exit the session?</h3>
+            <div class="modal-btn-row">
+                <button id="exit-session-cancel-btn" class="modal-btn">Cancel</button>
+                <button id="exit-session-yes-btn" class="modal-btn">Yes</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Duration selection modal -->
     <div id="duration-modal">
         <div id="duration-box">
@@ -2440,7 +2451,6 @@
             clearInterval(_sess._breathInterval);
             if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
             orbContainer.classList.remove('breathing');
-            _breathAnimStart = null;
             document.getElementById('session-breath-label').classList.remove('visible');
             document.getElementById('session-overlay').style.display = 'none';
             document.getElementById('session-overlay').classList.remove('orb-hidden');
@@ -2517,9 +2527,21 @@
                 }
                 window._selfDirected = false;
                 sessionEndFlow();
+            } else if (window._sessionActive) {
+                // Guided session: confirm before exiting
+                document.getElementById('exit-session-modal').style.display = 'flex';
             } else {
                 fullReset();
             }
+        });
+
+        document.getElementById('exit-session-cancel-btn').addEventListener('click', () => {
+            document.getElementById('exit-session-modal').style.display = 'none';
+        });
+        document.getElementById('exit-session-yes-btn').addEventListener('click', () => {
+            document.getElementById('exit-session-modal').style.display = 'none';
+            window._suppressVisualization = true;
+            fullReset();
         });
 
         // Pre-record modal

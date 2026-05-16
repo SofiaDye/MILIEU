@@ -689,6 +689,7 @@ function toggleMic() {
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
 
     mediaRecorder.onstop = async () => {
+      if (window._suppressVisualization) { window._suppressVisualization = false; return; }
       const _mySession = _sessionId;
       const rawBlob = new Blob(recordedChunks, { type: 'audio/webm' });
 
