@@ -2619,7 +2619,7 @@
             function updateNumbers() {
                 const items = sdModal.querySelectorAll('.sd-structure-item');
                 items.forEach((li, i) => {
-                    li.querySelector('span').textContent = (i + 1) + '. ' + li.querySelector('span').textContent.replace(/^\d+\. /, '').replace(/^\d+\. /, '');
+                    li.querySelector('span:last-child').textContent = (i + 1) + '. ' + li.querySelector('span:last-child').textContent.replace(/^\d+\. /, '').replace(/^\d+\. /, '');
                 });
             }
             function moveItem(li, dir) {
@@ -2678,7 +2678,7 @@
                 beginBtn.onclick = function() {
                     // Collect session structure and duration
                     const checkedSteps = Array.from(document.querySelectorAll('#sd-structure-list input[type=checkbox]:checked'));
-                    const stepLabels = checkedSteps.map(cb => cb.parentElement.querySelector('span').textContent.trim());
+                    const stepLabels = checkedSteps.map(cb => cb.parentElement.querySelector('span:last-child').textContent.trim());
                     if (stepLabels.length === 0) {
                         alert('Please select at least one session step.');
                         return;

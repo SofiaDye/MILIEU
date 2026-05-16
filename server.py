@@ -172,7 +172,7 @@ def tts():
             headers={'xi-api-key': api_key, 'Content-Type': 'application/json'},
             json={
                 'text': text,
-                'model_id': 'eleven_multilingual_v2',
+                'model_id': 'eleven_monolingual_v1',
                 'voice_settings': {'stability': 0.72, 'similarity_boost': 0.75, 'style': 0.0, 'use_speaker_boost': True},
             },
             timeout=15,
