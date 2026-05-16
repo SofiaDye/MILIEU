@@ -169,7 +169,7 @@ def tts():
         resp = requests.post(
             'https://api.openai.com/v1/audio/speech',
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={'model': 'tts-1', 'input': text, 'voice': 'shimmer', 'speed': 0.88},
+            json={'model': 'tts-1', 'input': text, 'voice': 'fable', 'speed': 0.88},
             timeout=15,
         )
         if resp.status_code != 200:
