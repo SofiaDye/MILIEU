@@ -3317,6 +3317,11 @@
                     sessDataClear();
                     state = 'fading';
                     fadeAlpha = 0;
+                    // Restore SD session so user can record again
+                    startBreathing();
+                    if (window._resumeAmbientPrompts) window._resumeAmbientPrompts('drawing');
+                    const _sdBtnRestore = document.getElementById('sd-session-prompt-btn');
+                    if (_sdBtnRestore) { _sdBtnRestore.style.display = ''; _sdBtnRestore.onclick = triggerSdRecord; }
                 }, 5000);
             };
             if (typeof toggleMic === 'function') toggleMic();
