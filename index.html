@@ -1564,11 +1564,27 @@
             const tags = document.getElementById('soundmarks-tags');
             if (!categories || categories.length === 0) {
                 tags.innerHTML = '<span class="soundmark-tag" style="opacity:0.4;">—</span>';
-                return;
+            } else {
+                tags.innerHTML = categories.map(cat =>
+                    `<span class="soundmark-tag">${cat.replace(/_/g, ' ')}</span>`
+                ).join('');
             }
-            tags.innerHTML = categories.map(cat =>
-                `<span class="soundmark-tag">${cat.replace(/_/g, ' ')}</span>`
-            ).join('');
+            // During SD visualisation, show soundmarks + complexity label in corner
+            if (window._sdVizActive) {
+                const la = window._lastAnalysis;
+                const smList = (la.soundmarks || []).slice(0, 5).map(s => s.replace(/_/g, ' '));
+                const cn = (la.complexityNorm !== undefined) ? la.complexityNorm : 0.5;
+                function _cLabel(n) {
+                    if (n < 0.2) return 'highly ordered';
+                    if (n < 0.4) return 'mostly ordered';
+                    if (n < 0.6) return 'moderately complex';
+                    if (n < 0.8) return 'mostly disordered';
+                    return 'highly disordered';
+                }
+                const dataEl = document.getElementById('session-data-display');
+                dataEl.innerHTML = `<div class="session-tags-row">${smList.map(s => `<span class="session-tag">${s}</span>`).join('') || '<span class="session-tag" style="opacity:0.4">—</span>'}</div><div style="font-family:'miller-text',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.65);text-align:center;margin-top:4px;">${_cLabel(cn)}</div>`;
+                dataEl.classList.add('visible');
+            }
         };
 
         const orbContainer = document.getElementById('orb-container');
@@ -1832,7 +1848,12 @@
             if (active) {
                 orbLabel.textContent = 'Recording...';
                 orbLabel.style.opacity = '';
-                orbSublabel.style.opacity = '0';
+                if (window._selfDirected) {
+                    orbSublabel.textContent = 'Record up to 30s for best results';
+                    orbSublabel.style.opacity = '1';
+                } else {
+                    orbSublabel.style.opacity = '0';
+                }
                 const _sdBtnRec = document.getElementById('sd-session-prompt-btn');
                 if (_sdBtnRec) _sdBtnRec.style.display = 'none';
             } else {
@@ -1846,7 +1867,6 @@
                 if (active) { document.getElementById('bottom-bar').classList.remove('open'); document.getElementById('bottom-bar-toggle').textContent = 'Details'; }
                 _galleryPanel.classList.toggle('hidden-ui', active);
             }
-            _globeBtnRec.classList.toggle('hidden-ui', active);
         };
         window.setOrbAnalysing = function() {}; // no-op — analysing state removed
         window.hideOrb = function() {
@@ -2234,8 +2254,6 @@
             const _globeBtn = document.getElementById('globe-btn');
             _soundBtn.style.display = active ? '' : 'none';
             if (_isMobileView) {
-                // On mobile, hide globe during drawing so sound btn sits at top-right
-                if (_globeBtn) _globeBtn.style.display = active ? 'none' : '';
                 _soundBtn.style.right = active ? '14px' : '';
             }
             const panel = document.getElementById('info-viz-panel');
@@ -2715,8 +2733,7 @@
                         const mobileNav = document.getElementById('mobile-nav');
                         if (mobileNav) mobileNav.classList.add('hidden-ui');
                         orbLabel.textContent = 'Drop audio / Click to record';
-                        orbSublabel.textContent = 'Record up to 30s for best results';
-                        orbSublabel.style.opacity = '1';
+                        orbSublabel.style.opacity = '0';
 
                         // Capture session metadata from the SD form for saving
                         window._recordMeta = {
@@ -2731,6 +2748,7 @@
                         document.getElementById('home-tagline').classList.add('hidden-ui');
                         _sess.steps = customSteps;
                         _sess.idx = 0;
+                        _breathLabelsShown = false;
                         _sess.active = true;
                         window._sessionActive = true;
                         _sess.recordings = [];
@@ -3152,15 +3170,18 @@
         }
 
         let _breathGen = 0;
+        let _breathLabelsShown = false;
 
         function startBreathing() {
             ++_breathGen;
             clearInterval(_sess._breathInterval);
+            clearTimeout(_sess._breathInterval);
             const _gen = _breathGen;
             orbContainer.classList.add('breathing');
             orbLabel.textContent = '';
             const _bl = document.getElementById('session-breath-label');
             if (!_bl) return;
+            if (_breathLabelsShown) return; // labels already shown this session
 
             const HALF = 4500;
             const CYCLE = 9000;
@@ -3197,6 +3218,7 @@
                 clearInterval(_sess._breathInterval);
                 clearTimeout(_sess._breathInterval);
                 _bl.classList.remove('visible');
+                _breathLabelsShown = true;
                 return;
             }
             _bl.classList.remove('visible');
@@ -3412,6 +3434,7 @@
                 };
                 window.onVisualisationComplete = async () => {
                     window.onVisualisationComplete = null;
+                    if (window.stopAudioPlayback) window.stopAudioPlayback();
                     clearInterval(_sess._promptTimer);
                     sessPrompt('');
                     try { const cv = document.querySelector('canvas'); if (cv) window._lastDrawingThumbnail = cv.toDataURL('image/png'); } catch(e) {}
@@ -3588,6 +3611,7 @@
         async function sessionStart(duration) {
             clearTimeout(_idleTimer); // no standby during sessions
             document.getElementById('home-tagline').classList.add('hidden-ui');
+            _breathLabelsShown = false;
             _sess.active = true;
             window._sessionActive = true;
             _sess.idx = 0;
