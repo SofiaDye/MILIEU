@@ -2729,7 +2729,8 @@
                         const mobileNav = document.getElementById('mobile-nav');
                         if (mobileNav) mobileNav.classList.add('hidden-ui');
                         orbLabel.textContent = 'Drop audio / Click to record';
-                        orbSublabel.style.opacity = '0';
+                        orbSublabel.textContent = 'Record up to 30s for best results';
+                        orbSublabel.style.opacity = '1';
 
                         // Capture session metadata from the SD form for saving
                         window._recordMeta = {
@@ -3295,6 +3296,17 @@
                 // Save the canvas recording to My Landscapes
                 if (window.stopVisualRecording) await window.stopVisualRecording();
                 if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
+                // Show soundmarks and order/disorder scale
+                const la = window._lastAnalysis;
+                if (la) {
+                    const dataEl = document.getElementById('session-data-display');
+                    const smList = (la.soundmarks || []).slice(0, 5).map(s => s.replace(/_/g, ' '));
+                    const avgN = la.complexityNorm !== undefined ? la.complexityNorm : 0.5;
+                    setTimeout(() => {
+                        dataEl.innerHTML = `<div class="session-tags-row">${smList.map(s => `<span class="session-tag">${s}</span>`).join('') || '<span class="session-tag" style="opacity:0.4">—</span>'}</div>${sessBuildScale(avgN)}`;
+                        dataEl.classList.add('visible');
+                    }, 820);
+                }
                 // Stay on the completed drawing for 5s, then fade back to orb
                 setTimeout(() => {
                     if (window.setPlaybackActive) window.setPlaybackActive(false);
