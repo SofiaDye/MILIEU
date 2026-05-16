@@ -3305,23 +3305,22 @@
             window.onVisualisationComplete = async function() {
                 window.onVisualisationComplete = null;
                 window._sdVizActive = false;
-                clearTimeout(window._vizStopTimer); // prevent fallback timer from triggering fade early
+                clearTimeout(window._vizStopTimer);
                 clearInterval(_sess._promptTimer);
                 if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
-                // Save the canvas recording to My Landscapes
                 if (window.stopVisualRecording) await window.stopVisualRecording();
                 if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
-                // Stay on the completed drawing for 5s, then fade — clear data at same time
+                // Hold drawing for 5s then fade; resume session after fade completes
                 setTimeout(() => {
                     if (window.setPlaybackActive) window.setPlaybackActive(false);
                     sessDataClear();
-                    state = 'fading';
-                    fadeAlpha = 0;
-                    // Restore SD session so user can record again
-                    startBreathing();
-                    if (window._resumeAmbientPrompts) window._resumeAmbientPrompts('drawing');
-                    const _sdBtnRestore = document.getElementById('sd-session-prompt-btn');
-                    if (_sdBtnRestore) { _sdBtnRestore.style.display = ''; _sdBtnRestore.onclick = triggerSdRecord; }
+                    if (window.fadeVisualization) window.fadeVisualization();
+                    // Resume ambient prompts and record button once drawing has faded (~1.5s)
+                    setTimeout(() => {
+                        if (window._resumeAmbientPrompts) window._resumeAmbientPrompts('drawing');
+                        const _sdBtnRestore = document.getElementById('sd-session-prompt-btn');
+                        if (_sdBtnRestore) { _sdBtnRestore.style.display = ''; _sdBtnRestore.onclick = triggerSdRecord; }
+                    }, 1500);
                 }, 5000);
             };
             if (typeof toggleMic === 'function') toggleMic();
