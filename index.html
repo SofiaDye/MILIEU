@@ -3115,28 +3115,22 @@
         };
 
         let _sessPromptGen = 0;
-        const _ttsCache = {};
-        let _ttsAudio = null;
 
         function _speakPrompt(text) {
-            if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
-            if (_ttsCache[text]) {
-                _ttsAudio = new Audio(_ttsCache[text]);
-                _ttsAudio.play().catch(() => {});
-                return;
-            }
-            fetch('https://api.elevenlabs.io/v1/text-to-speech/xGDJhCwcqw94ypljc95Z', {
-                method: 'POST',
-                headers: { 'xi-api-key': 'sk_093e1e7c151d0c11f970e42672d9c05c8222766f43c76cca', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, model_id: 'eleven_turbo_v2_5', voice_settings: { stability: 0.72, similarity_boost: 0.75, style: 0.0, use_speaker_boost: true } })
-            }).then(r => r.ok ? r.blob() : null)
-              .then(blob => {
-                if (!blob) return;
-                const url = URL.createObjectURL(blob);
-                _ttsCache[text] = url;
-                _ttsAudio = new Audio(url);
-                _ttsAudio.play().catch(() => {});
-              }).catch(() => {});
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utt = new SpeechSynthesisUtterance(text);
+            utt.rate = 0.82;
+            utt.pitch = 1.0;
+            utt.volume = 1.0;
+            const voices = window.speechSynthesis.getVoices();
+            const calm = voices.find(v => v.name === 'Samantha') ||
+                         voices.find(v => v.name === 'Karen') ||
+                         voices.find(v => v.name === 'Moira') ||
+                         voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female')) ||
+                         voices.find(v => v.lang.startsWith('en'));
+            if (calm) utt.voice = calm;
+            window.speechSynthesis.speak(utt);
         }
 
         function sessPrompt(text) {
@@ -3688,7 +3682,7 @@
             _sess.active = false;
             window._sessionActive = false;
             window.voiceEnabled = false;
-            if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
             clearTimeout(_sess._timer);
             clearInterval(_sess._promptTimer);
             clearInterval(_sess._breathInterval);
