@@ -2828,7 +2828,7 @@
                             sessPrompt(ambientPrompts[ambientPromptIdx % ambientPrompts.length]);
                             ambientPromptIdx++;
                             // Next prompt in 18–38 seconds (irregular)
-                            const nextMs = 18000 + Math.floor(Math.random() * 20000);
+                            const nextMs = 8000 + Math.floor(Math.random() * 6000);
                             ambientPromptTimer = setTimeout(showAmbientPrompt, nextMs);
                         }
                         showAmbientPrompt();
