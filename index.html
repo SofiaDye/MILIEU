@@ -1142,7 +1142,7 @@
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 15px; color: rgba(25,35,55,0.45);
             letter-spacing: 0.12em; text-align: center;
-            opacity: 0; transition: opacity 1.2s ease;
+            opacity: 0; transition: opacity 0.6s ease;
             pointer-events: none;
         }
         #session-breath-label.visible { opacity: 1; }
@@ -1755,7 +1755,6 @@
                 document.getElementById('prerecord-modal').classList.add('open');
             } else {
                 // Guided session: open guided intro modal first
-                document.getElementById('guided-voice-check').checked = false;
                 document.getElementById('guided-intro-modal').classList.add('open');
             }
         }
@@ -2279,12 +2278,7 @@
     <div id="guided-intro-modal">
         <div id="guided-intro-box">
             <h3>Guided Meditation</h3>
-            <p>A timed guided session, for mindful listening. We recommend not having a voice over so you can fully immerse in your own soundscape, however, if you prefer, tick below to have the prompts read out to you.</p>
-            <label class="sd-check-label" style="justify-content:center;width:100%;">
-                <input type="checkbox" id="guided-voice-check">
-                <span class="sd-check-circle"></span>
-                <span>Voice over</span>
-            </label>
+            <p>A timed guided session, for mindful listening.</p>
             <div class="modal-btn-row">
                 <button id="guided-intro-back-btn" class="modal-btn">Back</button>
                 <button id="guided-intro-next-btn" class="modal-btn">Next</button>
@@ -2382,14 +2376,6 @@
                 <div style="font-family:'miller-text',serif;font-style:italic;font-size:14px;color:rgba(40,42,50,0.65);text-align:center;max-width:320px;">
                     In this mode, you can guide and record your own soundscape without structure.
                 </div>
-                <div style="font-family:'miller-text',serif;font-style:italic;font-size:13px;color:rgba(40,42,50,0.60);text-align:center;max-width:300px;line-height:1.5;">
-                    We recommend not having a voice over so you can fully immerse in your own soundscape, however, if you prefer, tick below to have the prompts read out to you.
-                </div>
-                <label class="sd-check-label" style="justify-content:center;width:100%;">
-                    <input type="checkbox" id="sd-voice-check">
-                    <span class="sd-check-circle"></span>
-                    <span>Voice over</span>
-                </label>
                 <div class="modal-btn-row">
                     <button class="sd-back-btn modal-btn">Back</button>
                     <button class="sd-next-btn prerecord-start modal-btn">Next</button>
@@ -2926,13 +2912,10 @@
         });
 
         // ── Duration modal ────────────────────────────────────────────────────────
-        window.voiceEnabled = false;
-
         document.getElementById('guided-intro-back-btn').addEventListener('click', () => {
             document.getElementById('guided-intro-modal').classList.remove('open');
         });
         document.getElementById('guided-intro-next-btn').addEventListener('click', () => {
-            window.voiceEnabled = document.getElementById('guided-voice-check').checked;
             document.getElementById('guided-intro-modal').classList.remove('open');
             document.getElementById('duration-modal').classList.add('open');
         });
@@ -2940,10 +2923,6 @@
         document.getElementById('duration-back-btn').addEventListener('click', () => {
             document.getElementById('duration-modal').classList.remove('open');
             document.getElementById('guided-intro-modal').classList.add('open');
-        });
-
-        document.getElementById('sd-voice-check').addEventListener('change', function() {
-            window.voiceEnabled = this.checked;
         });
 
         document.querySelectorAll('.duration-btn').forEach(btn => {
@@ -3116,30 +3095,6 @@
 
         let _sessPromptGen = 0;
 
-        const _ttsCache = {};
-        let _ttsAudio = null;
-
-        function _speakPrompt(text) {
-            if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
-            if (_ttsCache[text]) {
-                _ttsAudio = new Audio(_ttsCache[text]);
-                _ttsAudio.play().catch(() => {});
-                return;
-            }
-            fetch('https://api.elevenlabs.io/v1/text-to-speech/xGDJhCwcqw94ypljc95Z', {
-                method: 'POST',
-                headers: { 'xi-api-key': 'sk_ddef7ac12f60dc1333ce86084f3c7dad43b5729a57d52af1', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, model_id: 'eleven_monolingual_v1', voice_settings: { stability: 0.75, similarity_boost: 0.75 } })
-            }).then(r => r.ok ? r.blob() : null)
-              .then(blob => {
-                if (!blob) return;
-                const url = URL.createObjectURL(blob);
-                _ttsCache[text] = url;
-                _ttsAudio = new Audio(url);
-                _ttsAudio.play().catch(() => {});
-              }).catch(() => {});
-        }
-
         function sessPrompt(text) {
             const el = document.getElementById('session-prompt-text');
             if (el) {
@@ -3147,10 +3102,9 @@
                 const gen = ++_sessPromptGen;
                 if (!text) return;
                 setTimeout(() => {
-                    if (gen !== _sessPromptGen) return; // stale callback — a newer prompt superseded this one
+                    if (gen !== _sessPromptGen) return;
                     el.innerHTML = text.replace(/\n/g, '<br>');
                     el.style.opacity = '1';
-                    if (window.voiceEnabled) _speakPrompt(text);
                 }, 820);
             }
         }
@@ -3198,27 +3152,26 @@
         }
 
         let _breathGen = 0;
-        let _breathAnimStart = null; // when the orbBreathe animation last started
 
         function startBreathing() {
             ++_breathGen;
             clearInterval(_sess._breathInterval);
             const _gen = _breathGen;
-            const _wasBreathing = orbContainer.classList.contains('breathing');
             orbContainer.classList.add('breathing');
-            if (!_wasBreathing) _breathAnimStart = performance.now(); // animation just (re)started
             orbLabel.textContent = '';
             const _bl = document.getElementById('session-breath-label');
             if (!_bl) return;
 
-            const HALF = 4500;   // half of 9s animation = one In or Out phase
+            const HALF = 4500;
             const CYCLE = 9000;
-            const MAX_LABELS = 6; // 3 full in/out cycles then stop
+            const MAX_LABELS = Infinity;
             let _bpi;
 
-            // Calculate where we are in the current animation cycle
-            if (_breathAnimStart !== null) {
-                const _elapsed = (performance.now() - _breathAnimStart) % CYCLE;
+            // Read actual animation position from CSS engine for perfect sync
+            const _orbEl = document.getElementById('orb');
+            const _anim = _orbEl && _orbEl.getAnimations && _orbEl.getAnimations().find(a => a.animationName === 'orbBreathe');
+            const _elapsed = (_anim && _anim.currentTime != null) ? (_anim.currentTime % CYCLE) : 0;
+            if (true) {
                 // 0–4500ms = expanding = In, 4500–9000ms = contracting = Out
                 const _inInPhase = _elapsed < HALF;
                 _bpi = _inInPhase ? 0 : 1; // start label at correct phase
@@ -3236,13 +3189,6 @@
                         _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
                     }, HALF);
                 }, _toNext);
-            } else {
-                _bpi = 0;
-                _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
-                _sess._breathInterval = setInterval(() => {
-                    _bpi++;
-                    _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
-                }, HALF);
             }
         }
 
@@ -3258,7 +3204,7 @@
                 if (_breathGen !== _gen) return;
                 _bl.textContent = _bpi % 2 === 0 ? 'In' : 'Out';
                 _bl.classList.add('visible');
-            }, 300);
+            }, 650);
         }
 
         function stopBreathing() {
@@ -3278,6 +3224,7 @@
             clearInterval(_sess._promptTimer);
             stopBreathing();
             sessPrompt('');
+            window._lastAnalysis = null;
             const _sdBtn = document.getElementById('sd-session-prompt-btn');
             if (_sdBtn) _sdBtn.style.display = 'none';
             // Pause prompts while drawing
@@ -3305,7 +3252,6 @@
             };
             window.onVisualisationComplete = async function() {
                 window.onVisualisationComplete = null;
-                window._sdVizActive = false;
                 clearTimeout(window._vizStopTimer);
                 clearInterval(_sess._promptTimer);
                 if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
@@ -3313,6 +3259,7 @@
                 if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
                 // Hold drawing for 5s then fade; resume session after fade completes
                 setTimeout(() => {
+                    window._sdVizActive = false;
                     if (window.setPlaybackActive) window.setPlaybackActive(false);
                     sessDataClear();
                     if (window.fadeVisualization) window.fadeVisualization();
@@ -3688,8 +3635,6 @@
             // Guided session: normal end flow
             _sess.active = false;
             window._sessionActive = false;
-            window.voiceEnabled = false;
-            if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
             clearTimeout(_sess._timer);
             clearInterval(_sess._promptTimer);
             clearInterval(_sess._breathInterval);
