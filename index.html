@@ -3125,10 +3125,10 @@
                 _ttsAudio.play().catch(() => {});
                 return;
             }
-            fetch('/tts', {
+            fetch('https://api.elevenlabs.io/v1/text-to-speech/xGDJhCwcqw94ypljc95Z', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
+                headers: { 'xi-api-key': 'sk_093e1e7c151d0c11f970e42672d9c05c8222766f43c76cca', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, model_id: 'eleven_turbo_v2_5', voice_settings: { stability: 0.72, similarity_boost: 0.75, style: 0.0, use_speaker_boost: true } })
             }).then(r => r.ok ? r.blob() : null)
               .then(blob => {
                 if (!blob) return;
