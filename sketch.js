@@ -19,6 +19,11 @@ window.fadeVisualization = function() {
   if (state === 'visualising') { state = 'fading'; fadeAlpha = 0; }
 };
 
+window.stopAudioPlayback = function() {
+  if (playbackAudio) { playbackAudio.pause(); playbackAudio = null; }
+  playbackActive = false;
+};
+
 window.resetSketch = function() {
   _sessionId++;                          // invalidates any in-flight async fetch
   clearInterval(window._revealTimer);

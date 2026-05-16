@@ -3164,7 +3164,7 @@
 
             const HALF = 4500;
             const CYCLE = 9000;
-            const MAX_LABELS = Infinity;
+            const MAX_LABELS = 6;
             let _bpi;
 
             // Read actual animation position from CSS engine for perfect sync
@@ -3260,6 +3260,7 @@
                 // Hold drawing for 5s then fade; resume session after fade completes
                 setTimeout(() => {
                     window._sdVizActive = false;
+                    if (window.stopAudioPlayback) window.stopAudioPlayback();
                     if (window.setPlaybackActive) window.setPlaybackActive(false);
                     sessDataClear();
                     if (window.fadeVisualization) window.fadeVisualization();
