@@ -2761,8 +2761,7 @@
                         if (_sdBtn) { _sdBtn.style.display = ''; _sdBtn.onclick = triggerSdRecord; }
 
                         // Start ambient self-directed session logic
-                        stopBreathing();
-                        orbContainer.classList.remove('breathing');
+                        startBreathing();
 
                         // Map each step type to bank categories.
                         // Regular keys (e.g. BREATHE) come from column 3 of the sheet.
