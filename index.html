@@ -184,23 +184,6 @@
             color: rgba(30,40,60,0.80);
         }
 
-        /* Globe button */
-        #globe-btn {
-            position: fixed; top: 22px; right: 24px;
-            width: 38px; height: 38px;
-            background: none; border: none; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 1001;
-            transition: background 0.18s, opacity 0.4s;
-        }
-        #globe-btn.hidden-ui { opacity: 0; pointer-events: none; }
-        #globe-btn:hover {
-            background: rgba(200,220,240,0.18);
-        }
-        #globe-btn svg {
-            width: 22px; height: 22px;
-            opacity: 0.85;
-        }
         #ae-btn {
             position: fixed; top: 22px; right: 116px;
             height: 28px; padding: 0 12px;
@@ -775,8 +758,7 @@
             #splash-enter   { bottom: 32px; top: auto; height: 76px; }
 
             /* Top buttons */
-            #globe-btn  { top: 14px; right: 14px; width: 34px; height: 34px; }
-            #sound-btn  { top: 14px; right: 56px; width: 34px; height: 34px; }
+            #sound-btn  { top: 14px; right: 14px; width: 34px; height: 34px; }
 
             /* Home button */
             #home-btn { font-size: 11px; padding: 0 10px; }
@@ -1263,16 +1245,6 @@
         <!-- Home button top left -->
         <button id="home-btn" title="Return to start">Home</button>
 
-        <!-- Globe button top right, hidden when splash overlay is present -->
-        <button id="globe-btn" title="Globe" style="display:none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3a4a5a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <ellipse cx="12" cy="12" rx="10" ry="4.5" />
-                <ellipse cx="12" cy="12" rx="4.5" ry="10" />
-                <path d="M2 12h20" />
-                <path d="M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20z" />
-            </svg>
-        </button>
     <!-- AE black bg export toggle -->
     <button id="ae-btn" title="Black background for After Effects export">AE</button>
     <!-- Sound toggle button -->
@@ -1312,43 +1284,21 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-    // Show/hide globe + sound buttons based on whether the splash is in the DOM
+    // Show/hide sound button based on whether the splash is in the DOM
     function updateGlobeBtnVisibility() {
-        const splash = document.getElementById('splash-screen');
-        const globeBtn = document.getElementById('globe-btn');
         const soundBtn = document.getElementById('sound-btn');
-        const homeBtn  = document.getElementById('home-btn');
         const aeBtn    = document.getElementById('ae-btn');
-        const splashVisible = !!(splash && splash.parentNode);
-        globeBtn.style.display = 'none';
         soundBtn.style.display = 'none';
-        // homeBtn is controlled by recording/visualising state, not splash
         aeBtn.style.display    = 'none';
     }
     const _visObserver = new MutationObserver(updateGlobeBtnVisibility);
     _visObserver.observe(document.body, { childList: true });
 
-    // Map modal — wire up directly (elements are already in DOM at this point)
+    // Map modal
     let _leafletMap = null;
     const _mapModal  = document.getElementById('map-modal');
     const _mapClose  = document.getElementById('map-close');
-    const _globeBtn  = document.getElementById('globe-btn');
 
-    _globeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        _mapModal.style.display = 'flex';
-        setTimeout(function() {
-            if (!_leafletMap) {
-                _leafletMap = L.map('map').setView([20, 0], 2);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                }).addTo(_leafletMap);
-            } else {
-                _leafletMap.invalidateSize();
-            }
-        }, 100);
-    });
 
     _mapClose.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1822,8 +1772,6 @@
         // Orb state functions (called from sketch.js)
         const _bottomBar    = document.getElementById('bottom-bar-wrapper');
         const _galleryPanel = document.getElementById('gallery-panel');
-        const _globeBtnRec  = document.getElementById('globe-btn');
-
         // Toggle the info panel open/closed
         document.getElementById('bottom-bar-toggle').addEventListener('click', () => {
             const bar = document.getElementById('bottom-bar');
@@ -2251,7 +2199,6 @@
         window.setPlaybackActive = function(active) {
             const _isMobileView = window.innerWidth < 640;
             const _soundBtn = document.getElementById('sound-btn');
-            const _globeBtn = document.getElementById('globe-btn');
             _soundBtn.style.display = active ? '' : 'none';
             if (_isMobileView) {
                 _soundBtn.style.right = active ? '14px' : '';
