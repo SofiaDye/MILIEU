@@ -1046,6 +1046,30 @@
         #self-directed-btn.hidden-ui { opacity: 0; pointer-events: none; }
 
         /* Duration selection modal */
+        #guided-intro-modal {
+            position: fixed; inset: 0;
+            background: rgba(30,40,60,0.18);
+            z-index: 1500; display: none;
+            align-items: center; justify-content: center;
+        }
+        #guided-intro-modal.open { display: flex; }
+        #guided-intro-box {
+            background: rgba(245,247,250,0.98);
+            border-radius: 14px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            padding: 34px 38px;
+            display: flex; flex-direction: column; align-items: center; gap: 18px;
+            min-width: 300px; max-width: 340px;
+        }
+        #guided-intro-box h3 {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 16px; color: rgba(40,42,50,0.72); margin: 0; text-align: center;
+        }
+        #guided-intro-box p {
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 14px; color: rgba(40,42,50,0.65);
+            text-align: center; margin: 0; line-height: 1.55;
+        }
         #duration-modal {
             position: fixed; inset: 0;
             background: rgba(30,40,60,0.18);
@@ -1730,8 +1754,9 @@
                 document.getElementById('prerecord-save').value = 'true';
                 document.getElementById('prerecord-modal').classList.add('open');
             } else {
-                // Guided session: open duration modal
-                document.getElementById('duration-modal').classList.add('open');
+                // Guided session: open guided intro modal first
+                document.getElementById('guided-voice-check').checked = false;
+                document.getElementById('guided-intro-modal').classList.add('open');
             }
         }
         document.getElementById('orb').addEventListener('click', orbClickHandler);
@@ -2250,6 +2275,23 @@
         });
     </script>
 
+    <!-- Guided meditation intro modal -->
+    <div id="guided-intro-modal">
+        <div id="guided-intro-box">
+            <h3>Guided Meditation</h3>
+            <p>A timed guided session, for mindful listening. We recommend not having a voice over so you can fully immerse in your own soundscape, however, if you prefer, tick below to have the prompts read out to you.</p>
+            <label class="sd-check-label" style="justify-content:center;width:100%;">
+                <input type="checkbox" id="guided-voice-check">
+                <span class="sd-check-circle"></span>
+                <span>Voice over</span>
+            </label>
+            <div class="modal-btn-row">
+                <button id="guided-intro-back-btn" class="modal-btn">Back</button>
+                <button id="guided-intro-next-btn" class="modal-btn">Next</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Duration selection modal -->
     <div id="duration-modal">
         <div id="duration-box">
@@ -2334,12 +2376,20 @@
 
     <!-- Self-Directed Session Modal (3-step) -->
     <div id="self-directed-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(30,40,60,0.22);align-items:center;justify-content:center;">
-        <div id="sd-modal-inner" style="background:rgba(245,247,250,0.98);border-radius:14px;box-shadow:0 4px 32px rgba(0,0,0,0.14);padding:30px 32px;min-width:300px;max-width:95vw;width:340px;display:flex;flex-direction:column;align-items:center;gap:18px;">
+        <div id="sd-modal-inner" style="background:rgba(245,247,250,0.98);border-radius:14px;box-shadow:0 4px 32px rgba(0,0,0,0.14);padding:32px 36px;min-width:300px;max-width:95vw;width:400px;display:flex;flex-direction:column;align-items:center;gap:18px;">
             <div class="sd-modal-step" id="sd-step-1">
                 <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Self-Directed Session</h3>
                 <div style="font-family:'miller-text',serif;font-style:italic;font-size:14px;color:rgba(40,42,50,0.65);text-align:center;max-width:320px;">
                     In this mode, you can guide and record your own soundscape without structure.
                 </div>
+                <div style="font-family:'miller-text',serif;font-style:italic;font-size:13px;color:rgba(40,42,50,0.60);text-align:center;max-width:300px;line-height:1.5;">
+                    We recommend not having a voice over so you can fully immerse in your own soundscape, however, if you prefer, tick below to have the prompts read out to you.
+                </div>
+                <label class="sd-check-label" style="justify-content:center;width:100%;">
+                    <input type="checkbox" id="sd-voice-check">
+                    <span class="sd-check-circle"></span>
+                    <span>Voice over</span>
+                </label>
                 <div class="modal-btn-row">
                     <button class="sd-back-btn modal-btn">Back</button>
                     <button class="sd-next-btn prerecord-start modal-btn">Next</button>
@@ -2876,8 +2926,24 @@
         });
 
         // ── Duration modal ────────────────────────────────────────────────────────
+        window.voiceEnabled = false;
+
+        document.getElementById('guided-intro-back-btn').addEventListener('click', () => {
+            document.getElementById('guided-intro-modal').classList.remove('open');
+        });
+        document.getElementById('guided-intro-next-btn').addEventListener('click', () => {
+            window.voiceEnabled = document.getElementById('guided-voice-check').checked;
+            document.getElementById('guided-intro-modal').classList.remove('open');
+            document.getElementById('duration-modal').classList.add('open');
+        });
+
         document.getElementById('duration-back-btn').addEventListener('click', () => {
             document.getElementById('duration-modal').classList.remove('open');
+            document.getElementById('guided-intro-modal').classList.add('open');
+        });
+
+        document.getElementById('sd-voice-check').addEventListener('change', function() {
+            window.voiceEnabled = this.checked;
         });
 
         document.querySelectorAll('.duration-btn').forEach(btn => {
@@ -3049,6 +3115,30 @@
         };
 
         let _sessPromptGen = 0;
+        const _ttsCache = {};
+        let _ttsAudio = null;
+
+        function _speakPrompt(text) {
+            if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
+            if (_ttsCache[text]) {
+                _ttsAudio = new Audio(_ttsCache[text]);
+                _ttsAudio.play().catch(() => {});
+                return;
+            }
+            fetch('/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            }).then(r => r.ok ? r.blob() : null)
+              .then(blob => {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                _ttsCache[text] = url;
+                _ttsAudio = new Audio(url);
+                _ttsAudio.play().catch(() => {});
+              }).catch(() => {});
+        }
+
         function sessPrompt(text) {
             const el = document.getElementById('session-prompt-text');
             if (el) {
@@ -3059,6 +3149,7 @@
                     if (gen !== _sessPromptGen) return; // stale callback — a newer prompt superseded this one
                     el.innerHTML = text.replace(/\n/g, '<br>');
                     el.style.opacity = '1';
+                    if (window.voiceEnabled) _speakPrompt(text);
                 }, 820);
             }
         }
@@ -3576,6 +3667,8 @@
             // Guided session: normal end flow
             _sess.active = false;
             window._sessionActive = false;
+            window.voiceEnabled = false;
+            if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
             clearTimeout(_sess._timer);
             clearInterval(_sess._promptTimer);
             clearInterval(_sess._breathInterval);
