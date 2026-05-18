@@ -3278,22 +3278,15 @@
                 if (_sess.bank) {
                     for (let _i = 0; _i < (step.bankCount || 4); _i++) { const _p = pickPrompt('BREATHE'); if (_p) _bPool.push(_p); }
                 }
-                const _bPrompts = _bPool.length ? _bPool : step.prompts;
-                const interval = Math.max(5000, Math.min(12000, Math.floor(step.duration / _bPrompts.length)));
+                const _bPool2 = _bPool.length ? _bPool : step.prompts.slice(1);
                 const _hr = new Date().getHours();
                 const _greeting = _hr < 12 ? 'Good morning' : _hr < 17 ? 'Good afternoon' : 'Good evening';
-                sessPrompt(_greeting);
-                _sess._promptTimer = setTimeout(() => {
-                    sessPrompt('Breathe with Milieu');
-                    _sess._promptTimer = setTimeout(() => {
-                        // start at 1 for fallback prompts — index 0 is 'Breathe with Milieu'
-                        // which was already shown above; bank prompts start at 0 (different text)
-                        let pi = _bPool.length ? 0 : 1;
-                        function nextPrompt() { if (pi < _bPrompts.length) sessPrompt(_bPrompts[pi++]); }
-                        nextPrompt();
-                        _sess._promptTimer = setInterval(nextPrompt, interval);
-                    }, 3500);
-                }, 3000);
+                const _allBPrompts = [_greeting, 'Breathe with Milieu', ..._bPool2];
+                const _bInterval = Math.max(5000, Math.floor(step.duration / _allBPrompts.length));
+                let _bPi = 0;
+                function _bNext() { if (_bPi < _allBPrompts.length) sessPrompt(_allBPrompts[_bPi++]); }
+                _bNext();
+                _sess._promptTimer = setInterval(_bNext, _bInterval);
 
                 _sess._timer = setTimeout(() => {
                     clearInterval(_sess._promptTimer);
@@ -3310,7 +3303,7 @@
                     for (let _i = 0; _i < (step.bankCount || 4); _i++) { const _p = pickPrompt('SET INTENTIONS'); if (_p) _siPool.push(_p); }
                 }
                 const _siPrompts = _siPool.length ? _siPool : step.prompts;
-                const _siInterval = Math.max(5000, Math.min(12000, Math.floor(step.duration / _siPrompts.length)));
+                const _siInterval = Math.max(5000, Math.floor(step.duration / _siPrompts.length));
                 let _siPi = 0;
                 function _siNext() { if (_siPi < _siPrompts.length) sessPrompt(_siPrompts[_siPi++]); }
                 _siNext();
@@ -3356,8 +3349,10 @@
                 function showRecordingPrompt() {
                     if (rpi < _recPool.length) sessPrompt(_recPool[rpi++]);
                 }
+                const _maxSecs = window._sessMaxRecordSecs || 30;
+                const _recInterval = Math.max(8000, Math.floor((_maxSecs * 1000) / Math.max(1, _recPool.length)));
                 showRecordingPrompt();
-                _sess._promptTimer = setInterval(showRecordingPrompt, 20000);
+                _sess._promptTimer = setInterval(showRecordingPrompt, _recInterval);
 
                 window['onVisualisationStart'] = () => {
                     clearInterval(_sess._promptTimer);
