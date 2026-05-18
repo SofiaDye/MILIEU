@@ -3493,13 +3493,18 @@
                 } else {
                     _wPrompts = [...step.prompts].slice(0, _maxWPrompts);
                 }
-                let pi = 0;
-                const interval = Math.floor(step.duration / _wPrompts.length);
-                function nextPrompt() { if (pi < _wPrompts.length) sessPrompt(_wPrompts[pi++]); }
-                _sess._promptTimer = setInterval(nextPrompt, interval);
-                setTimeout(nextPrompt, 1000);
+                let _wpi = 0;
+                const _wStep = Math.floor(step.duration / _wPrompts.length);
+                function _showWPrompt() {
+                    if (!_sess.active || _wpi >= _wPrompts.length) return;
+                    sessPrompt(_wPrompts[_wpi++]);
+                    if (_wpi < _wPrompts.length) {
+                        _sess._promptTimer = setTimeout(_showWPrompt, _wStep);
+                    }
+                }
+                _sess._promptTimer = setTimeout(_showWPrompt, 1000);
                 _sess._timer = setTimeout(() => {
-                    clearInterval(_sess._promptTimer);
+                    clearTimeout(_sess._promptTimer);
                     sessionAdvance();
                 }, step.duration);
             }
