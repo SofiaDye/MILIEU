@@ -3355,7 +3355,7 @@
                     if (rpi < _recPool.length) sessPrompt(_recPool[rpi++]);
                 }
                 const _maxSecs = window._sessMaxRecordSecs || 30;
-                const _recInterval = Math.max(8000, Math.floor((_maxSecs * 1000) / Math.max(1, _recPool.length)));
+                const _recInterval = Math.min(15000, Math.max(8000, Math.floor((_maxSecs * 1000) / Math.max(1, _recPool.length))));
                 showRecordingPrompt();
                 _sess._promptTimer = setInterval(showRecordingPrompt, _recInterval);
 
