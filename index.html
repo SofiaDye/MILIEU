@@ -1697,6 +1697,12 @@
 
         // Orb click handler
         function orbClickHandler() {
+            // Resume AudioContext on user gesture so audio capture works on iOS
+            if (window._recAudioCtx && window._recAudioCtx.state === 'suspended') {
+                window._recAudioCtx.resume();
+            } else if (!window._recAudioCtx) {
+                try { window._recAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+            }
             if (window._sessionActive) {
                 // During session: first click starts recording (advancing to playback step),
                 // second click (while recording) stops it
@@ -2096,29 +2102,27 @@
                 const canvas = document.querySelector('canvas');
                 const stream = canvas.captureStream(30);
                 if (audioEl) {
-                    // captureStream() works on Chrome/Edge but NOT Safari/iOS
-                    if (audioEl.captureStream) {
-                        try { audioEl.captureStream().getAudioTracks().forEach(t => stream.addTrack(t)); }
-                        catch(e) { console.warn('captureStream failed:', e); }
-                    } else if (audioEl.mozCaptureStream) {
-                        try { audioEl.mozCaptureStream().getAudioTracks().forEach(t => stream.addTrack(t)); }
-                        catch(e) { console.warn('mozCaptureStream failed:', e); }
-                    } else {
-                        // Safari fallback: Web Audio API MediaStreamDestination
-                        try {
-                            if (!window._recAudioCtx) {
-                                window._recAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                            }
-                            const _ctx = window._recAudioCtx;
-                            if (_ctx.state === 'suspended') _ctx.resume();
-                            if (!audioEl._recSrcNode) {
-                                audioEl._recSrcNode = _ctx.createMediaElementSource(audioEl);
-                                audioEl._recSrcNode.connect(_ctx.destination); // keep audio audible
-                            }
-                            const _dest = _ctx.createMediaStreamDestination();
-                            audioEl._recSrcNode.connect(_dest);
-                            _dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
-                        } catch(e) { console.warn('Web Audio capture failed:', e); }
+                    // Web Audio API is most reliable across all browsers
+                    try {
+                        if (!window._recAudioCtx) {
+                            window._recAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        }
+                        const _ctx = window._recAudioCtx;
+                        if (_ctx.state === 'suspended') _ctx.resume();
+                        if (!audioEl._recSrcNode) {
+                            audioEl._recSrcNode = _ctx.createMediaElementSource(audioEl);
+                            audioEl._recSrcNode.connect(_ctx.destination);
+                        }
+                        const _dest = _ctx.createMediaStreamDestination();
+                        audioEl._recSrcNode.connect(_dest);
+                        _dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+                    } catch(e) {
+                        // Fallback: captureStream on element
+                        console.warn('Web Audio capture failed, trying captureStream:', e);
+                        const _cs = audioEl.captureStream || audioEl.mozCaptureStream;
+                        if (_cs) {
+                            try { _cs.call(audioEl).getAudioTracks().forEach(t => stream.addTrack(t)); } catch(e2) {}
+                        }
                     }
                 }
                 const mime = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
