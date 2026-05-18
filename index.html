@@ -1615,6 +1615,12 @@
         function enterStandby() {
             if (window._sessionActive || _standbyOverlay) return;
 
+            // Close any open modals before entering standby
+            ['guided-intro-modal','duration-modal','exit-session-modal','prerecord-modal','self-directed-modal','map-modal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.remove('open'); el.style.display = 'none'; }
+            });
+
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;inset:0;z-index:500;background:radial-gradient(ellipse at 50% 50%,rgba(235,242,255,1.0) 0%,rgba(210,225,248,1.0) 35%,rgba(185,208,240,1.0) 65%,rgba(160,190,228,1.0) 100%);display:flex;align-items:center;justify-content:center;';
 
@@ -3356,6 +3362,7 @@
                 window['onVisualisationStart'] = () => {
                     clearInterval(_sess._promptTimer);
                     window.setPlaybackActive && window.setPlaybackActive(true);
+                    window._sdVizActive = true;
                     window._lastRecordingDuration = Math.max(step.drawingMin || 60, window._lastRecordingDuration || 30);
                     const _drawPool = [];
                     if (_sess.bank) {
@@ -3372,6 +3379,7 @@
                 };
                 window.onVisualisationComplete = async () => {
                     window.onVisualisationComplete = null;
+                    window._sdVizActive = false;
                     if (window.stopAudioPlayback) window.stopAudioPlayback();
                     clearInterval(_sess._promptTimer);
                     sessPrompt('');
@@ -3386,7 +3394,9 @@
                 document.getElementById('session-overlay').classList.remove('orb-hidden');
                 orbSublabel.style.opacity = '0';
                 window.showOrb && window.showOrb();
-                const rec = _sess.recordings[0];
+                startBreathing();
+                if (window.fadeVisualization) window.fadeVisualization();
+                const rec = _sess.recordings[0] || window._lastAnalysis;
                 const cn = rec && rec.complexityNorm !== undefined ? rec.complexityNorm : 0.5;
                 function complexityLabel(n) {
                     if (n < 0.2) return 'highly ordered';
@@ -3418,7 +3428,10 @@
                     if (!_onlySilence) resolvedPrompts.push('Did you notice this?');
                 }
                 _rPrompts.forEach(p => {
-                    if (p) resolvedPrompts.push(resolvePromptTemplate(p, _cLbl, _smsText));
+                    if (p) {
+                        const resolved = resolvePromptTemplate(p, _cLbl, _smsText);
+                        if (!resolvedPrompts.includes(resolved)) resolvedPrompts.push(resolved);
+                    }
                 });
                 // 4th prompt lingers twice as long
                 const _longHold = step.longHold || 30000;
@@ -3445,6 +3458,7 @@
             }
             else if (step.type === 'winddown') {
                 document.getElementById('session-overlay').classList.remove('orb-hidden');
+                sessDataClear();
                 // Fade drawing back in as background layer
                 if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
                 if (window._lastDrawingThumbnail) {
@@ -3487,8 +3501,8 @@
                 let pi = 0;
                 const interval = Math.floor(step.duration / _wPrompts.length);
                 function nextPrompt() { if (pi < _wPrompts.length) sessPrompt(_wPrompts[pi++]); }
-                nextPrompt();
                 _sess._promptTimer = setInterval(nextPrompt, interval);
+                setTimeout(nextPrompt, 1000);
                 _sess._timer = setTimeout(() => {
                     clearInterval(_sess._promptTimer);
                     sessionAdvance();
@@ -3550,6 +3564,7 @@
             clearTimeout(_idleTimer); // no standby during sessions
             document.getElementById('home-tagline').classList.add('hidden-ui');
             _breathLabelsShown = false;
+            window._suppressVisualization = false;
             _sess.active = true;
             window._sessionActive = true;
             _sess.idx = 0;
