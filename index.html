@@ -3149,37 +3149,19 @@
             orbContainer.classList.add('breathing');
             orbLabel.textContent = '';
             const _bl = document.getElementById('session-breath-label');
-            if (!_bl) return;
-            if (_breathLabelsShown) return; // labels already shown this session
+            if (!_bl || _breathLabelsShown) return;
 
             const HALF = 4500;
-            const CYCLE = 9000;
             const MAX_LABELS = 6;
-            let _bpi;
+            let _bpi = 0;
 
-            // Read actual animation position from CSS engine for perfect sync
-            const _orbEl = document.getElementById('orb');
-            const _anim = _orbEl && _orbEl.getAnimations && _orbEl.getAnimations().find(a => a.animationName === 'orbBreathe');
-            const _elapsed = (_anim && _anim.currentTime != null) ? (_anim.currentTime % CYCLE) : 0;
-            if (true) {
-                // 0–4500ms = expanding = In, 4500–9000ms = contracting = Out
-                const _inInPhase = _elapsed < HALF;
-                _bpi = _inInPhase ? 0 : 1; // start label at correct phase
-                // Delay first label until next phase boundary so interval stays locked to animation
-                const _toNext = _inInPhase ? (HALF - _elapsed) : (CYCLE - _elapsed);
-                // Show current phase immediately
+            // Animation always starts fresh here (first call per session).
+            // 0ms = orb contracted, beginning to expand = "In".
+            _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
+            _sess._breathInterval = setInterval(() => {
+                _bpi++;
                 _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
-                // Then snap interval to the animation's phase boundaries
-                _sess._breathInterval = setTimeout(() => {
-                    if (_breathGen !== _gen) return;
-                    _bpi++;
-                    _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
-                    _sess._breathInterval = setInterval(() => {
-                        _bpi++;
-                        _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS);
-                    }, HALF);
-                }, _toNext);
-            }
+            }, HALF);
         }
 
         function _showBreathLabel(_bpi, _gen, _bl, MAX_LABELS) {
@@ -3226,20 +3208,7 @@
                 clearInterval(_sess._promptTimer);
                 sessPrompt('');
                 window.setPlaybackActive && window.setPlaybackActive(true);
-                // Poll for analysis data and show soundmarks + scale as soon as ready
                 window._sdVizActive = true;
-                (function tryShowSdData() {
-                    if (!window._sdVizActive) return;
-                    const la = window._lastAnalysis;
-                    if (la && la.soundmarks !== undefined && la.complexityNorm !== undefined) {
-                        const dataEl = document.getElementById('session-data-display');
-                        const smList = (la.soundmarks || []).slice(0, 5).map(s => s.replace(/_/g, ' '));
-                        dataEl.innerHTML = `<div class="session-tags-row">${smList.map(s => `<span class="session-tag">${s}</span>`).join('') || '<span class="session-tag" style="opacity:0.4">—</span>'}</div>${sessBuildScale(la.complexityNorm)}`;
-                        dataEl.classList.add('visible');
-                    } else {
-                        setTimeout(tryShowSdData, 1500);
-                    }
-                })();
             };
             window.onVisualisationComplete = async function() {
                 window.onVisualisationComplete = null;
