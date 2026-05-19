@@ -1233,6 +1233,29 @@
         .send-tag-dot {
             width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; opacity: 0.85;
         }
+        .send-subtitle-row { display: flex; align-items: center; gap: 7px; }
+        .send-info-btn {
+            width: 17px; height: 17px; border-radius: 50%;
+            border: 1.2px solid rgba(100,130,180,0.35);
+            background: none; cursor: pointer;
+            font-family: 'miller-text', serif; font-style: italic;
+            font-size: 10px; color: rgba(80,100,140,0.65);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: border-color 0.15s;
+        }
+        .send-info-btn:hover { border-color: rgba(100,130,180,0.7); color: rgba(60,80,120,0.9); }
+        .send-info-popup {
+            display: none;
+            background: rgba(245,247,250,0.98);
+            border-radius: 8px;
+            box-shadow: 0 3px 16px rgba(0,0,0,0.11);
+            padding: 11px 14px;
+            font-family: 'miller-text', serif; font-style: italic;
+            font-size: 12px; line-height: 1.65;
+            color: rgba(40,42,50,0.70);
+            margin-top: 6px;
+        }
+        .send-info-popup.visible { display: block; }
     </style>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
@@ -2327,15 +2350,27 @@
                     <div class="send-box" id="session-end-complexity">—</div>
                 </div>
                 <div class="send-section">
-                    <div class="send-subtitle">Soundmarks</div>
+                    <div class="send-subtitle-row">
+                        <div class="send-subtitle">Soundmarks</div>
+                        <button class="send-info-btn" data-popup="send-popup-soundmarks">?</button>
+                    </div>
+                    <div class="send-info-popup" id="send-popup-soundmarks">Sounds that are significant to a particular place — the identifiable qualities of an environment.</div>
                     <div class="send-tags" id="session-end-soundmarks"><div class="send-tag">—</div></div>
                 </div>
                 <div class="send-section">
-                    <div class="send-subtitle">Keynote</div>
+                    <div class="send-subtitle-row">
+                        <div class="send-subtitle">Keynote</div>
+                        <button class="send-info-btn" data-popup="send-popup-keynote">?</button>
+                    </div>
+                    <div class="send-info-popup" id="send-popup-keynote">The key or tonality of a particular composition. Measured in Hz — the median pitch of the recording (60–2000 Hz).</div>
                     <div class="send-box" id="session-end-keynote">—</div>
                 </div>
                 <div class="send-section">
-                    <div class="send-subtitle">Signal</div>
+                    <div class="send-subtitle-row">
+                        <div class="send-subtitle">Signal</div>
+                        <button class="send-info-btn" data-popup="send-popup-signal">?</button>
+                    </div>
+                    <div class="send-info-popup" id="send-popup-signal">A foreground sound consciously listened to, designed to attract attention. 0 = tonal &nbsp;·&nbsp; 1 = noise.</div>
                     <div class="send-box" id="session-end-signal">—</div>
                 </div>
                 <div class="modal-btn-row">
@@ -3648,6 +3683,21 @@
         document.getElementById('session-end-next-btn').addEventListener('click', () => {
             document.getElementById('session-end-page1').style.display = 'none';
             document.getElementById('session-end-page2').style.display = 'flex';
+        });
+
+        // Info ? buttons in session end modal
+        document.querySelectorAll('.send-info-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const targetId = btn.dataset.popup;
+                const popup = document.getElementById(targetId);
+                const isOpen = popup.classList.contains('visible');
+                document.querySelectorAll('.send-info-popup').forEach(p => p.classList.remove('visible'));
+                if (!isOpen) popup.classList.add('visible');
+            });
+        });
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.send-info-popup').forEach(p => p.classList.remove('visible'));
         });
 
         // Session end modal — save / discard
