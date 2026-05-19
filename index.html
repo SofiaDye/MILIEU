@@ -2217,6 +2217,10 @@
             }
             const panel = document.getElementById('info-viz-panel');
             if (active) {
+                // During sessions, session-data-display handles the corner info — don't show panel
+                if (window._sessionActive || window._selfDirected) {
+                    panel.classList.remove('visible', 'shown');
+                } else {
                 const la = window._lastAnalysis || {};
                 const sms = la.soundmarks || [];
                 const dotsHtml = sms.length
@@ -2230,6 +2234,7 @@
                     ${dotsHtml ? `<div class="ivp-section"><div class="ivp-label">Soundmarks</div><div class="ivp-dots">${dotsHtml}</div></div>` : ''}`;
                 panel.classList.add('visible');
                 setTimeout(() => panel.classList.add('shown'), 50);
+                }
             } else {
                 panel.classList.remove('shown');
                 setTimeout(() => panel.classList.remove('visible'), 800);
