@@ -285,14 +285,14 @@
         #info-panel.open { transform: translateX(0); }
         #info-panel.hidden-ui { opacity: 0; pointer-events: none; }
         #info-handle {
-            position: absolute; top: calc(50% + 85px); right: -28px;
+            position: absolute; top: calc(50% + 100px); right: -28px;
             transform: translateY(-50%);
-            width: 28px; height: 140px;
+            width: 28px; height: 175px;
             background: rgba(195,215,245,0.95);
             border-radius: 0 10px 10px 0;
             box-shadow: 2px 0 10px rgba(0,0,0,0.10);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
+            cursor: pointer; overflow: hidden;
             transition: background 0.2s, width 0.2s;
         }
         #info-handle:hover { width: 34px; background: rgba(168,200,235,1); }
@@ -300,8 +300,8 @@
             writing-mode: vertical-rl;
             transform: rotate(180deg);
             font-family: "miller-text", serif; font-style: italic;
-            font-size: 11px; letter-spacing: 0.18em;
-            color: rgba(40,42,50,0.65); user-select: none;
+            font-size: 10px; letter-spacing: 0.12em;
+            color: rgba(40,42,50,0.65); user-select: none; text-align: center;
         }
         #info-header {
             flex-shrink: 0;
