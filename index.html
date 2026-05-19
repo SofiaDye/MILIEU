@@ -1533,7 +1533,8 @@
                     return 'highly disordered';
                 }
                 const dataEl = document.getElementById('session-data-display');
-                dataEl.innerHTML = `<div class="session-tags-row">${smList.map(s => `<span class="session-tag">${s}</span>`).join('') || '<span class="session-tag" style="opacity:0.4">—</span>'}</div><div style="font-family:'miller-text',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.65);text-align:center;margin-top:4px;">${_cLabel(cn)}</div>`;
+                const _tagsHtml = smList.length ? smList.map(s => `<span class="session-tag">${s}</span>`).join('') : '';
+                dataEl.innerHTML = `${_tagsHtml ? `<div class="session-tags-row">${_tagsHtml}</div>` : ''}<div style="font-family:'miller-text',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.65);text-align:right;margin-top:4px;">${_cLabel(cn)}</div>`;
                 dataEl.classList.add('visible');
             }
         };
@@ -3133,22 +3134,6 @@
             setTimeout(() => { el.innerHTML = ''; }, 820);
         }
 
-        function sessBuildScale(norm) {
-            const n = isNaN(norm) ? 0.5 : Math.max(0, Math.min(1, norm));
-            return `<svg width="260" height="44">
-                <text x="116" y="8" font-size="11" fill="rgba(160,165,180,0.80)" font-family="miller-text, serif" font-style="italic" text-anchor="middle" dominant-baseline="middle">Sonic complexity</text>
-                <line x1="40" y1="22" x2="220" y2="22" stroke="rgba(190,198,212,0.65)" stroke-width="1.5"/>
-                <defs><radialGradient id="sBg" cx="38%" cy="32%" r="60%">
-                    <stop offset="0%" stop-color="rgba(255,255,255,0.90)"/>
-                    <stop offset="40%" stop-color="rgba(180,215,240,0.85)"/>
-                    <stop offset="100%" stop-color="rgba(140,185,220,0.60)"/>
-                </radialGradient></defs>
-                <circle cx="${40 + 180 * n}" cy="22" r="6" fill="url(#sBg)" stroke="rgba(160,195,220,0.5)" stroke-width="1"/>
-                <text x="0" y="36" font-size="11" fill="rgba(155,160,175,0.75)" font-family="miller-text, serif" font-style="italic" text-anchor="start" dominant-baseline="middle">Order</text>
-                <text x="260" y="36" font-size="11" fill="rgba(155,160,175,0.75)" font-family="miller-text, serif" font-style="italic" text-anchor="end" dominant-baseline="middle">Disorder</text>
-            </svg>`;
-        }
-
         let _breathGen = 0;
         let _breathLabelsShown = false;
 
@@ -3459,16 +3444,7 @@
             else if (step.type === 'winddown') {
                 document.getElementById('session-overlay').classList.remove('orb-hidden');
                 sessDataClear();
-                // Fade drawing back in as background layer
                 if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
-                if (window._lastDrawingThumbnail) {
-                    const _dOverlay = document.createElement('img');
-                    _dOverlay.src = window._lastDrawingThumbnail;
-                    _dOverlay.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:contain;z-index:14;opacity:0;transition:opacity 2.5s ease;pointer-events:none;';
-                    document.body.appendChild(_dOverlay);
-                    window._drawingOverlay = _dOverlay;
-                    setTimeout(() => { _dOverlay.style.opacity = '1'; }, 50);
-                }
                 // Slow fade-in: set transition before removing hidden, force reflow for sync
                 orbContainer.style.transition = 'opacity 2.5s ease';
                 void orbContainer.offsetWidth;
@@ -3512,43 +3488,6 @@
                     clearTimeout(_sess._promptTimer);
                     sessionAdvance();
                 }, step.duration);
-            }
-
-            else if (step.type === 'closing') {
-                window.showOrb && window.showOrb();
-                orbContainer.classList.add('breathing');
-                orbLabel.textContent = '';
-                document.getElementById('session-overlay').classList.remove('orb-hidden');
-                const items = step.items;
-                const tpi = Math.floor(step.duration / items.length);
-                const allSm = [...new Set([
-                    ...(_sess.recordings[0] ? _sess.recordings[0].soundmarks || [] : []),
-                    ...(_sess.recordings[1] ? _sess.recordings[1].soundmarks || [] : [])
-                ])];
-                const avgN = _sess.recordings.reduce((s,r) => s + (r.complexityNorm || 0.5), 0) / Math.max(1, _sess.recordings.length);
-                let ci = 0;
-                function showClosing() {
-                    if (ci >= items.length) {
-                        orbContainer.classList.remove('breathing');
-                        sessionAdvance(); return;
-                    }
-                    const item = items[ci++];
-                    const dataEl = document.getElementById('session-data-display');
-                    sessDataClear();
-                    if (item.kind === 'text+data') {
-                        sessPrompt(item.text);
-                        setTimeout(() => {
-                            dataEl.innerHTML = `
-                                <div class="session-tags-row">${allSm.map(s => `<span class="session-tag">${s.replace(/_/g,' ')}</span>`).join('') || '<span class="session-tag" style="opacity:0.4">—</span>'}</div>
-                                ${sessBuildScale(avgN)}`;
-                            dataEl.classList.add('visible');
-                        }, 820);
-                    } else {
-                        sessPrompt(item.text);
-                    }
-                    _sess._timer = setTimeout(showClosing, tpi);
-                }
-                showClosing();
             }
 
             else if (step.type === 'end') {
