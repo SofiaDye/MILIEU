@@ -1494,7 +1494,7 @@
             </model-viewer>
             <img id="orb-title" src="just_text.png" alt="MILIEU" />
             <div id="orb-label">Guided Meditation</div>
-            <div id="orb-sublabel">Press to begin</div>
+            <div id="orb-sublabel">Press orb to begin</div>
         </div>
     </div>
 
@@ -1923,7 +1923,7 @@
             } else {
                 orbLabel.textContent = window._sessionActive ? '' : 'Guided Meditation';
                 orbLabel.style.opacity = '';
-                orbSublabel.textContent = 'Press to begin';
+                orbSublabel.textContent = 'Press orb to begin';
                 orbSublabel.style.opacity = (window._selfDirected || window._sessionActive) ? '0' : '';
             }
             if (!window._sessionActive) {
