@@ -216,7 +216,7 @@
 
         /* Gallery tab — lives inside the panel, peeks out on the right edge */
         #gallery-handle {
-            position: absolute; top: 50%; right: -28px;
+            position: absolute; top: calc(50% - 85px); right: -28px;
             transform: translateY(-50%);
             width: 28px; height: 140px;
             background: rgba(195,215,245,0.95);
@@ -269,6 +269,62 @@
             overflow: visible;
         }
         #gallery-panel.open { transform: translateX(0); }
+
+        /* Understanding Milieu panel */
+        #info-panel {
+            position: fixed; top: 0; left: 0;
+            width: 300px; height: 100vh;
+            background: rgba(245,247,250,0.98);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+            z-index: 200;
+            display: flex; flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.35s ease, opacity 0.4s ease;
+            overflow: visible;
+        }
+        #info-panel.open { transform: translateX(0); }
+        #info-panel.hidden-ui { opacity: 0; pointer-events: none; }
+        #info-handle {
+            position: absolute; top: calc(50% + 85px); right: -28px;
+            transform: translateY(-50%);
+            width: 28px; height: 140px;
+            background: rgba(195,215,245,0.95);
+            border-radius: 0 10px 10px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.10);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, width 0.2s;
+        }
+        #info-handle:hover { width: 34px; background: rgba(168,200,235,1); }
+        #info-handle span {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 11px; letter-spacing: 0.18em;
+            color: rgba(40,42,50,0.65); user-select: none;
+        }
+        #info-header {
+            flex-shrink: 0;
+            padding: 22px 20px 14px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        #info-header h4 {
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0;
+        }
+        #info-close {
+            background: none; border: none; cursor: pointer;
+            font-size: 20px; color: rgba(60,65,75,0.45); line-height: 1; padding: 0 0 0 10px;
+        }
+        #info-close:hover { color: rgba(20,22,25,0.80); }
+        #info-body {
+            flex: 1; overflow-y: auto;
+            padding: 20px 20px 28px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 13px; line-height: 1.75;
+            color: rgba(40,42,50,0.68);
+        }
         #gallery-header {
             flex-shrink: 0;
             padding: 22px 20px 14px;
@@ -1305,6 +1361,17 @@
         </div>
         <div id="gallery-grid"></div>
     </div>
+
+    <div id="info-panel">
+        <div id="info-handle"><span>Understanding Milieu</span></div>
+        <div id="info-header">
+            <h4>Understanding Milieu</h4>
+            <button id="info-close" title="Close">×</button>
+        </div>
+        <div id="info-body">
+            <p>Placeholder text — content coming soon.</p>
+        </div>
+    </div>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -2274,6 +2341,15 @@
         });
         document.getElementById('gallery-close').addEventListener('click', closeGallery);
 
+        // Understanding Milieu panel
+        const _infoPanel = document.getElementById('info-panel');
+        function openInfo()  { _infoPanel.classList.add('open'); }
+        function closeInfo() { _infoPanel.classList.remove('open'); }
+        document.getElementById('info-handle').addEventListener('click', () => {
+            _infoPanel.classList.contains('open') ? closeInfo() : openInfo();
+        });
+        document.getElementById('info-close').addEventListener('click', closeInfo);
+
         lightbox.addEventListener('click', e => {
             if (e.target === lightbox || e.target.id === 'lightbox-close') lightbox.classList.remove('open');
         });
@@ -2522,7 +2598,7 @@
             _rec = null; _chunks = [];
             if (typeof window.resetSketch === 'function') window.resetSketch();
             document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
-            document.getElementById('gallery-panel').classList.remove('hidden-ui');
+            document.getElementById('gallery-panel').classList.remove('hidden-ui'); document.getElementById('info-panel').classList.remove('hidden-ui');
             document.getElementById('self-directed-btn').classList.remove('hidden-ui');
             document.getElementById('details-btn').style.display = '';
             document.getElementById('soundmarks-box').style.display = '';
@@ -2737,7 +2813,7 @@
                         document.getElementById('orb-sublabel').style.opacity = '0';
                         orbLabel.style.opacity = '0';
                         document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
-                        document.getElementById('gallery-panel').classList.add('hidden-ui');
+                        document.getElementById('gallery-panel').classList.add('hidden-ui'); document.getElementById('info-panel').classList.add('hidden-ui');
                         selfDirectedBtn.classList.add('hidden-ui');
                         document.getElementById('home-btn').style.display = 'flex';
                         document.getElementById('home-btn').textContent = 'Home / End Session';
@@ -2932,7 +3008,7 @@
                 document.getElementById('orb-sublabel').style.opacity = '';
                 orbLabel.style.opacity = '';
                 document.getElementById('bottom-bar-wrapper').classList.remove('hidden-ui');
-                document.getElementById('gallery-panel').classList.remove('hidden-ui');
+                document.getElementById('gallery-panel').classList.remove('hidden-ui'); document.getElementById('info-panel').classList.remove('hidden-ui');
                 selfDirectedBtn.classList.remove('hidden-ui');
                 document.getElementById('home-btn').style.display = 'none';
                 if (detailsBtn) {
@@ -3581,7 +3657,7 @@
             document.getElementById('orb-sublabel').style.opacity = '0';
             orbLabel.style.opacity = '0';
             document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
-            document.getElementById('gallery-panel').classList.add('hidden-ui');
+            document.getElementById('gallery-panel').classList.add('hidden-ui'); document.getElementById('info-panel').classList.add('hidden-ui');
             document.getElementById('self-directed-btn').classList.add('hidden-ui');
             document.getElementById('home-btn').style.display = 'flex';
             document.getElementById('home-btn').textContent = 'Home';
