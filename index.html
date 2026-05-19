@@ -2730,6 +2730,8 @@
                         _sess.steps = customSteps;
                         _sess.idx = 0;
                         _breathLabelsShown = false;
+                        window._suppressVisualization = false;
+                        sessDataClear();
                         _sess.active = true;
                         window._sessionActive = true;
                         _sess.recordings = [];
