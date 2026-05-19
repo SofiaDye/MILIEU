@@ -286,9 +286,9 @@
         #info-panel.open { transform: translateX(0); }
         #info-panel.hidden-ui { opacity: 0; pointer-events: none; }
         #info-handle {
-            position: absolute; top: calc(50% + 100px); right: -28px;
+            position: absolute; top: calc(50% + 90px); right: -28px;
             transform: translateY(-50%);
-            width: 28px; height: 185px;
+            width: 28px; height: 150px;
             background: rgba(195,215,245,0.95);
             border-radius: 0 10px 10px 0;
             box-shadow: 2px 0 10px rgba(0,0,0,0.10);
@@ -782,10 +782,18 @@
             font-family: "miller-text", serif;
             font-weight: 400;
             font-style: italic;
-            font-size: 16.25px;
-            line-height: 1.7;
-            color: rgba(40,42,50,0.72);
-            margin: 0;
+            font-size: 13px;
+            line-height: 1.75;
+            color: rgba(40,42,50,0.70);
+            margin: 0 0 16px 0;
+        }
+        #info-body p strong {
+            font-weight: 400;
+            font-style: italic;
+            font-size: 14px;
+            color: rgba(40,42,50,0.85);
+            display: block;
+            margin-bottom: 4px;
         }
 
         /* ── Mobile ─────────────────────────────────────────────────────────── */
@@ -1370,7 +1378,10 @@
             <button id="info-close" title="Close">×</button>
         </div>
         <div id="info-body">
-            <p>Placeholder text — content coming soon.</p>
+            <p><strong>About Milieu</strong><br>Milieu is a sonic meditation experience, grounded in your landscape. It listens to your surrounding environment and visualises it in real time, creating an introspective experience that draws you into intentional contact with the space you inhabit. Explore through a Guided Meditation or Self Directed Meditation session.</p>
+            <p><strong>About the visuals</strong><br>As you record, Milieu generates a unique visual pattern shaped by the sonic qualities of your environment. No two landscapes sound the same, and no two visuals will be either. Milieu also detects commonly found soundmarks — sonic qualities characteristic of a place, such as voices, birdsong or traffic — which appear as colour-coded annotations within the pattern.</p>
+            <p><strong>How to use Milieu</strong><br>Milieu is designed for all levels of meditative experience, whether you are new to mindful listening or a more self-directed practitioner. Sessions are structured around breathing, intention setting, live recording and reflection. We encourage building a session into your daily routine — through consistent practice, a more rooted sense of presence within your landscapes can be cultivated over time.</p>
+            <p><strong>Milieu's goal</strong><br>To explore how far sonic presence within our landscapes can be deepened through intentional design. Referencing Pauline Oliveros' concept of Quantum Listening — can an interface facilitate this state of deep, simultaneous listening, day to day?</p>
         </div>
     </div>
     <!-- Leaflet JS -->
