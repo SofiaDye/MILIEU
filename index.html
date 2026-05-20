@@ -3418,6 +3418,7 @@
                 _sess._timer = setTimeout(() => {
                     clearTimeout(_sess._promptTimer);
                     clearInterval(_sess._promptTimer);
+                    _breathLabelsShown = true;
                     stopBreathing();
                     sessionAdvance();
                 }, step.duration);
