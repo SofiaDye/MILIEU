@@ -2470,10 +2470,6 @@
             <!-- Page 2: reflection -->
             <div id="session-end-page2" style="display:none;flex-direction:column;gap:14px;width:100%;">
                 <h3>Take these thoughts into your day…</h3>
-                <div class="prerecord-field">
-                    <label>Name this session</label>
-                    <input type="text" id="session-end-name" placeholder="e.g. morning walk...">
-                </div>
                 <textarea id="session-description" placeholder="Describe what you noticed..."></textarea>
                 <label class="session-image-label">
                     <input type="file" id="session-image" accept="image/*" style="display:none">
@@ -2501,7 +2497,7 @@
             </div>
             <div class="sd-modal-step" id="sd-step-2" style="display:none;width:100%;">
                 <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Before you record</h3>
-                <div class="prerecord-field"><label>Name</label><input type="text" id="sd-name" placeholder="e.g. morning walk..."></div>
+                <div class="prerecord-field"><label>Name session</label><input type="text" id="sd-name" placeholder="e.g. morning walk..."></div>
                 <div class="prerecord-field"><label>Location</label><input type="text" id="sd-location" placeholder="e.g. brixton, london..."></div>
                 <div class="prerecord-field"><label>Date</label><input type="text" id="sd-date" placeholder="DD.MM.YYYY" maxlength="10"></div>
                 <div class="prerecord-field"><label>Time</label><input type="time" id="sd-time"></div>
@@ -2533,7 +2529,7 @@
         <div id="prerecord-box">
             <h3>Before you record</h3>
             <div class="prerecord-field">
-                <label>Name</label>
+                <label>Name session</label>
                 <input type="text" id="prerecord-name" placeholder="e.g. morning walk...">
             </div>
             <div class="prerecord-field">
@@ -3806,12 +3802,9 @@
 
         document.getElementById('session-save-btn').addEventListener('click', async () => {
             document.getElementById('session-end-modal').classList.remove('open');
-            const _endName = document.getElementById('session-end-name').value.trim();
             const _endDesc = document.getElementById('session-description').value.trim();
-            if (_endName && window._recordMeta) window._recordMeta.name = _endName;
             if (window._lastSavedRecordId) {
                 const _fields = {};
-                if (_endName)             _fields.label        = _endName;
                 if (_endDesc)             _fields.description  = _endDesc;
                 if (_sessionImageDataURL) _fields.imageDataURL = _sessionImageDataURL;
                 if (Object.keys(_fields).length) await dbUpdate(window._lastSavedRecordId, _fields);
