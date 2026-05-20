@@ -271,27 +271,27 @@
         #gallery-panel.open { transform: translateX(0); z-index: 202; }
         #info-panel.open { z-index: 202; }
 
-        /* Understanding Milieu panel */
+        /* Understanding Milieu panel — right side */
         #info-panel {
-            position: fixed; top: 0; left: 0;
+            position: fixed; top: 0; right: 0;
             width: 300px; height: 100vh;
             background: rgba(245,247,250,0.98);
-            box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+            box-shadow: -4px 0 24px rgba(0,0,0,0.12);
             z-index: 200;
             display: flex; flex-direction: column;
-            transform: translateX(-100%);
+            transform: translateX(100%);
             transition: transform 0.35s ease, opacity 0.4s ease;
             overflow: visible;
         }
         #info-panel.open { transform: translateX(0); }
         #info-panel.hidden-ui { opacity: 0; pointer-events: none; }
         #info-handle {
-            position: absolute; top: calc(50% + 75px); right: -28px;
+            position: absolute; top: calc(50% - 75px); left: -28px;
             transform: translateY(-50%);
             width: 28px; height: 150px;
             background: rgba(195,215,245,0.95);
-            border-radius: 0 10px 10px 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.10);
+            border-radius: 10px 0 0 10px;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.10);
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; overflow: hidden;
             transition: background 0.2s, width 0.2s;
