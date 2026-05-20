@@ -1323,6 +1323,18 @@
             margin-top: 6px;
         }
         .send-info-popup.visible { display: block; }
+        #home-orbs {
+            position: fixed; inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+        .home-orb {
+            position: absolute; top: 0; left: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(195,215,245,0.55) 0%, rgba(180,205,240,0.20) 60%, transparent 100%);
+            will-change: transform, filter;
+        }
     </style>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
@@ -1330,6 +1342,7 @@
     <script src="sketch.js"></script>
 </head>
     <body>
+    <div id="home-orbs"></div>
         <!-- Self Directed mode tab -->
         <button id="self-directed-btn">Self Directed<br>Meditation</button>
 
@@ -3876,6 +3889,55 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
         }
+    </script>
+    <script>
+    (function() {
+        const container = document.getElementById('home-orbs');
+        const NUM = 11;
+        const orbs = [];
+        for (let i = 0; i < NUM; i++) {
+            const el = document.createElement('div');
+            el.className = 'home-orb';
+            const size = 100 + Math.random() * 160;
+            el.style.width = size + 'px';
+            el.style.height = size + 'px';
+            container.appendChild(el);
+            orbs.push({
+                el, size,
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                vx: (Math.random() - 0.5) * 0.35,
+                vy: (Math.random() - 0.5) * 0.35
+            });
+        }
+
+        let mx = -999, my = -999;
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+        document.addEventListener('touchmove', e => {
+            if (e.touches[0]) { mx = e.touches[0].clientX; my = e.touches[0].clientY; }
+        }, { passive: true });
+
+        function tick() {
+            const hidden = window._sessionActive || window._selfDirected;
+            container.style.opacity = hidden ? '0' : '1';
+            if (!hidden) {
+                const W = window.innerWidth, H = window.innerHeight;
+                orbs.forEach(o => {
+                    o.x += o.vx; o.y += o.vy;
+                    if (o.x < -o.size) o.x = W + o.size;
+                    else if (o.x > W + o.size) o.x = -o.size;
+                    if (o.y < -o.size) o.y = H + o.size;
+                    else if (o.y > H + o.size) o.y = -o.size;
+                    const dist = Math.hypot(mx - o.x, my - o.y);
+                    const blur = dist < 180 ? 30 * (dist / 180) : 30;
+                    o.el.style.transform = `translate(${o.x - o.size / 2}px,${o.y - o.size / 2}px)`;
+                    o.el.style.filter = `blur(${blur.toFixed(1)}px)`;
+                });
+            }
+            requestAnimationFrame(tick);
+        }
+        tick();
+    })();
     </script>
 </body>
 </html>
