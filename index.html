@@ -2077,7 +2077,7 @@
                 const meta = document.createElement('div');
                 meta.id = 'lightbox-meta';
                 // Session details
-                const _lbName = _isTimestampLabel(item.label) ? '—' : (item.label || '—');
+                const _lbName = _isTimestampLabel(item.label) ? '—' : (item.label || '');
                 const hasDetails = _lbName || item.location || item.date || item.time;
                 if (hasDetails) {
                     const sec = document.createElement('div');
@@ -2190,14 +2190,14 @@
                         : `<video src="${url}" muted playsinline style="${_mStyle}"></video>`;
                     const _dt = [item.date, item.time].filter(Boolean).join(' · ');
                     const _a = item.analysis;
-                    const _displayName = _isTimestampLabel(item.label) ? '—' : (item.label || '—');
-                    const _displayDate = item.date || '—';
+                    const _displayName = _isTimestampLabel(item.label) ? '—' : (item.label || '');
+                    const _displayDate = item.date || '';
                     const _smDots = (_a && _a.soundmarks && _a.soundmarks.length)
                         ? '<div class="thumb-sm-dots">' + _a.soundmarks.slice(0,5).map(cat => {
                             const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180,195,215];
                             return `<span class="thumb-sm-dot" style="background:rgb(${col[0]},${col[1]},${col[2]})" title="${cat.replace(/_/g,' ')}"></span>`;
                           }).join('') + '</div>' : '';
-                    const _displayDateTime = [item.date, item.time].filter(Boolean).join(' · ') || '—';
+                    const _displayDateTime = [item.date, item.time].filter(Boolean).join(' · ') || '';
                     const infoLines = [
                         `<div class="gallery-thumb-name">${_displayName}</div>`,
                         `<div class="gallery-thumb-sub">${_displayDateTime}</div>`
@@ -2318,7 +2318,7 @@
             return !t || /^\d{1,2}:\d{2}(:\d{2})?(\s*(AM|PM))?$/i.test(t) || /^\d{2}\.\d{2}\.\d{4}/.test(t);
         }
         function _complexityLabel(n) {
-            if (!n && n !== 0) return '—';
+            if (!n && n !== 0) return '';
             if (n < 0.2) return 'Highly ordered';
             if (n < 0.4) return 'Mostly ordered';
             if (n < 0.6) return 'Moderately complex';
@@ -2458,7 +2458,7 @@
                         <div class="send-subtitle">Soundmarks</div>
                         <button class="send-info-btn" data-popup="send-popup-soundmarks">?</button>
                     </div>
-                    <div class="send-info-popup" id="send-popup-soundmarks">Sounds that are significant to a particular place — the identifiable qualities of an environment.</div>
+                    <div class="send-info-popup" id="send-popup-soundmarks">Sounds that are significant to a particular place, the identifiable qualities of an environment.</div>
                     <div class="send-tags" id="session-end-soundmarks"><div class="send-tag">—</div></div>
                 </div>
                 <div class="send-section">
@@ -2466,7 +2466,7 @@
                         <div class="send-subtitle">Keynote</div>
                         <button class="send-info-btn" data-popup="send-popup-keynote">?</button>
                     </div>
-                    <div class="send-info-popup" id="send-popup-keynote">The key or tonality of a particular composition. Measured in Hz — the median pitch of the recording (60–2000 Hz).</div>
+                    <div class="send-info-popup" id="send-popup-keynote">The key or tonality of a particular composition. Measured in Hz, the median pitch of the recording (60-2000 Hz).</div>
                     <div class="send-box" id="session-end-keynote">—</div>
                 </div>
                 <div class="send-section">
@@ -2474,7 +2474,7 @@
                         <div class="send-subtitle">Signal</div>
                         <button class="send-info-btn" data-popup="send-popup-signal">?</button>
                     </div>
-                    <div class="send-info-popup" id="send-popup-signal">A foreground sound consciously listened to, designed to attract attention. 0 = tonal &nbsp;·&nbsp; 1 = noise.</div>
+                    <div class="send-info-popup" id="send-popup-signal">A foreground sound consciously listened to, designed to attract attention. 0 = tonal, 1 = noise.</div>
                     <div class="send-box" id="session-end-signal">—</div>
                 </div>
                 <div class="modal-btn-row">
