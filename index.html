@@ -320,7 +320,9 @@
         }
         #info-close:hover { color: rgba(20,22,25,0.80); }
         #info-body {
-            flex: 1; overflow-y: scroll;
+            position: absolute;
+            top: 65px; bottom: 0; left: 0; right: 0;
+            overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             padding: 20px 20px 60px;
@@ -333,6 +335,7 @@
             padding: 22px 20px 14px;
             border-bottom: 1px solid rgba(0,0,0,0.08);
             display: flex; align-items: center; justify-content: space-between;
+            position: relative; z-index: 1;
         }
         #gallery-header h4 {
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
@@ -344,7 +347,8 @@
         }
         #gallery-close:hover { color: rgba(20,22,25,0.80); }
         #gallery-grid {
-            flex: 1; min-height: 0;
+            position: absolute;
+            top: 65px; bottom: 0; left: 0; right: 0;
             overflow-y: scroll; overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
