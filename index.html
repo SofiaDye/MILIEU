@@ -3338,6 +3338,7 @@
             stopBreathing();
             sessPrompt('');
             window._lastAnalysis = null;
+            window._sessMaxRecordSecs = 600; // SD: manual stop only, 10min safety limit
             const _sdBtn = document.getElementById('sd-session-prompt-btn');
             if (_sdBtn) _sdBtn.style.display = 'none';
             // Pause prompts while drawing
