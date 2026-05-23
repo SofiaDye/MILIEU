@@ -266,7 +266,7 @@
             display: flex; flex-direction: column;
             transform: translateX(-100%);
             transition: transform 0.35s ease;
-            overflow: visible;
+            overflow: hidden;
         }
         #gallery-panel.open { transform: translateX(0); z-index: 202; }
         #info-panel.open { z-index: 202; }
@@ -352,6 +352,7 @@
             overflow-y: scroll; overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
+            overscroll-behavior: contain;
             padding: 8px 14px 60px;
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 10px; align-content: start;
@@ -1773,7 +1774,14 @@
             if (window._sessionActive || _standbyOverlay) return;
 
             // Close any open modals before entering standby
-            ['guided-intro-modal','duration-modal','exit-session-modal','prerecord-modal','self-directed-modal','map-modal'].forEach(id => {
+            // Only remove 'open' class — do NOT set el.style.display because inline styles
+            // override CSS class rules and would prevent modals from reopening after standby.
+            ['guided-intro-modal','duration-modal','prerecord-modal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('open');
+            });
+            // These modals use inline display toggling, so setting display:none is safe here
+            ['exit-session-modal','self-directed-modal','map-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.classList.remove('open'); el.style.display = 'none'; }
             });
@@ -2218,7 +2226,7 @@
                     const url = URL.createObjectURL(item.blob);
                     const thumb = document.createElement('div');
                     thumb.className = 'gallery-thumb';
-                    const _mStyle = 'width:100%;object-fit:contain;display:block;background:#dde3ec;';
+                    const _mStyle = 'width:100%;height:120px;object-fit:cover;display:block;background:#dde3ec;';
                     const media = item.thumbnail
                         ? `<img src="${item.thumbnail}" alt="" style="${_mStyle}">`
                         : `<video src="${url}" muted playsinline style="${_mStyle}"></video>`;
