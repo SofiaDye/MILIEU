@@ -2679,6 +2679,16 @@
             homeBtn.textContent = 'Home';
             window._lastSavedRecordId = null;
             window._lastDrawingThumbnail = null;
+            // Clear session-end form so it doesn't carry over between sessions
+            const _descField = document.getElementById('session-description');
+            if (_descField) _descField.value = '';
+            const _imgInput = document.getElementById('session-image');
+            if (_imgInput) _imgInput.value = '';
+            const _prevImg = document.getElementById('session-preview-img');
+            if (_prevImg) { _prevImg.src = ''; _prevImg.style.display = 'none'; }
+            const _imgLabel = _imgInput && _imgInput.closest('label');
+            if (_imgLabel) _imgLabel.style.display = '';
+            _sessionImageDataURL = '';
             if (window._drawingOverlay) { window._drawingOverlay.remove(); window._drawingOverlay = null; }
             if (window.setPlaybackActive) window.setPlaybackActive(false);
             hideSessionProgress();
@@ -2716,6 +2726,7 @@
             if (window._selfDirected && window._sessionActive) {
                 // Formal end: stop prompts, grab data, run fade + modal
                 if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
+                window._suppressVisualization = true; // prevent onstop triggering viz behind end modal
                 if (typeof window.stopMicIfActive === 'function') window.stopMicIfActive();
                 document.getElementById('sd-session-prompt-btn').style.display = 'none';
                 if (window._lastAnalysis && !_sess.recordings.length) {
@@ -2923,7 +2934,7 @@
                         _sess.bank = null;
                         try {
                             const _r = await Promise.race([
-                                fetch('http://127.0.0.1:5000/prompts'),
+                                fetch('/prompts'),
                                 new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
                             ]);
                             if (_r.ok) _sess.bank = await _r.json();
