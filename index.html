@@ -882,6 +882,9 @@
         }
 
         /* Custom circular checkbox for SD session structure */
+        .sd-modal-step {
+            display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%;
+        }
         .sd-check-label {
             display: flex; align-items: center; gap: 10px;
             font-family: 'miller-text', serif; font-style: italic;
@@ -892,7 +895,7 @@
         .sd-check-label input[type="checkbox"] { display: none; }
         .sd-check-circle {
             width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
-            border: 1.5px solid rgba(100,130,180,0.40);
+            border: 1.5px solid rgba(160,165,175,0.50);
             background: transparent;
             display: flex; align-items: center; justify-content: center;
             transition: border-color 0.2s, background 0.2s;
@@ -900,41 +903,48 @@
         .sd-check-circle::after {
             content: '';
             width: 10px; height: 10px; border-radius: 50%;
-            background: rgba(120,160,210,0.85);
+            background: rgba(140,145,155,0.85);
             opacity: 0; transition: opacity 0.2s;
         }
         .sd-check-label input[type="checkbox"]:checked + .sd-check-circle {
-            border-color: rgba(120,160,210,0.70);
-            background: rgba(195,215,245,0.18);
+            border-color: rgba(140,145,155,0.70);
+            background: rgba(200,202,208,0.18);
         }
         .sd-check-label input[type="checkbox"]:checked + .sd-check-circle::after {
             opacity: 1;
         }
         .sd-check-label:hover .sd-check-circle {
-            border-color: rgba(120,160,210,0.60);
+            border-color: rgba(140,145,155,0.65);
         }
 
         /* Pre-record modal */
         #prerecord-modal {
             position: fixed; inset: 0;
-            background: rgba(30,40,60,0.22);
+            background: rgba(30,40,60,0.12);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             z-index: 1500;
             display: none; align-items: center; justify-content: center;
         }
         #prerecord-modal.open { display: flex; }
         #prerecord-box {
-            background: rgba(245,247,250,0.98);
-            border-radius: 14px;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.14);
-            padding: 30px 32px;
-            width: 320px;
+            background: radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);
+            border-radius: 20px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            padding: 28px 26px;
+            width: 300px;
             display: flex; flex-direction: column; gap: 16px;
+        }
+        .modal-title-pill {
+            background: rgba(255,255,255,0.72);
+            border-radius: 18px;
+            padding: 9px 16px;
+            text-align: center;
         }
         #prerecord-box h3 {
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0; text-align: center;
         }
-        .prerecord-field { display: flex; flex-direction: column; gap: 5px; }
+        .prerecord-field { display: flex; flex-direction: column; gap: 5px; width: 100%; }
         .prerecord-field label {
             font-family: "miller-text", serif; font-style: italic;
             font-size: 11px; color: rgba(60,65,80,0.50); letter-spacing: 0.08em;
@@ -949,6 +959,26 @@
         }
         .prerecord-field input[type="date"]:focus,
         .prerecord-field input[type="text"]:focus { border-color: rgba(140,170,210,0.70); }
+        #prerecord-box .prerecord-field input[type="text"],
+        #prerecord-box .prerecord-field input[type="time"],
+        #sd-modal-inner .prerecord-field input[type="text"],
+        #sd-modal-inner .prerecord-field input[type="time"] {
+            border: none;
+            border-radius: 20px;
+            padding: 9px 14px;
+            background: #ffffff;
+            outline: none;
+            font-family: "miller-text", serif; font-style: italic;
+            font-size: 13px; color: rgba(40,42,50,0.75);
+            box-shadow: none;
+            width: 100%; box-sizing: border-box;
+        }
+        #prerecord-box .prerecord-field input[type="text"]:focus,
+        #prerecord-box .prerecord-field input[type="time"]:focus,
+        #sd-modal-inner .prerecord-field input[type="text"]:focus,
+        #sd-modal-inner .prerecord-field input[type="time"]:focus {
+            box-shadow: 0 0 0 1.5px rgba(160,175,200,0.35);
+        }
         .prerecord-save-row {
             display: flex; align-items: center; justify-content: space-between;
             padding: 4px 0;
@@ -957,20 +987,6 @@
             font-family: "miller-text", serif; font-style: italic;
             font-size: 12px; color: rgba(60,65,80,0.60);
         }
-        #prerecord-start {
-            height: 38px; border: none; border-radius: 8px;
-            background: rgba(195,215,245,0.95); color: rgba(20,30,50,0.85);
-            font-family: "miller-text", serif; font-style: italic;
-            font-size: 13px; cursor: pointer; transition: background 0.15s;
-        }
-        #prerecord-start:hover { background: rgba(168,200,235,1); }
-        #prerecord-cancel {
-            height: 28px; border: none; background: none;
-            font-family: "miller-text", serif; font-style: italic;
-            font-size: 12px; color: rgba(80,85,100,0.45); cursor: pointer;
-            transition: color 0.15s; text-align: center;
-        }
-        #prerecord-cancel:hover { color: rgba(40,42,50,0.75); }
 
         /* Quick save during visualisation */
         #quick-save-btn {
@@ -1103,56 +1119,67 @@
         /* Duration selection modal */
         #guided-intro-modal {
             position: fixed; inset: 0;
-            background: rgba(30,40,60,0.18);
+            background: rgba(30,40,60,0.12);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             z-index: 1500; display: none;
             align-items: center; justify-content: center;
         }
         #guided-intro-modal.open { display: flex; }
         #guided-intro-box {
-            background: rgba(245,247,250,0.98);
-            border-radius: 14px;
+            background: radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);
+            border-radius: 20px;
             box-shadow: 0 4px 32px rgba(0,0,0,0.12);
-            padding: 34px 38px;
-            display: flex; flex-direction: column; align-items: center; gap: 18px;
-            min-width: 300px; max-width: 340px;
+            padding: 28px 26px;
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+            min-width: 300px; max-width: 320px;
         }
         #guided-intro-box h3 {
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 16px; color: rgba(40,42,50,0.72); margin: 0; text-align: center;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0; text-align: center;
         }
         #guided-intro-box p {
             font-family: "miller-text", serif; font-style: italic;
             font-size: 14px; color: rgba(40,42,50,0.65);
             text-align: center; margin: 0; line-height: 1.55;
         }
+        .modal-desc-card {
+            background: rgba(255,255,255,0.72);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
         #duration-modal {
             position: fixed; inset: 0;
-            background: rgba(30,40,60,0.18);
+            background: rgba(30,40,60,0.12);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             z-index: 1500; display: none;
             align-items: center; justify-content: center;
         }
         #duration-modal.open { display: flex; }
         #duration-box {
-            background: rgba(245,247,250,0.98);
-            border-radius: 14px;
+            background: radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);
+            border-radius: 20px;
             box-shadow: 0 4px 32px rgba(0,0,0,0.12);
-            padding: 34px 38px;
-            display: flex; flex-direction: column; align-items: center; gap: 22px;
-            min-width: 300px;
+            padding: 28px 26px;
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+            min-width: 300px; width: 300px;
         }
         #duration-box h3 {
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 16px; color: rgba(40,42,50,0.72); margin: 0; text-align: center;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0; text-align: center;
         }
-        #duration-options { display: flex; gap: 10px; }
+        #duration-options { display: flex; flex-direction: column; gap: 7px; width: 100%; }
         .duration-btn {
-            flex: 1; height: 46px; padding: 0 22px;
-            background: rgba(195,215,245,0.95); border: none; border-radius: 10px;
+            width: 100%; height: 38px; padding: 0 14px;
+            background: #ffffff; border: none; border-radius: 20px;
             font-family: "miller-text", serif; font-style: italic;
-            font-size: 14px; color: rgba(40,42,50,0.72);
-            cursor: pointer; transition: background 0.15s; white-space: nowrap;
+            font-size: 13px; color: rgba(40,42,50,0.72);
+            cursor: pointer; transition: background 0.15s;
+            text-align: center;
         }
-        .duration-btn:hover { background: rgba(168,200,235,1); color: rgba(20,30,50,0.88); }
+        .duration-btn:hover { background: rgba(235,237,241,1); color: rgba(20,30,50,0.88); }
 
         /* Session overlay — above orb so text renders on top of it */
         #session-overlay {
@@ -1168,15 +1195,15 @@
         #session-progress.visible { display: flex; }
         .sp-dot {
             width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
-            border: 1.5px solid rgba(100,140,200,0.55);
+            border: 1.5px solid rgba(160,165,175,0.55);
             background: transparent;
             transition: background 0.5s, border-color 0.5s;
         }
-        .sp-dot.done    { background: rgba(100,140,200,0.45); border-color: rgba(100,140,200,0.55); }
-        .sp-dot.active  { background: rgba(100,140,200,0.90); border-color: rgba(100,140,200,0.90); }
+        .sp-dot.done    { background: rgba(160,165,175,0.45); border-color: rgba(160,165,175,0.60); }
+        .sp-dot.active  { background: rgba(140,145,155,0.90); border-color: rgba(140,145,155,0.90); }
         .sp-seg {
             width: 1.5px; height: 28px; flex-shrink: 0;
-            background: rgba(100,140,200,0.25);
+            background: rgba(160,165,175,0.28);
         }
         /* Prompt text — centred on screen (= centre of orb) */
         #session-prompt-text {
@@ -1222,64 +1249,67 @@
         /* Session end modal */
         #session-end-modal {
             position: fixed; inset: 0;
-            background: rgba(30,40,60,0.22);
+            background: rgba(30,40,60,0.12);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             z-index: 1500; display: none;
             align-items: center; justify-content: center;
         }
         #session-end-modal.open { display: flex; }
         #session-end-box {
-            background: rgba(245,247,250,0.98);
-            border-radius: 14px;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.14);
-            padding: 30px 32px; width: 340px; max-width: 95vw;
-            display: flex; flex-direction: column; gap: 14px;
+            background: radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);
+            border-radius: 20px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            padding: 28px 26px; width: 320px; max-width: 95vw;
+            display: flex; flex-direction: column; gap: 16px;
         }
         #session-end-box h3 {
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0;
+            font-size: 15px; color: rgba(40,42,50,0.80); margin: 0; text-align: center;
         }
         #session-end-box p {
             font-family: "miller-text", serif; font-style: italic;
             font-size: 12px; color: rgba(60,65,80,0.50); margin: 0;
         }
         #session-description {
-            border: 1px solid rgba(180,190,210,0.45); border-radius: 6px;
-            padding: 10px 12px;
+            border: none; border-radius: 16px;
+            padding: 12px 14px;
             font-family: "miller-text", serif; font-style: italic;
-            font-size: 13px; color: rgba(40,42,50,0.85);
-            background: rgba(255,255,255,0.9); outline: none;
-            resize: none; height: 90px; width: 100%;
+            font-size: 13px; color: rgba(40,42,50,0.80);
+            background: #ffffff; outline: none;
+            resize: none; height: 120px; width: 100%;
+            box-sizing: border-box;
         }
-        #session-description:focus { border-color: rgba(140,170,210,0.70); }
+        #session-description:focus { box-shadow: 0 0 0 1.5px rgba(160,175,200,0.35); }
         .session-image-label {
             font-family: "miller-text", serif; font-style: italic;
-            font-size: 12px; color: rgba(80,100,130,0.55);
+            font-size: 12px; color: rgba(80,100,130,0.50);
             cursor: pointer; text-align: center;
-            border: 1px dashed rgba(180,190,210,0.50);
-            border-radius: 6px; padding: 10px;
+            border: 1px dashed rgba(180,190,210,0.45);
+            border-radius: 16px; padding: 12px;
             transition: border-color 0.15s, color 0.15s;
         }
-        .session-image-label:hover { border-color: rgba(140,165,200,0.70); color: rgba(50,70,100,0.75); }
-        #session-preview-img { width: 100%; border-radius: 6px; display: none; margin-top: 4px; }
+        .session-image-label:hover { border-color: rgba(140,155,175,0.65); color: rgba(50,60,80,0.70); }
+        #session-preview-img { width: 100%; border-radius: 14px; display: none; margin-top: 4px; }
         #session-save-btn {
-            height: 38px; border: none; border-radius: 8px;
-            background: rgba(195,215,245,0.95); color: rgba(20,30,50,0.85);
-            font-family: "miller-text", serif; font-style: italic;
-            font-size: 13px; cursor: pointer; transition: background 0.15s;
+            height: auto; padding: 8px 26px; width: auto;
+            background: none; border: 1px solid rgba(80,100,130,0.32); border-radius: 20px;
+            font-family: "miller-text", serif; font-weight: 400; font-style: italic;
+            font-size: 14px; color: rgba(35,50,75,0.62);
+            cursor: pointer; transition: border-color 0.2s, color 0.2s, background 0.18s;
         }
-        #session-save-btn:hover { background: rgba(168,200,235,1); }
+        #session-save-btn:hover { border-color: rgba(80,100,130,0.58); color: rgba(20,30,50,0.88); background: rgba(200,210,225,0.22); }
         #session-discard-btn {
             height: 28px; border: none; background: none;
             font-family: "miller-text", serif; font-style: italic;
-            font-size: 12px; color: rgba(80,85,100,0.45);
+            font-size: 12px; color: rgba(80,85,100,0.40);
             cursor: pointer; text-align: center; transition: color 0.15s;
         }
-        #session-discard-btn:hover { color: rgba(40,42,50,0.75); }
+        #session-discard-btn:hover { color: rgba(40,42,50,0.70); }
 
         /* Consistent modal navigation button row */
         .modal-btn-row {
             display: flex; justify-content: center; align-items: center;
-            gap: 12px; margin-top: 20px; width: 100%;
+            gap: 12px; margin-top: 0; width: 100%;
         }
         #session-end-next-btn { white-space: nowrap; }
         /* Session end modal — page 1 sections */
@@ -1290,18 +1320,18 @@
             color: rgba(60,65,80,0.45);
         }
         .send-box {
-            background: rgba(195,215,245,0.55);
-            border-radius: 8px; padding: 9px 13px;
+            background: #ffffff;
+            border-radius: 20px; padding: 9px 14px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 13px; color: rgba(40,42,50,0.80);
+            font-size: 13px; color: rgba(40,42,50,0.75);
         }
         .send-tags { display: flex; flex-wrap: wrap; gap: 6px; }
         .send-tag {
             display: flex; align-items: center; gap: 7px;
-            background: rgba(195,215,245,0.55);
-            border-radius: 8px; padding: 7px 12px;
+            background: #ffffff;
+            border-radius: 20px; padding: 7px 14px;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 13px; color: rgba(40,42,50,0.80);
+            font-size: 13px; color: rgba(40,42,50,0.75);
         }
         .send-tag-dot {
             width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; opacity: 0.85;
@@ -1829,20 +1859,17 @@
                 try { window._recAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
             }
             if (window._sessionActive) {
-                // During session: first click starts recording (advancing to playback step),
-                // second click (while recording) stops it
+                // During session: orb stops recording only in self-directed (guided stops automatically)
                 if (orbContainer.classList.contains('recording')) {
-                    if (typeof toggleMic === 'function') toggleMic();
+                    if (window._selfDirected && typeof toggleMic === 'function') toggleMic();
+                } else if (window._selfDirected) {
+                    // Call directly — avoids the gap where the orb is visible but
+                    // sd-session-prompt-btn is still hidden after the fade completes
+                    triggerSdRecord();
                 } else if (_sess.steps[_sess.idx] && _sess.steps[_sess.idx].type === 'record') {
                     window._lastAnalysis = null; // clear for this recording
                     sessionAdvance();             // moves to playback step, sets onVisualisationComplete
                     if (typeof toggleMic === 'function') toggleMic();
-                } else if (window._selfDirected) {
-                    // In self-directed, allow orb click to trigger recording at any time
-                    const sdBtn = document.getElementById('sd-session-prompt-btn');
-                    if (sdBtn && sdBtn.style.display !== 'none') {
-                        sdBtn.click();
-                    }
                 }
                 return;
             }
@@ -2392,8 +2419,10 @@
     <!-- Guided meditation intro modal -->
     <div id="guided-intro-modal">
         <div id="guided-intro-box">
-            <h3>Guided Meditation</h3>
-            <p>A timed guided session, for mindful listening.</p>
+            <h3>Guided Meditation Session</h3>
+            <div class="modal-desc-card">
+                <p>A timed guided session, for mindful listening.</p>
+            </div>
             <div class="modal-btn-row">
                 <button id="guided-intro-back-btn" class="modal-btn">Back</button>
                 <button id="guided-intro-next-btn" class="modal-btn">Next</button>
@@ -2402,9 +2431,12 @@
     </div>
 
     <!-- Exit session confirmation modal -->
-    <div id="exit-session-modal" style="position:fixed;inset:0;background:rgba(30,40,60,0.18);z-index:1500;display:none;align-items:center;justify-content:center;">
-        <div style="background:rgba(245,247,250,0.98);border-radius:14px;box-shadow:0 4px 32px rgba(0,0,0,0.12);padding:34px 38px;display:flex;flex-direction:column;align-items:center;gap:22px;min-width:300px;max-width:340px;">
-            <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:16px;color:rgba(40,42,50,0.72);margin:0;text-align:center;">Are you sure you want to exit the session?</h3>
+    <div id="exit-session-modal" style="position:fixed;inset:0;background:rgba(30,40,60,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:1500;display:none;align-items:center;justify-content:center;">
+        <div style="background:radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);border-radius:20px;box-shadow:0 4px 32px rgba(0,0,0,0.12);padding:28px 26px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:300px;max-width:320px;">
+            <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Leaving session</h3>
+            <div class="modal-desc-card">
+                <p style="font-family:'miller-text',serif;font-style:italic;font-size:14px;color:rgba(40,42,50,0.65);margin:0;text-align:center;line-height:1.55;">Are you sure you want to exit the session?</p>
+            </div>
             <div class="modal-btn-row">
                 <button id="exit-session-cancel-btn" class="modal-btn">Cancel</button>
                 <button id="exit-session-yes-btn" class="modal-btn">Yes</button>
@@ -2418,12 +2450,12 @@
             <h3>How long do you have?</h3>
             <div id="duration-options">
                 <button class="duration-btn" data-min="1">1 min (trial)</button>
-                <button class="duration-btn" data-min="2">2 min</button>
-                <button class="duration-btn" data-min="5">5 min</button>
-                <button class="duration-btn" data-min="10">10 min</button>
-                <button class="duration-btn" data-min="15">15 min</button>
+                <button class="duration-btn" data-min="2">2 mins</button>
+                <button class="duration-btn" data-min="5">5 mins</button>
+                <button class="duration-btn" data-min="10">10 mins</button>
+                <button class="duration-btn" data-min="15">15 mins</button>
             </div>
-            <div class="modal-btn-row" style="margin-top:14px;">
+            <div class="modal-btn-row">
                 <button id="duration-back-btn" class="modal-btn">Back</button>
             </div>
         </div>
@@ -2454,14 +2486,10 @@
         <div id="session-end-box">
             <!-- Page 1: analysis summary -->
             <div id="session-end-page1" style="display:flex;flex-direction:column;gap:14px;width:100%;">
-                <h3>Your Session</h3>
-                <div class="send-section">
-                    <div class="send-subtitle">Measure of Order to Disorder detected in your landscape</div>
-                    <div class="send-box" id="session-end-complexity">—</div>
-                </div>
+                <h3>Your session</h3>
                 <div class="send-section">
                     <div class="send-subtitle-row">
-                        <div class="send-subtitle">Soundmarks</div>
+                        <div class="send-subtitle">Milieu heard</div>
                         <button class="send-info-btn" data-popup="send-popup-soundmarks">?</button>
                     </div>
                     <div class="send-info-popup" id="send-popup-soundmarks">Sounds that are significant to a particular place, the identifiable qualities of an environment.</div>
@@ -2483,32 +2511,40 @@
                     <div class="send-info-popup" id="send-popup-signal">A foreground sound consciously listened to, designed to attract attention. 0 = tonal, 1 = noise.</div>
                     <div class="send-box" id="session-end-signal">—</div>
                 </div>
+                <div class="send-section">
+                    <div class="send-subtitle">Measure of order to disorder</div>
+                    <div class="send-box" id="session-end-complexity">—</div>
+                </div>
                 <div class="modal-btn-row">
                     <button id="session-end-next-btn" class="modal-btn">Next</button>
                 </div>
             </div>
             <!-- Page 2: reflection -->
             <div id="session-end-page2" style="display:none;flex-direction:column;gap:14px;width:100%;">
-                <h3>Take these thoughts into your day…</h3>
+                <h3 style="text-align:center;">Take these thoughts into your day…</h3>
                 <textarea id="session-description" placeholder="Describe what you noticed..."></textarea>
                 <label class="session-image-label">
                     <input type="file" id="session-image" accept="image/*" style="display:none">
                     + Add an image
                 </label>
                 <img id="session-preview-img" alt="session image">
-                <button id="session-save-btn">Save to My Landscapes</button>
+                <div class="modal-btn-row">
+                    <button id="session-save-btn">Save to My Landscapes</button>
+                </div>
                 <button id="session-discard-btn">Discard Session</button>
             </div>
         </div>
     </div>
 
     <!-- Self-Directed Session Modal (3-step) -->
-    <div id="self-directed-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(30,40,60,0.22);align-items:center;justify-content:center;">
-        <div id="sd-modal-inner" style="background:rgba(245,247,250,0.98);border-radius:14px;box-shadow:0 4px 32px rgba(0,0,0,0.14);padding:32px 36px;min-width:300px;max-width:95vw;width:400px;display:flex;flex-direction:column;align-items:center;gap:18px;">
+    <div id="self-directed-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(30,40,60,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;justify-content:center;">
+        <div id="sd-modal-inner" style="background:radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);border-radius:20px;box-shadow:0 4px 32px rgba(0,0,0,0.12);padding:28px 26px;min-width:300px;max-width:95vw;width:360px;display:flex;flex-direction:column;align-items:center;gap:16px;">
             <div class="sd-modal-step" id="sd-step-1">
-                <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Self-Directed Session</h3>
-                <div style="font-family:'miller-text',serif;font-style:italic;font-size:14px;color:rgba(40,42,50,0.65);text-align:center;max-width:320px;">
-                    In this mode, you can guide and record your own soundscape without structure.
+                <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Self Directed Meditation Session</h3>
+                <div class="modal-desc-card">
+                    <div style="font-family:'miller-text',serif;font-style:italic;font-size:14px;color:rgba(40,42,50,0.65);text-align:center;line-height:1.55;">
+                        A self directed session, for you to meditate at your own pace
+                    </div>
                 </div>
                 <div class="modal-btn-row">
                     <button class="sd-back-btn modal-btn">Back</button>
@@ -2516,11 +2552,11 @@
                 </div>
             </div>
             <div class="sd-modal-step" id="sd-step-2" style="display:none;width:100%;">
-                <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Before you record</h3>
-                <div class="prerecord-field"><label>Name session</label><input type="text" id="sd-name" placeholder="e.g. morning walk..."></div>
-                <div class="prerecord-field"><label>Location</label><input type="text" id="sd-location" placeholder="e.g. brixton, london..."></div>
+                <h3 style="font-family:'miller-text',serif;font-weight:400;font-style:italic;font-size:15px;color:rgba(40,42,50,0.80);margin:0;text-align:center;">Before you begin</h3>
+                <div class="prerecord-field"><label>Name Session</label><input type="text" id="sd-name" placeholder="...morning walk"></div>
                 <div class="prerecord-field"><label>Date</label><input type="text" id="sd-date" placeholder="DD.MM.YYYY" maxlength="10"></div>
                 <div class="prerecord-field"><label>Time</label><input type="time" id="sd-time"></div>
+                <div class="prerecord-field"><label>Location</label><input type="text" id="sd-location" placeholder="...London, Bethnal Green"></div>
                 <input type="hidden" id="sd-save" value="true">
                 <div class="modal-btn-row">
                     <button class="sd-back-btn prerecord-cancel modal-btn">Back</button>
@@ -2547,14 +2583,10 @@
     <!-- Pre-record modal -->
     <div id="prerecord-modal">
         <div id="prerecord-box">
-            <h3>Before you record</h3>
+            <h3>Before you begin</h3>
             <div class="prerecord-field">
-                <label>Name session</label>
-                <input type="text" id="prerecord-name" placeholder="e.g. morning walk...">
-            </div>
-            <div class="prerecord-field">
-                <label>Location</label>
-                <input type="text" id="prerecord-location" placeholder="e.g. brixton, london...">
+                <label>Name Session</label>
+                <input type="text" id="prerecord-name" placeholder="...morning walk">
             </div>
             <div class="prerecord-field">
                 <label>Date</label>
@@ -2564,9 +2596,15 @@
                 <label>Time</label>
                 <input type="time" id="prerecord-time">
             </div>
+            <div class="prerecord-field">
+                <label>Location</label>
+                <input type="text" id="prerecord-location" placeholder="...London, Bethnal Green">
+            </div>
             <input type="hidden" id="prerecord-save" value="true">
-            <button id="prerecord-start">Begin</button>
-            <button id="prerecord-cancel">Cancel</button>
+            <div class="modal-btn-row">
+                <button id="prerecord-cancel" class="modal-btn">Back</button>
+                <button id="prerecord-start" class="modal-btn">Next</button>
+            </div>
         </div>
     </div>
 
@@ -3091,7 +3129,7 @@
         const SESSION_1MIN = [
             { type: 'breathe', duration: 12000, bankCount: 1, prompts: ['Breathe with Milieu', 'Follow your breath'] },
             { type: 'set_intentions', duration: 10000, bankCount: 1, prompts: ['Set an intention for this practice'] },
-            { type: 'record', prompts: ['When you\'re ready, press the orb to begin recording', 'Listen to what\'s around you'] },
+            { type: 'record', maxRecordSecs: 30, prompts: ['When you\'re ready, press the orb to begin recording', 'Listen to what\'s around you', 'Notice any sounds near or far'] },
             { type: 'playback', drawingMin: 15, prompts: ['Trace the pattern as it builds', 'Watch as it curves and travels'] },
             { type: 'reflect', duration: 20000, longHold: 8000, bankCount: 1, prompts: [null, null, 'How does this make you feel?'] },
             { type: 'winddown', duration: 8000, bankCount: 1, prompts: ['Slowly come back into the present'] },
@@ -3355,7 +3393,19 @@
                 window.setPlaybackActive && window.setPlaybackActive(true);
                 window._sdVizActive = true;
                 const _sdInitEl = document.getElementById('session-data-display');
-                _sdInitEl.innerHTML = '<div style="font-family:\'miller-text\',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.35);text-align:right;">analysing...</div>';
+                const _sdLaLive = window._lastAnalysis;
+                if (_sdLaLive && _sdLaLive.complexityNorm !== undefined) {
+                    function _sdVizLabel(n) {
+                        if (n < 0.2) return 'highly ordered';
+                        if (n < 0.4) return 'mostly ordered';
+                        if (n < 0.6) return 'moderately complex';
+                        if (n < 0.8) return 'mostly disordered';
+                        return 'highly disordered';
+                    }
+                    _sdInitEl.innerHTML = `<div style="font-family:'miller-text',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.65);text-align:right;">${_sdVizLabel(_sdLaLive.complexityNorm)}</div>`;
+                } else {
+                    _sdInitEl.innerHTML = '<div style="font-family:\'miller-text\',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.35);text-align:right;">analysing...</div>';
+                }
                 _sdInitEl.classList.add('visible');
             };
             window.onVisualisationComplete = async function() {
@@ -3511,7 +3561,19 @@
                     window.setPlaybackActive && window.setPlaybackActive(true);
                     window._sdVizActive = true;
                     const _initEl = document.getElementById('session-data-display');
-                    _initEl.innerHTML = '<div style="font-family:\'miller-text\',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.35);text-align:right;">analysing...</div>';
+                    const _laLive = window._lastAnalysis;
+                    if (_laLive && _laLive.complexityNorm !== undefined) {
+                        function _vizStartLabel(n) {
+                            if (n < 0.2) return 'highly ordered';
+                            if (n < 0.4) return 'mostly ordered';
+                            if (n < 0.6) return 'moderately complex';
+                            if (n < 0.8) return 'mostly disordered';
+                            return 'highly disordered';
+                        }
+                        _initEl.innerHTML = `<div style="font-family:'miller-text',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.65);text-align:right;">${_vizStartLabel(_laLive.complexityNorm)}</div>`;
+                    } else {
+                        _initEl.innerHTML = '<div style="font-family:\'miller-text\',serif;font-style:italic;font-size:12px;color:rgba(60,70,90,0.35);text-align:right;">analysing...</div>';
+                    }
                     _initEl.classList.add('visible');
                     window._lastRecordingDuration = Math.max(step.drawingMin || 60, window._lastRecordingDuration || 30);
                     const _drawPool = [];

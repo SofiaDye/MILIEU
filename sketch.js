@@ -651,6 +651,16 @@ function finishMicAnalysis() {
 
   if (window.setOrbRecording) window.setOrbRecording(false);
 
+  // Pre-populate _lastAnalysis with live metrics so session-end page 1 always has data,
+  // even when the server analysis endpoint doesn't respond in time.
+  // The server response (via onstop async fetch) will overwrite these with refined values if it arrives.
+  if (window.updateDetailsBox && liveFrames > 0) {
+    const _liveEntN = Math.max(0, Math.min(1, (mEntropy   - 6.7)  / (8.3  - 6.7)));
+    const _liveSdN  = Math.max(0, Math.min(1, (mEntropySD - 0.10) / (0.45 - 0.10)));
+    const _liveCN   = Math.max(0, Math.min(1, (_liveEntN + _liveSdN) * 0.5));
+    window.updateDetailsBox(dispMeanEntropy, dispStdEntropy, dispRMS, dispKeynote, dispSignal, _liveCN);
+  }
+
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   // onstop callback will call startVisualising() once audio is processed
 }

@@ -315,6 +315,6 @@ def analyse():
 if __name__ == '__main__':
     print('-' * 50)
     print('  MILIEU server')
-    print('  http://localhost:5000')
+    print('  http://localhost:5001')
     print('-' * 50)
-    app.run(debug=False, port=5000, threaded=False)
+    app.run(debug=False, port=5001, threaded=False)

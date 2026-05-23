@@ -15,7 +15,7 @@ try:
     if NGROK_TOKEN:
         ngrok.set_auth_token(NGROK_TOKEN)
 
-    tunnel = ngrok.connect(5000, "http")
+    tunnel = ngrok.connect(5001, "http")
     print("\n" + "="*55)
     print("  MILIEU is live at:")
     print(f"  {tunnel.public_url}")
@@ -24,7 +24,7 @@ try:
 
 except Exception as e:
     print(f"[ngrok] Could not start tunnel: {e}")
-    print("[ngrok] Running locally only at http://localhost:5000\n")
+    print("[ngrok] Running locally only at http://localhost:5001\n")
 
 # ── Flask server (imported last so ngrok URL prints first) ────────────────────
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
