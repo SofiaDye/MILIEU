@@ -1253,11 +1253,13 @@
         }
         #session-data-display.visible { opacity: 1; }
         .session-tag {
-            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px;
             font-family: "miller-text", serif; font-style: italic;
             font-size: 12px; letter-spacing: 0.04em; text-transform: none;
             background: rgba(180,195,215,0.25); color: rgba(40,45,60,0.72);
         }
+        .session-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
         .session-tags-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 
         /* Session end modal */
@@ -1692,10 +1694,13 @@
             // During guided/SD visualisation, show soundmark tags in corner
             if (window._sdVizActive) {
                 const la = window._lastAnalysis;
-                const smList = (la.soundmarks || []).slice(0, 5).map(s => s.replace(/_/g, ' '));
+                const smCats = (la.soundmarks || []).slice(0, 5);
                 const dataEl = document.getElementById('session-data-display');
-                if (smList.length) {
-                    const _tagsHtml = smList.map(s => `<span class="session-tag">${s}</span>`).join('');
+                if (smCats.length) {
+                    const _tagsHtml = smCats.map(cat => {
+                        const col = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) ? CATEGORY_COLORS[cat] : [180, 195, 215];
+                        return `<span class="session-tag"><span class="session-dot" style="background:rgb(${col[0]},${col[1]},${col[2]})"></span>${cat.replace(/_/g,' ')}</span>`;
+                    }).join('');
                     dataEl.innerHTML = `<div class="session-tags-row">${_tagsHtml}</div>`;
                     dataEl.classList.add('visible');
                 }
@@ -3584,97 +3589,99 @@
             }
 
             else if (step.type === 'playback') {
-                if (window._selfDirected) { triggerSdRecord(); return; }
-                // During recording: prompts from RECORDING bank or fallback
-                const _recPool = [];
-                if (_sess.bank) {
-                    for (let _i = 0; _i < 5; _i++) { const _p = pickPrompt('RECORDING'); if (_p) _recPool.push(_p); }
-                }
-                if (!_recPool.length) {
-                    const _rs = _sess.steps[_sess.idx - 1];
-                    if (_rs && _rs.prompts) _recPool.push(..._rs.prompts.slice(1).filter(Boolean));
-                }
-                let rpi = 0;
-                function showRecordingPrompt() {
-                    if (!_recPool.length) return;
-                    sessPrompt(_recPool[rpi % _recPool.length]);
-                    rpi++;
-                }
-                const _maxSecs = window._sessMaxRecordSecs || 30;
-                const _recInterval = Math.min(15000, Math.max(8000, Math.floor((_maxSecs * 1000) / Math.max(1, _recPool.length))));
-                showRecordingPrompt();
-                _sess._promptTimer = setInterval(showRecordingPrompt, _recInterval);
-
-                window['onVisualisationStart'] = () => {
-                    clearInterval(_sess._promptTimer);
-                    clearTimeout(_sess._smWaitTimer);
-                    window.setPlaybackActive && window.setPlaybackActive(true);
-                    window._sdVizActive = true;
-                    document.getElementById('session-data-display').classList.remove('visible');
-                    window._lastRecordingDuration = Math.max(step.drawingMin || 60, window._lastRecordingDuration || 30);
-
-                    // Complexity label from live analysis
-                    const _laViz = window._lastAnalysis;
-                    const _cnViz = (_laViz && _laViz.complexityNorm !== undefined) ? _laViz.complexityNorm : 0.5;
-                    function _cLblViz(n) {
-                        if (n < 0.2) return 'highly ordered';
-                        if (n < 0.4) return 'mostly ordered';
-                        if (n < 0.6) return 'moderately complex';
-                        if (n < 0.8) return 'mostly disordered';
-                        return 'highly disordered';
+                    if (window._selfDirected) { triggerSdRecord(); return; }
+                    // During recording: prompts from RECORDING bank or fallback
+                    const _recPool = [];
+                    if (_sess.bank) {
+                        for (let _i = 0; _i < 5; _i++) { const _p = pickPrompt('RECORDING'); if (_p) _recPool.push(_p); }
                     }
-                    // Drawing prompts — use step definition only (avoids mis-tagged sheet prompts)
-                    const _drawPrompts = (step.prompts && step.prompts.length) ? step.prompts
-                        : ['Watch as the pattern forms', 'Notice what emerges', 'Follow a path through the pattern'];
-                    let _dpi = 0;
-                    function _startDrawPrompts() {
+                    if (!_recPool.length) {
+                        const _rs = _sess.steps[_sess.idx - 1];
+                        if (_rs && _rs.prompts) _recPool.push(..._rs.prompts.slice(1).filter(Boolean));
+                    }
+                    let rpi = 0;
+                    function showRecordingPrompt() {
+                        if (!_recPool.length) return;
+                        sessPrompt(_recPool[rpi % _recPool.length]);
+                        rpi++;
+                    }
+                    const _maxSecs = window._sessMaxRecordSecs || 30;
+                    const _recInterval = Math.min(15000, Math.max(8000, Math.floor((_maxSecs * 1000) / Math.max(1, _recPool.length))));
+                    showRecordingPrompt();
+                    _sess._promptTimer = setInterval(showRecordingPrompt, _recInterval);
+
+                    window['onVisualisationStart'] = () => {
+                        clearInterval(_sess._promptTimer);
                         clearTimeout(_sess._smWaitTimer);
-                        window._onSoundmarksReady = null;
-                        const _remMs = Math.max(_drawPrompts.length * 7000, window._lastRecordingDuration * 1000 - 8000);
-                        const _iv = Math.max(7000, Math.floor(_remMs / _drawPrompts.length));
-                        sessPrompt(_drawPrompts[_dpi % _drawPrompts.length]);
-                        _dpi++;
-                        _sess._promptTimer = setInterval(() => {
+                        window.setPlaybackActive && window.setPlaybackActive(true);
+                        window._sdVizActive = true;
+                        document.getElementById('session-data-display').classList.remove('visible');
+                        window._lastRecordingDuration = Math.max(step.drawingMin || 60, window._lastRecordingDuration || 30);
+
+                        // Complexity label from live analysis
+                        const _laViz = window._lastAnalysis;
+                        const _cnViz = (_laViz && _laViz.complexityNorm !== undefined) ? _laViz.complexityNorm : 0.5;
+                        function _cLblViz(n) {
+                            if (n < 0.2) return 'highly ordered';
+                            if (n < 0.4) return 'mostly ordered';
+                            if (n < 0.6) return 'moderately complex';
+                            if (n < 0.8) return 'mostly disordered';
+                            return 'highly disordered';
+                        }
+                        // Drawing prompts — use step definition only (avoids mis-tagged sheet prompts)
+                        const _drawPrompts = (step.prompts && step.prompts.length) ? step.prompts
+                            : ['Watch as the pattern forms', 'Notice what emerges', 'Follow a path through the pattern'];
+                        let _dpi = 0;
+                        // --- PATCHED PROMPT SEQUENCE LOGIC ---
+                        // 1. Show complexity as first prompt
+                        sessPrompt('Milieu understood your environment as ' + _cLblViz(_cnViz));
+                        // 2. When soundmarks arrive from server, show them then start drawing prompts
+                        window._onSoundmarksReady = function(cats) {
+                            if (!window._sdVizActive) return;
+                            clearTimeout(_sess._smWaitTimer); // cancel fallback timer
+                            const _sms = (cats || []).slice(0, 3).map(s => s.replace(/_/g, ' '));
+                            const _smsText = _sms.length === 0 ? null
+                                : _sms.length === 1 ? _sms[0]
+                                : _sms.slice(0, -1).join(', ') + ' and ' + _sms[_sms.length - 1];
+                            if (_smsText) {
+                                sessPrompt('Milieu also detected ' + _smsText);
+                                _sess._smWaitTimer = setTimeout(_startDrawPrompts, 4500);
+                            } else {
+                                _startDrawPrompts();
+                            }
+                        };
+                        // 3. Fallback: if server doesn't respond in 5s, start drawing prompts
+                        _sess._smWaitTimer = setTimeout(() => {
+                            window._onSoundmarksReady = null;
+                            _startDrawPrompts();
+                        }, 5000);
+                        // 4. Drawing prompts logic
+                        function _startDrawPrompts() {
+                            clearTimeout(_sess._smWaitTimer);
+                            window._onSoundmarksReady = null;
+                            const _remMs = Math.max(_drawPrompts.length * 7000, window._lastRecordingDuration * 1000 - 8000);
+                            const _iv = Math.max(7000, Math.floor(_remMs / _drawPrompts.length));
                             sessPrompt(_drawPrompts[_dpi % _drawPrompts.length]);
                             _dpi++;
-                        }, _iv);
-                    }
-                    // 1. Show complexity as first prompt
-                    sessPrompt('Milieu understood your surroundings as … ' + _cLblViz(_cnViz));
-                    // 2. When soundmarks arrive from server, show them then start drawing prompts
-                    window._onSoundmarksReady = function(cats) {
-                        if (!window._sdVizActive) return;
-                        clearTimeout(_sess._smWaitTimer); // cancel fallback timer
-                        const _sms = (cats || []).slice(0, 3).map(s => s.replace(/_/g, ' '));
-                        const _smsText = _sms.length === 0 ? null
-                            : _sms.length === 1 ? _sms[0]
-                            : _sms.slice(0, -1).join(', ') + ' and ' + _sms[_sms.length - 1];
-                        if (_smsText) {
-                            sessPrompt('Milieu also detected … ' + _smsText);
-                            _sess._smWaitTimer = setTimeout(_startDrawPrompts, 4500);
-                        } else {
-                            _startDrawPrompts();
+                            _sess._promptTimer = setInterval(() => {
+                                sessPrompt(_drawPrompts[_dpi % _drawPrompts.length]);
+                                _dpi++;
+                            }, _iv);
                         }
                     };
-                    // 3. Fallback: if server doesn't respond in 5s, start drawing prompts
-                    _sess._smWaitTimer = setTimeout(() => {
+                    window.onVisualisationComplete = async () => {
+                        window.onVisualisationComplete = null;
+                        window._sdVizActive = false;
                         window._onSoundmarksReady = null;
-                        _startDrawPrompts();
-                    }, 5000);
-                };
-                window.onVisualisationComplete = async () => {
-                    window.onVisualisationComplete = null;
-                    window._sdVizActive = false;
-                    window._onSoundmarksReady = null;
-                    clearTimeout(_sess._smWaitTimer);
-                    if (window.stopAudioPlayback) window.stopAudioPlayback();
-                    clearInterval(_sess._promptTimer);
-                    sessPrompt('');
-                    try { const cv = document.querySelector('canvas'); if (cv) window._lastDrawingThumbnail = cv.toDataURL('image/png'); } catch(e) {}
-                    await (window.stopVisualRecording && window.stopVisualRecording());
-                    if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
-                    sessionAdvance();
-                };
+                        clearTimeout(_sess._smWaitTimer);
+                        if (window.stopAudioPlayback) window.stopAudioPlayback();
+                        clearInterval(_sess._promptTimer);
+                        sessPrompt('');
+                        try { const cv = document.querySelector('canvas'); if (cv) window._lastDrawingThumbnail = cv.toDataURL('image/png'); } catch(e) {}
+                        await (window.stopVisualRecording && window.stopVisualRecording());
+                        if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
+                        sessionAdvance();
+                    };
             }
 
                else if (step.type === 'reflect') {
