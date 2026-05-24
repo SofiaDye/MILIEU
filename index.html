@@ -3048,8 +3048,11 @@
                                 }
                                 return;
                             }
-                            sessPrompt(ambientPrompts[ambientPromptIdx % ambientPrompts.length]);
-                            ambientPromptIdx++;
+                            if (ambientPromptIdx >= ambientPrompts.length) {
+                                shuffle(ambientPrompts);
+                                ambientPromptIdx = 0;
+                            }
+                            sessPrompt(ambientPrompts[ambientPromptIdx++]);
                             // Next prompt in 18–38 seconds (irregular)
                             const nextMs = 8000 + Math.floor(Math.random() * 6000);
                             ambientPromptTimer = setTimeout(showAmbientPrompt, nextMs);
