@@ -730,10 +730,15 @@ function toggleMic() {
           state = 'fading'; fadeAlpha = 0;
         }
       }
-      if (playbackAudio) playbackAudio.addEventListener('ended', _onVizDone, { once: true });
       const _recDur = window._lastRecordingDuration || 30;
       clearTimeout(window._vizStopTimer);
       window._vizStopTimer = setTimeout(_onVizDone, (_recDur + 1.5) * 1000);
+      // For guided sessions (onVisualisationComplete set), _vizStopTimer controls duration
+      // so drawingMin is respected even when audio is shorter than drawingMin.
+      // For free exploration, let audio 'ended' terminate visualization immediately.
+      if (playbackAudio && !window.onVisualisationComplete) {
+        playbackAudio.addEventListener('ended', _onVizDone, { once: true });
+      }
 
       // ── Background: encode + send to server for soundmarks/refined measures ──
       (async () => {
