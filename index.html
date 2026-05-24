@@ -42,7 +42,7 @@
             color: rgba(20,30,50,0.88);
             background: rgba(200,210,225,0.22);
         }
-        canvas { display: block; }
+        canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important; }
 
         /* Map modal */
         #map-modal {
@@ -256,6 +256,17 @@
         }
         #quick-capture-btn:hover { background: rgba(168,200,235,1); }
 
+        /* Panel backdrop — blurs the app when gallery or info panel is open */
+        #panel-backdrop {
+            position: fixed; inset: 0;
+            z-index: 199;
+            background: rgba(215, 225, 240, 0.18);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        #panel-backdrop.visible { opacity: 1; pointer-events: none; }
+
         /* Gallery panel */
         #gallery-panel {
             position: fixed; top: 0; left: 0;
@@ -266,7 +277,7 @@
             display: flex; flex-direction: column;
             transform: translateX(-100%);
             transition: transform 0.35s ease;
-            overflow: hidden;
+            overflow: visible;
         }
         #gallery-panel.open { transform: translateX(0); z-index: 202; }
         #info-panel.open { z-index: 202; }
@@ -347,9 +358,9 @@
         }
         #gallery-close:hover { color: rgba(20,22,25,0.80); }
         #gallery-grid {
-            position: absolute;
-            top: 65px; bottom: 0; left: 0; right: 0;
-            overflow-y: scroll; overflow-x: hidden;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto; overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             overscroll-behavior: contain;
@@ -378,10 +389,11 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: box-shadow 0.15s;
             background: #dde3ec;
+            min-height: 110px;
         }
         .gallery-thumb:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
         .gallery-thumb video,
-        .gallery-thumb > img { width: 100%; height: 120px; object-fit: contain; display: block; background: #dde3ec; }
+        .gallery-thumb > img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #dde3ec; }
         .gallery-thumb-info {
             position: absolute; bottom: 0; left: 0; right: 0;
             padding: 18px 8px 7px;
@@ -1416,6 +1428,7 @@
         <button id="lightbox-close">×</button>
     </div>
 
+    <div id="panel-backdrop"></div>
     <div id="gallery-panel">
         <div id="gallery-handle"><span>My Landscapes</span></div>
         <div id="gallery-header">
@@ -1849,6 +1862,7 @@
                 e.stopPropagation();
                 _activated = true;
                 clearTimeout(_sbTimer);
+                overlay.style.pointerEvents = 'none'; // allow orb clicks immediately during fade
                 overlay.style.transition = 'opacity 1s ease';
                 overlay.style.opacity = '0';
                 setTimeout(() => {
@@ -2189,9 +2203,16 @@
             function addThumbListeners(thumb, url, item) {
                 if (!item.thumbnail) {
                     const vid = thumb.querySelector('video');
-                    vid.addEventListener('loadedmetadata', () => { vid.currentTime = vid.duration * 0.5; });
+                    // seek to midpoint and keep paused so a frame is visible
+                    const seekMid = () => {
+                        if (vid.duration && isFinite(vid.duration)) {
+                            vid.currentTime = vid.duration * 0.5;
+                        }
+                    };
+                    vid.addEventListener('loadedmetadata', seekMid);
+                    vid.addEventListener('loadeddata', seekMid); // fallback
                     vid.addEventListener('mouseenter', () => vid.play());
-                    vid.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = vid.duration * 0.5; });
+                    vid.addEventListener('mouseleave', () => { vid.pause(); seekMid(); });
                 }
                 thumb.addEventListener('click', e => {
                     if (e.target.classList.contains('thumb-del')) return;
@@ -2226,10 +2247,10 @@
                     const url = URL.createObjectURL(item.blob);
                     const thumb = document.createElement('div');
                     thumb.className = 'gallery-thumb';
-                    const _mStyle = 'width:100%;height:120px;object-fit:cover;display:block;background:#dde3ec;';
+                    const _mStyle = 'width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#dde3ec;';
                     const media = item.thumbnail
                         ? `<img src="${item.thumbnail}" alt="" style="${_mStyle}">`
-                        : `<video src="${url}" muted playsinline style="${_mStyle}"></video>`;
+                        : `<video src="${url}" muted playsinline preload="metadata" style="${_mStyle}"></video>`;
                     const _dt = [item.date, item.time].filter(Boolean).join(' · ');
                     const _a = item.analysis;
                     const _displayName = _isTimestampLabel(item.label) ? '—' : (item.label || '');
@@ -2403,8 +2424,14 @@
 
         // Gallery panel — tab click to open/close
         const galleryHandle = document.getElementById('gallery-handle');
-        function openGallery()  { galleryPanel.classList.add('open');    renderGallery(); }
-        function closeGallery() { galleryPanel.classList.remove('open'); }
+        const _backdrop = document.getElementById('panel-backdrop');
+        const _infoPanel = document.getElementById('info-panel');
+        function _updateBackdrop() {
+            const open = galleryPanel.classList.contains('open') || _infoPanel.classList.contains('open');
+            _backdrop.classList.toggle('visible', open);
+        }
+        function openGallery()  { galleryPanel.classList.add('open');    renderGallery(); _updateBackdrop(); }
+        function closeGallery() { galleryPanel.classList.remove('open'); _updateBackdrop(); }
 
         galleryHandle.addEventListener('click', () => {
             galleryPanel.classList.contains('open') ? closeGallery() : openGallery();
@@ -2412,9 +2439,8 @@
         document.getElementById('gallery-close').addEventListener('click', closeGallery);
 
         // Understanding Milieu panel
-        const _infoPanel = document.getElementById('info-panel');
-        function openInfo()  { _infoPanel.classList.add('open'); }
-        function closeInfo() { _infoPanel.classList.remove('open'); }
+        function openInfo()  { _infoPanel.classList.add('open'); _updateBackdrop(); }
+        function closeInfo() { _infoPanel.classList.remove('open'); _updateBackdrop(); }
         document.getElementById('info-handle').addEventListener('click', () => {
             _infoPanel.classList.contains('open') ? closeInfo() : openInfo();
         });
@@ -3159,7 +3185,7 @@
         const SESSION_2MIN = [
             { type: 'breathe', duration: 25000, bankCount: 2, prompts: ['Breathe with Milieu', 'Focus on the space around you', 'Follow your breath'] },
             { type: 'set_intentions', duration: 18000, bankCount: 2, prompts: ['Set an intention for this practice', 'How do you want to feel today'] },
-            { type: 'record', prompts: ['When you\'re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
+            { type: 'record', prompts: ['When you\'re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear', 'Notice the layers of sound around you', 'Stay present with what you\'re hearing', 'Let sound come to you'] },
             { type: 'playback', drawingMin: 25, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels'] },
             { type: 'reflect', duration: 35000, longHold: 12000, bankCount: 2, prompts: [null, null, null, 'How does this make you feel?', 'Notice how you perceive the sound now'] },
             { type: 'winddown', duration: 12000, bankCount: 1, prompts: ['Draw your attention back to your breath', 'Slowly come back into the present'] },
@@ -3188,7 +3214,10 @@
                 type: 'record', maxRecordSecs: 45,
                 prompts: [
                     'When you\'re ready, press the orb to begin recording the sound around you',
-                    'Bring your focus back to what you can hear'
+                    'Bring your focus back to what you can hear',
+                    'Notice the layers of sound around you',
+                    'Stay present with what you\'re hearing',
+                    'Let sound come to you'
                 ]
             },
             {
@@ -3240,11 +3269,11 @@
                     'Release the need to \'do\' and absorb the current moment'
                 ]
             },
-            { type: 'record', maxRecordSecs: 120, prompts: ['When you\'re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
+            { type: 'record', maxRecordSecs: 120, prompts: ['When you\'re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear', 'Notice the layers of sound around you', 'Stay present with what you\'re hearing', 'Let sound come to you', 'What sounds are closest to you?', 'What sounds are furthest away?'] },
             { type: 'playback', drawingMin: 120, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels', 'Track a path'] },
             {
                 type: 'reflect', duration: 150000, longHold: 45000,
-                prompts: [null, null, null, null, null, null, null, null]
+                prompts: [null, null, null, null, 'What do you notice as you sit with this image?', 'How do you perceive the sound now?', 'Notice what has shifted', 'Breathe with what you\'ve created']
             },
             {
                 type: 'winddown', duration: 60000, bankCount: 3,
@@ -3275,11 +3304,11 @@
                     'Release the need to \'do\' and absorb the current moment'
                 ]
             },
-            { type: 'record', maxRecordSecs: 180, prompts: ['When you\'re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear'] },
+            { type: 'record', maxRecordSecs: 180, prompts: ['When you\'re ready, press the orb to begin recording the sound around you', 'Bring your focus back to what you can hear', 'Notice the layers of sound around you', 'Stay present with what you\'re hearing', 'Let sound come to you', 'What sounds are closest to you?', 'What sounds are furthest away?', 'Notice any sounds that come and go', 'Is there a rhythm to what you hear?'] },
             { type: 'playback', drawingMin: 180, prompts: ['Trace the pattern as it builds from the sounds you experienced', 'Watch as it curves and travels', 'Track a path'] },
             {
                 type: 'reflect', duration: 240000, longHold: 60000,
-                prompts: [null, null, null, null, null, null, null, null, null, null]
+                prompts: [null, null, null, null, null, 'What do you notice as you sit with this image?', 'How do you perceive the sound now?', 'Notice what has shifted', 'Breathe with what you\'ve created', 'Take a moment with your landscape']
             },
             {
                 type: 'winddown', duration: 90000, bankCount: 4,

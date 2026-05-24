@@ -422,7 +422,7 @@ function startVisualising() {
   // Origins: sparse (low complexity) → dense (high complexity)
   const _isMobile = windowWidth < 640;
   let numOrigins = int(lerp(2, 14, complexityNorm));
-  if (_isMobile) numOrigins = Math.max(1, int(numOrigins * 0.12));
+  if (_isMobile) numOrigins = Math.max(1, int(numOrigins * 0.55));
   let origins = [];
   randomSeed(99);
   for (let o=0; o<numOrigins; o++) {
