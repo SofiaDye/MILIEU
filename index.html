@@ -3644,13 +3644,14 @@
                     // 2. When soundmarks arrive from server, show them then start drawing prompts
                     window._onSoundmarksReady = function(cats) {
                         if (!window._sdVizActive) return;
+                        clearTimeout(_sess._smWaitTimer); // cancel fallback timer
                         const _sms = (cats || []).slice(0, 3).map(s => s.replace(/_/g, ' '));
                         const _smsText = _sms.length === 0 ? null
                             : _sms.length === 1 ? _sms[0]
                             : _sms.slice(0, -1).join(', ') + ' and ' + _sms[_sms.length - 1];
                         if (_smsText) {
                             sessPrompt('Milieu also detected … ' + _smsText);
-                            setTimeout(_startDrawPrompts, 4500);
+                            _sess._smWaitTimer = setTimeout(_startDrawPrompts, 4500);
                         } else {
                             _startDrawPrompts();
                         }
