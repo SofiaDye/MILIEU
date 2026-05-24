@@ -3632,10 +3632,7 @@
                         const _drawPrompts = (step.prompts && step.prompts.length) ? step.prompts
                             : ['Watch as the pattern forms', 'Notice what emerges', 'Follow a path through the pattern'];
                         let _dpi = 0;
-                        // --- PATCHED PROMPT SEQUENCE LOGIC ---
-                        // 1. Show complexity as first prompt
-                        sessPrompt('Milieu understood your environment as ' + _cLblViz(_cnViz));
-                        // 2. When soundmarks arrive from server, show them then start drawing prompts
+                        // When soundmarks arrive from server, show them then start drawing prompts
                         window._onSoundmarksReady = function(cats) {
                             if (!window._sdVizActive) return;
                             clearTimeout(_sess._smWaitTimer); // cancel fallback timer
