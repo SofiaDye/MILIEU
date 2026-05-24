@@ -357,10 +357,10 @@ function draw() {
       if (window.showOrb) window.showOrb();
       const promptEl = document.getElementById('session-prompt-text');
       if (promptEl) {
-        // Only restore prompt overlay if not self-directed or session inactive
-        if (!window._selfDirected || !window._sessionActive) {
+        promptEl.classList.remove('hidden');
+        // Never reset opacity during an active session — sessPrompt controls it
+        if (!window._sessionActive) {
           promptEl.style.opacity = '';
-          promptEl.classList.remove('hidden');
         }
       }
       if (window._sessionActive) {
