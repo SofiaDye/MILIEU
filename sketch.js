@@ -349,6 +349,7 @@ function draw() {
     }
     if (fadeAlpha >= 255) {
       state = 'idle';
+      inputSource = null;
       if (window.setPlaybackActive) window.setPlaybackActive(false);
       clear();
       drawBackground(-1);
