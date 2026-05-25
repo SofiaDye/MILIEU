@@ -2052,12 +2052,15 @@
         });
         const dbAdd = (blob, label, location, date, time, thumbnail, placeholder, analysis) => new Promise(r => {
             if (!db) return r(null);
-            const req = db.transaction('visuals','readwrite').objectStore('visuals').add({
-                blob, label, location: location || '', date: date || '', time: time || '',
-                ts: Date.now(), thumbnail: thumbnail || '', placeholder: placeholder || false,
-                analysis: analysis || null, description: '', imageDataURL: ''
-            });
-            req.onsuccess = e => r(e.target.result);
+            try {
+                const req = db.transaction('visuals','readwrite').objectStore('visuals').add({
+                    blob, label, location: location || '', date: date || '', time: time || '',
+                    ts: Date.now(), thumbnail: thumbnail || '', placeholder: placeholder || false,
+                    analysis: analysis || null, description: '', imageDataURL: ''
+                });
+                req.onsuccess = e => r(e.target.result);
+                req.onerror = e => { console.warn('[dbAdd] error:', e.target.error); r(null); };
+            } catch(e) { console.warn('[dbAdd] exception:', e); r(null); }
         });
         const dbUpdate = (id, fields) => new Promise(r => {
             if (!db || !id) return r();
@@ -2329,20 +2332,23 @@
                 if (_cv) thumbnail = _cv.toDataURL('image/png');
             } catch(e) {}
             await new Promise(r => { _rec.onstop = r; _rec.stop(); });
-            if (!_chunks.length) { _rec = null; _chunks = []; return; }
+            if (!_chunks.length) { _rec = null; _chunks = []; console.warn('[stopVisualRecording] no chunks — nothing saved'); return; }
             const blob = new Blob(_chunks, { type: _rec.mimeType || 'video/webm' });
             _rec = null; _chunks = [];
             const meta = window._recordMeta || {};
             if (meta.shouldSave !== false) {
-                await dbReady;
-                const _la = window._lastAnalysis;
-                const _analysis = _la ? {
-                    complexity: _la.complexityNorm,
-                    soundmarks: _la.soundmarks || [],
-                    keynote:    _la.keynote,
-                    signal:     _la.signal
-                } : null;
-                window._lastSavedRecordId = await dbAdd(blob, meta.name || '', meta.location || '', meta.date || '', meta.time || '', thumbnail, false, _analysis);
+                try {
+                    await dbReady;
+                    const _la = window._lastAnalysis;
+                    const _analysis = _la ? {
+                        complexity: _la.complexityNorm,
+                        soundmarks: _la.soundmarks || [],
+                        keynote:    _la.keynote,
+                        signal:     _la.signal
+                    } : null;
+                    window._lastSavedRecordId = await dbAdd(blob, meta.name || '', meta.location || '', meta.date || '', meta.time || '', thumbnail, false, _analysis);
+                    console.log('[stopVisualRecording] saved id:', window._lastSavedRecordId);
+                } catch(e) { console.warn('[stopVisualRecording] save failed:', e); }
             }
         };
 
@@ -3472,19 +3478,13 @@
                 if (window._pauseAmbientPrompts) window._pauseAmbientPrompts('drawing');
                 if (window.stopVisualRecording) await window.stopVisualRecording();
                 if (window._lastAnalysis) _sess.recordings.push(Object.assign({}, window._lastAnalysis));
-                // Hold drawing for 5s then fade; resume session after fade completes
+                // Hold drawing for 5s then fade; sketch.js fade-complete restores SD button + prompts
                 setTimeout(() => {
                     window._sdVizActive = false;
                     if (window.stopAudioPlayback) window.stopAudioPlayback();
                     if (window.setPlaybackActive) window.setPlaybackActive(false);
                     sessDataClear();
                     if (window.fadeVisualization) window.fadeVisualization();
-                    // Resume ambient prompts and record button once drawing has faded (~1.5s)
-                    setTimeout(() => {
-                        if (window._resumeAmbientPrompts) window._resumeAmbientPrompts('drawing');
-                        const _sdBtnRestore = document.getElementById('sd-session-prompt-btn');
-                        if (_sdBtnRestore) { _sdBtnRestore.style.display = ''; _sdBtnRestore.onclick = triggerSdRecord; }
-                    }, 1500);
                 }, 5000);
             };
             if (typeof toggleMic === 'function') toggleMic();
