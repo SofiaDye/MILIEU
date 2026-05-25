@@ -265,7 +265,7 @@
             opacity: 0; pointer-events: none;
             transition: opacity 0.35s ease;
         }
-        #panel-backdrop.visible { opacity: 1; pointer-events: none; }
+        #panel-backdrop.visible { opacity: 1; pointer-events: auto; cursor: default; }
 
         /* Gallery panel */
         #gallery-panel {
@@ -2460,6 +2460,7 @@
             _infoPanel.classList.contains('open') ? closeInfo() : openInfo();
         });
         document.getElementById('info-close').addEventListener('click', closeInfo);
+        _backdrop.addEventListener('click', () => { closeGallery(); closeInfo(); });
 
         lightbox.addEventListener('click', e => {
             if (e.target === lightbox || e.target.id === 'lightbox-close') lightbox.classList.remove('open');
