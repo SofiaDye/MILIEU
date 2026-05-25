@@ -283,64 +283,60 @@
         #info-panel.open { z-index: 202; }
 
         /* Understanding Milieu panel — right side */
-        #info-panel {
-            position: fixed; top: 0; right: 0;
-            width: 300px; height: 100vh;
-            background: rgba(245,247,250,0.98);
-            box-shadow: -4px 0 24px rgba(0,0,0,0.12);
-            z-index: 200;
-            display: flex; flex-direction: column;
-            transform: translateX(100%);
-            transition: transform 0.35s ease, opacity 0.4s ease;
-            overflow: visible;
-        }
-        #info-panel.open { transform: translateX(0); }
-        #info-panel.hidden-ui { opacity: 0; pointer-events: none; }
-        #info-handle {
-            position: absolute; top: 50%; left: -28px;
-            transform: translateY(-50%);
-            width: 28px; height: 165px;
-            background: rgba(195,215,245,0.95);
-            border-radius: 10px 0 0 10px;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.10);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; overflow: hidden;
-            transition: background 0.2s, width 0.2s;
-        }
-        #info-handle:hover { width: 34px; background: rgba(168,200,235,1); }
-        #info-handle span {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
+        /* Info ? button */
+        #info-btn {
+            position: fixed; bottom: 22px; right: 22px;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(195,210,230,0.55);
+            border: 1px solid rgba(160,185,215,0.40);
             font-family: "miller-text", serif; font-style: italic;
-            font-size: 11px; letter-spacing: 0.18em;
-            color: rgba(40,42,50,0.65); user-select: none; text-align: center;
+            font-size: 15px; color: rgba(40,45,60,0.60);
+            cursor: pointer; z-index: 120;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            line-height: 1;
         }
-        #info-header {
-            flex-shrink: 0;
-            padding: 22px 20px 14px;
-            border-bottom: 1px solid rgba(0,0,0,0.08);
+        #info-btn:hover { background: rgba(168,200,235,0.80); color: rgba(30,35,50,0.85); }
+        #info-btn.hidden-ui { opacity: 0; pointer-events: none; }
+        /* Info modal */
+        #info-modal {
+            position: fixed; inset: 0;
+            background: rgba(30,40,60,0.12);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            z-index: 1500;
+            display: none; align-items: center; justify-content: center;
+        }
+        #info-modal.open { display: flex; }
+        #info-box {
+            background: radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);
+            border-radius: 20px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            padding: 28px 26px 24px;
+            width: min(340px, 88vw);
+            max-height: 70vh;
+            display: flex; flex-direction: column; gap: 0;
+            position: relative;
+        }
+        #info-modal-header {
             display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px; flex-shrink: 0;
         }
-        #info-header h4 {
+        #info-modal-header h4 {
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
             font-size: 15px; color: rgba(40,42,50,0.80); margin: 0;
         }
-        #info-close {
+        #info-modal-close {
             background: none; border: none; cursor: pointer;
             font-size: 20px; color: rgba(60,65,75,0.45); line-height: 1; padding: 0 0 0 10px;
         }
-        #info-close:hover { color: rgba(20,22,25,0.80); }
-        #info-body {
-            position: absolute;
-            top: 65px; bottom: 0; left: 0; right: 0;
-            overflow-y: scroll;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
-            padding: 20px 20px 60px;
+        #info-modal-close:hover { color: rgba(20,22,25,0.80); }
+        #info-modal-body {
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             font-family: "miller-text", serif; font-weight: 400; font-style: italic;
-            font-size: 13px; line-height: 1.75;
-            color: rgba(40,42,50,0.68);
+            font-size: 13px; line-height: 1.75; color: rgba(40,42,50,0.68);
         }
+        #info-panel { display: none; }
+        #info-panel.hidden-ui { display: none; }
         #gallery-header {
             flex-shrink: 0;
             padding: 22px 20px 14px;
@@ -1441,17 +1437,20 @@
         <div id="gallery-grid"></div>
     </div>
 
-    <div id="info-panel">
-        <div id="info-handle"><span>Understanding Milieu</span></div>
-        <div id="info-header">
-            <h4>Understanding Milieu</h4>
-            <button id="info-close" title="Close">×</button>
-        </div>
-        <div id="info-body">
-            <p><strong>About Milieu</strong><br>Milieu is a sonic meditation experience, grounded in your landscape. It listens to your surrounding environment and visualises it in real time, creating an introspective experience that draws you into intentional contact with the space you inhabit. Explore through a Guided Meditation or Self Directed Meditation session.</p>
-            <p><strong>About the visuals</strong><br>As you record, Milieu generates a unique visual pattern shaped by the sonic qualities of your environment. No two landscapes sound the same, and no two visuals will be either. Milieu also detects commonly found soundmarks, sonic qualities characteristic of a place, such as voices, birdsong or traffic, which appear as colour-coded annotations within the pattern.</p>
-            <p><strong>How to use Milieu</strong><br>Milieu is designed for all levels of meditative experience, whether you are new to mindful listening or a more self-directed practitioner. Sessions are structured around breathing, intention setting, live recording and reflection. We encourage building a session into your daily routine, through consistent practice, a more rooted sense of presence within your landscapes can be cultivated over time.</p>
-            <p><strong>Milieu's goal</strong><br>To explore how far sonic presence within our landscapes can be deepened through intentional design. Referencing Pauline Oliveros' concept of Quantum Listening, can an interface facilitate this state of deep, simultaneous listening, day to day?</p>
+    <div id="info-panel" style="display:none"></div>
+    <button id="info-btn" title="Understanding Milieu">?</button>
+    <div id="info-modal">
+        <div id="info-box">
+            <div id="info-modal-header">
+                <h4>Understanding Milieu</h4>
+                <button id="info-modal-close" title="Close">×</button>
+            </div>
+            <div id="info-modal-body">
+                <p><strong>About Milieu</strong><br>Milieu is a sonic meditation experience, grounded in your landscape. It listens to your surrounding environment and visualises it in real time, creating an introspective experience that draws you into intentional contact with the space you inhabit. Explore through a Guided Meditation or Self Directed Meditation session.</p>
+                <p><strong>About the visuals</strong><br>As you record, Milieu generates a unique visual pattern shaped by the sonic qualities of your environment. No two landscapes sound the same, and no two visuals will be either. Milieu also detects commonly found soundmarks, sonic qualities characteristic of a place, such as voices, birdsong or traffic, which appear as colour-coded annotations within the pattern.</p>
+                <p><strong>How to use Milieu</strong><br>Milieu is designed for all levels of meditative experience, whether you are new to mindful listening or a more self-directed practitioner. Sessions are structured around breathing, intention setting, live recording and reflection. We encourage building a session into your daily routine, through consistent practice, a more rooted sense of presence within your landscapes can be cultivated over time.</p>
+                <p><strong>Milieu's goal</strong><br>To explore how far sonic presence within our landscapes can be deepened through intentional design. Referencing Pauline Oliveros' concept of Quantum Listening, can an interface facilitate this state of deep, simultaneous listening, day to day?</p>
+            </div>
         </div>
     </div>
     <!-- Leaflet JS -->
@@ -2440,10 +2439,8 @@
         // Gallery panel — tab click to open/close
         const galleryHandle = document.getElementById('gallery-handle');
         const _backdrop = document.getElementById('panel-backdrop');
-        const _infoPanel = document.getElementById('info-panel');
         function _updateBackdrop() {
-            const open = galleryPanel.classList.contains('open') || _infoPanel.classList.contains('open');
-            _backdrop.classList.toggle('visible', open);
+            _backdrop.classList.toggle('visible', galleryPanel.classList.contains('open'));
         }
         function openGallery()  { galleryPanel.classList.add('open');    renderGallery(); _updateBackdrop(); }
         function closeGallery() { galleryPanel.classList.remove('open'); _updateBackdrop(); }
@@ -2454,13 +2451,13 @@
         document.getElementById('gallery-close').addEventListener('click', closeGallery);
 
         // Understanding Milieu panel
-        function openInfo()  { _infoPanel.classList.add('open'); _updateBackdrop(); }
-        function closeInfo() { _infoPanel.classList.remove('open'); _updateBackdrop(); }
-        document.getElementById('info-handle').addEventListener('click', () => {
-            _infoPanel.classList.contains('open') ? closeInfo() : openInfo();
-        });
-        document.getElementById('info-close').addEventListener('click', closeInfo);
-        _backdrop.addEventListener('click', () => { closeGallery(); closeInfo(); });
+        const _infoModal = document.getElementById('info-modal');
+        function openInfo()  { _infoModal.classList.add('open'); }
+        function closeInfo() { _infoModal.classList.remove('open'); }
+        document.getElementById('info-btn').addEventListener('click', openInfo);
+        document.getElementById('info-modal-close').addEventListener('click', closeInfo);
+        _infoModal.addEventListener('click', e => { if (e.target === _infoModal) closeInfo(); });
+        _backdrop.addEventListener('click', () => { closeGallery(); });
 
         lightbox.addEventListener('click', e => {
             if (e.target === lightbox || e.target.id === 'lightbox-close') lightbox.classList.remove('open');
@@ -2717,7 +2714,7 @@
             _rec = null; _chunks = [];
             if (typeof window.resetSketch === 'function') window.resetSketch();
             document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
-            document.getElementById('gallery-panel').classList.remove('hidden-ui'); document.getElementById('info-panel').classList.remove('hidden-ui');
+            document.getElementById('gallery-panel').classList.remove('hidden-ui'); document.getElementById('info-btn').classList.remove('hidden-ui');
             document.getElementById('self-directed-btn').classList.remove('hidden-ui');
             document.getElementById('details-btn').style.display = '';
             document.getElementById('soundmarks-box').style.display = '';
@@ -2943,7 +2940,7 @@
                         document.getElementById('orb-sublabel').style.opacity = '0';
                         orbLabel.style.opacity = '0';
                         document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
-                        document.getElementById('gallery-panel').classList.add('hidden-ui'); document.getElementById('info-panel').classList.add('hidden-ui');
+                        document.getElementById('gallery-panel').classList.add('hidden-ui'); document.getElementById('info-btn').classList.add('hidden-ui');
                         selfDirectedBtn.classList.add('hidden-ui');
                         document.getElementById('home-btn').style.display = 'flex';
                         document.getElementById('home-btn').textContent = 'Home / End Session';
@@ -3141,7 +3138,7 @@
                 document.getElementById('orb-sublabel').style.opacity = '';
                 orbLabel.style.opacity = '';
                 document.getElementById('bottom-bar-wrapper').classList.remove('hidden-ui');
-                document.getElementById('gallery-panel').classList.remove('hidden-ui'); document.getElementById('info-panel').classList.remove('hidden-ui');
+                document.getElementById('gallery-panel').classList.remove('hidden-ui'); document.getElementById('info-btn').classList.remove('hidden-ui');
                 selfDirectedBtn.classList.remove('hidden-ui');
                 document.getElementById('home-btn').style.display = 'none';
                 if (detailsBtn) {
@@ -3839,7 +3836,7 @@
             document.getElementById('orb-sublabel').style.opacity = '0';
             orbLabel.style.opacity = '0';
             document.getElementById('bottom-bar-wrapper').classList.add('hidden-ui');
-            document.getElementById('gallery-panel').classList.add('hidden-ui'); document.getElementById('info-panel').classList.add('hidden-ui');
+            document.getElementById('gallery-panel').classList.add('hidden-ui'); document.getElementById('info-btn').classList.add('hidden-ui');
             document.getElementById('self-directed-btn').classList.add('hidden-ui');
             document.getElementById('home-btn').style.display = 'flex';
             document.getElementById('home-btn').textContent = 'Home';
