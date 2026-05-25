@@ -2442,8 +2442,15 @@
         function _updateBackdrop() {
             _backdrop.classList.toggle('visible', galleryPanel.classList.contains('open'));
         }
-        function openGallery()  { galleryPanel.classList.add('open');    renderGallery(); _updateBackdrop(); }
-        function closeGallery() { galleryPanel.classList.remove('open'); _updateBackdrop(); }
+        function openGallery()  {
+            galleryPanel.classList.add('open'); renderGallery(); _updateBackdrop();
+            orbContainer.style.pointerEvents = 'none';
+        }
+        function closeGallery() {
+            galleryPanel.classList.remove('open'); _updateBackdrop();
+            // Delay restoring orb pointer events past the iOS ghost-click window (~300ms)
+            setTimeout(() => { orbContainer.style.pointerEvents = ''; }, 400);
+        }
 
         galleryHandle.addEventListener('click', () => {
             galleryPanel.classList.contains('open') ? closeGallery() : openGallery();
