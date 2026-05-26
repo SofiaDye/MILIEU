@@ -271,7 +271,7 @@
         #gallery-panel {
             position: fixed; top: 0; left: 0;
             width: 300px; height: 100vh;
-            background: rgba(245,247,250,0.98);
+            background: linear-gradient(160deg, #f5f6f8 0%, #d8dbe2 100%);
             box-shadow: 4px 0 24px rgba(0,0,0,0.12);
             z-index: 200;
             display: flex; flex-direction: column;
@@ -433,7 +433,7 @@
         }
         #gallery-lightbox.open { display: flex; }
         #lightbox-inner {
-            background: rgba(245,247,250,0.98);
+            background: radial-gradient(ellipse at center, #ffffff 5%, #d8dbe2 100%);
             border-radius: 14px; width: 100%; max-width: 520px;
             margin: auto; overflow: hidden;
             box-shadow: 0 8px 40px rgba(0,0,0,0.28);
@@ -1385,6 +1385,13 @@
             will-change: transform, filter;
             pointer-events: none;
         }
+
+        /* Mobile soundmark tags — must be after global rules to win the cascade */
+        @media (max-width: 640px) {
+            #session-data-display { max-width: min(180px, 46vw); bottom: 20px; right: 14px; gap: 5px; }
+            .session-tags-row { flex-direction: column !important; align-items: flex-end !important; flex-wrap: nowrap !important; gap: 5px !important; }
+            .session-tag { font-size: 11px; padding: 2px 8px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        }
     </style>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
@@ -2131,7 +2138,7 @@
                 inner.id = 'lightbox-inner';
                 const cls = document.createElement('button');
                 cls.id = 'lightbox-close'; cls.textContent = '×';
-                cls.addEventListener('click', () => lightbox.classList.remove('open'));
+                cls.addEventListener('click', () => closeLightbox());
                 inner.appendChild(cls);
                 if (item.placeholder) {
                     const img = document.createElement('img');
@@ -2446,7 +2453,13 @@
             galleryPanel.classList.add('open'); renderGallery(); _updateBackdrop();
             orbContainer.style.pointerEvents = 'none';
         }
+        function closeLightbox() {
+            const vid = lightbox.querySelector('video');
+            if (vid) { vid.pause(); vid.src = ''; }
+            lightbox.classList.remove('open');
+        }
         function closeGallery() {
+            closeLightbox();
             galleryPanel.classList.remove('open'); _updateBackdrop();
             // Delay restoring orb pointer events past the iOS ghost-click window (~300ms)
             setTimeout(() => { orbContainer.style.pointerEvents = ''; }, 400);
@@ -2467,7 +2480,7 @@
         _backdrop.addEventListener('click', () => { closeGallery(); });
 
         lightbox.addEventListener('click', e => {
-            if (e.target === lightbox || e.target.id === 'lightbox-close') lightbox.classList.remove('open');
+            if (e.target === lightbox || e.target.id === 'lightbox-close') closeLightbox();
         });
     </script>
 

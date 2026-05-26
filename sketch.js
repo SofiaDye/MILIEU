@@ -102,14 +102,36 @@ const CATEGORY_Y = {
   vehicles:    0.90,  // ~50 Hz
   low_freq:    0.94,  // ~30 Hz
 };
+// Colours derived from sonography map (pleasant/unpleasant × uneventful/eventful axes)
 const CATEGORY_COLORS = {
-  rain:[60,130,255], water:[0,210,255], thunder:[140,40,220], fire:[255,110,20],
-  wind:[180,215,230], amphibians:[40,200,90], insects:[180,220,0], birds:[255,215,0],
-  mammals:[180,100,40], vehicles:[90,90,90], voices:[255,60,60], footsteps:[200,160,100],
-  machinery:[220,100,0], bells:[220,200,100], music:[255,80,200], object_moving:[150,150,150],
-  alarm_siren:[255,0,30], construction:[200,150,0], low_freq:[60,60,130],
-  white_noise:[230,230,230], wind_howl:[170,215,255], handling:[200,200,200],
-  silence:[245,248,252],
+  // CALM — pleasant, uneventful: soft muted cool tones
+  low_freq:      [130, 150, 180],
+  footsteps:     [180, 162, 138],
+  wind:          [170, 208, 225],
+  rain:          [95,  155, 210],
+  water:         [75,  188, 205],
+  // VIBRANT — pleasant, eventful: warm saturated tones
+  amphibians:    [50,  195, 95],
+  insects:       [178, 215, 20],
+  voices:        [238, 92,  82],
+  mammals:       [212, 132, 52],
+  birds:         [243, 203, 32],
+  music:         [228, 92,  162],
+  bells:         [212, 182, 72],
+  // NEUTRAL — on or near the centre axes
+  vehicles:      [112, 112, 118],
+  object_moving: [158, 153, 153],
+  silence:       [230, 233, 240],
+  handling:      [193, 190, 190],
+  fire:          [243, 102, 32],
+  // CHAOTIC — unpleasant, eventful: harsh intense tones
+  construction:  [188, 118, 18],
+  machinery:     [208, 68,  22],
+  thunder:       [112, 32,  198],
+  alarm_siren:   [238, 12,  42],
+  // MONOTONOUS — unpleasant, uneventful: cold flat tones
+  wind_howl:     [142, 172, 202],
+  white_noise:   [212, 212, 218],
 };
 
 // ─── Mic-analysis accumulators ────────────────────────────────────────────────
