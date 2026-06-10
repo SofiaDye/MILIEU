@@ -154,9 +154,10 @@ function setup() {
 
 function windowResized() {
   SZ_W = windowWidth; SZ_H = windowHeight;
-  if (state === 'visualising' || state === 'fading') return;
   resizeCanvas(windowWidth, windowHeight);
-  drawBackground(-1);
+  if (state !== 'visualising' && state !== 'fading') {
+    drawBackground(-1);
+  }
 }
 
 // ─── Background ───────────────────────────────────────────────────────────────
