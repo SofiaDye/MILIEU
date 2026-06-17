@@ -1801,14 +1801,16 @@
         function enterStandby() {
             if (window._sessionActive || _standbyOverlay) return;
 
-            // Close any open modals before entering standby
-            // Only remove 'open' class — do NOT set el.style.display because inline styles
-            // override CSS class rules and would prevent modals from reopening after standby.
-            ['guided-intro-modal','duration-modal','prerecord-modal'].forEach(id => {
+            // Close every panel/modal before entering standby
+            if (typeof closeGallery === 'function') closeGallery();
+            if (typeof closeLightbox === 'function') closeLightbox();
+            if (typeof closeInfo === 'function') closeInfo();
+            // class-toggled modals
+            ['guided-intro-modal','duration-modal','prerecord-modal','session-end-modal','info-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.remove('open');
             });
-            // These modals use inline display toggling, so setting display:none is safe here
+            // inline-display modals
             ['exit-session-modal','self-directed-modal','map-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.classList.remove('open'); el.style.display = 'none'; }
