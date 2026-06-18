@@ -640,6 +640,10 @@ async function analyseFileOffline(file) {
   } catch (err) {
     console.error('[analyseFileOffline] Server error:', err.message);
     if (_sessionId !== _mySession) return;
+    // Reset to neutral defaults so a failed analysis never reuses stale values
+    mEntropy = 9.0; mEntropySD = 0.5; mRMS = 0.02; mKeynote = 400; mSignal = 0.05;
+    vParams.numOrigins = 8; vParams.lineWeight = 1.2;
+    detectedCategories = [];
     inputSource = 'file';
     startVisualising();
   }
@@ -814,6 +818,8 @@ function toggleMic() {
           if (window.updateSoundmarks) window.updateSoundmarks(detectedCategories);
         } catch (err) {
           console.error('[server analysis] error:', err.message);
+          mEntropy = 9.0; mEntropySD = 0.5; mRMS = 0.02; mKeynote = 400; mSignal = 0.05;
+          detectedCategories = [];
         }
       })();
     };

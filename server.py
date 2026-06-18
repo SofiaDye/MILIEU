@@ -310,6 +310,9 @@ def analyse():
     result['segment_start'] = segment_start
     result['segment_duration'] = SEG if total_dur >= SEG else round(len(y) / sr, 3)
     print(f'Analysis result: {result}')
+    # Free memory between calls — important on low-RAM devices like Raspberry Pi
+    del y, y_full
+    import gc; gc.collect()
     return jsonify(result)
 
 if __name__ == '__main__':
@@ -318,3 +321,4 @@ if __name__ == '__main__':
     print('  http://localhost:5001')
     print('-' * 50)
     app.run(debug=False, port=5001, threaded=False)
+    
