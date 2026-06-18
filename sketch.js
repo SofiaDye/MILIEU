@@ -448,12 +448,13 @@ function startVisualising() {
   let numOrigins = int(lerp(2, 14, complexityNorm));
   if (_isMobile) numOrigins = Math.max(1, int(numOrigins * 0.55));
   let origins = [];
-  randomSeed(99);
+  const _drawSeed = Math.floor(Date.now() % 99991);
+  randomSeed(_drawSeed);
   for (let o=0; o<numOrigins; o++) {
     if (o === 0) origins.push({x: SZ_W*random(0.2,0.5), y: SZ_H*random(0.3,0.7)});
     else         origins.push({x: SZ_W*random(0.05,0.95), y: SZ_H*random(0.05,0.95)});
   }
-  randomSeed(42);
+  randomSeed(_drawSeed + 1);
 
   let particlesPerOrigin = int(lerp(4, 12, complexityNorm));
   if (_isMobile) particlesPerOrigin = Math.max(2, int(particlesPerOrigin * 0.12));
@@ -464,7 +465,7 @@ function startVisualising() {
     let ox = origins[o].x, oy = origins[o].y;
     for (let i=0; i<particlesPerOrigin; i++) {
       let startAngle = random(TWO_PI);
-      randomSeed(42+seedCounter*31); noiseSeed(42+seedCounter*31);
+      randomSeed(_drawSeed+seedCounter*31); noiseSeed(_drawSeed+seedCounter*31);
       let path = buildParticlePath(ox,oy,startAngle,baseWeight,
                    sdNorm,sigNorm,rmsAlpha,rmsNorm,pitchNorm,entropyNorm,1.0,0);
       if (path.length > 0) {
