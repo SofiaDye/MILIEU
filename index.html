@@ -1879,12 +1879,15 @@
                 e.stopPropagation();
                 _activated = true;
                 clearTimeout(_sbTimer);
-                overlay.style.pointerEvents = 'none'; // allow orb clicks immediately during fade
+                overlay.style.pointerEvents = 'none';
                 overlay.style.transition = 'opacity 1s ease';
                 overlay.style.opacity = '0';
                 setTimeout(() => {
                     overlay.remove();
                     _standbyOverlay = null;
+                    // Always restore the landing screen fully when exiting standby
+                    if (window.showOrb) window.showOrb();
+                    if (window.fadeVisualization) { /* no-op if already idle */ }
                     resetIdleTimer();
                 }, 1050);
             });
