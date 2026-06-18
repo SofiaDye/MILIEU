@@ -1885,10 +1885,7 @@
                 setTimeout(() => {
                     overlay.remove();
                     _standbyOverlay = null;
-                    // Always restore the landing screen fully when exiting standby
-                    if (window.showOrb) window.showOrb();
-                    if (window.fadeVisualization) { /* no-op if already idle */ }
-                    resetIdleTimer();
+                    fullReset();
                 }, 1050);
             });
         }
