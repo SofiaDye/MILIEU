@@ -2708,6 +2708,7 @@
             // Clear session state
             _sess.active = false;
             window._sessionActive = false;
+            resetIdleTimer();
             window._pendingSessionDuration = null;
             window._sessMaxRecordSecs = 30;
             window.onVisualisationComplete = null;
@@ -3892,6 +3893,7 @@
             // Guided session: normal end flow
             _sess.active = false;
             window._sessionActive = false;
+            resetIdleTimer();
             clearTimeout(_sess._timer);
             clearInterval(_sess._promptTimer);
             clearInterval(_sess._breathInterval);
